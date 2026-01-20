@@ -111,3 +111,43 @@ def test_filters_chemistries_comma_separated(client: TestClient) -> None:
     assert "OXIDATION" in keys
 
 
+def test_filters_country_and_certification_affect_locations(client: TestClient) -> None:
+    # India has 3 companies total in the seed data, but only 2 have ISO9001.
+    r = client.get(
+        "/api/stats/locations",
+        params={"level": "country", "limit": 100, "country": "India", "certifications": "ISO9001"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data == [{"key": "India", "count": 2, "geometry": None}]
+
+
+def test_filters_certifications_comma_separated_and_and_semantics(client: TestClient) -> None:
+    # Comma-separated list should be accepted; AND semantics mean company must have *all* certs.
+    # ISO9001 + USFDA co-occur for the 2 "even-indexed" seed companies, both in India.
+    r = client.get(
+        "/api/stats/locations",
+        params={"level": "country", "limit": 100, "country": "India", "certifications": "ISO9001,USFDA"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data == [{"key": "India", "count": 2, "geometry": None}]
+
+
+def test_filters_combined_certifications_and_chemistries(client: TestClient) -> None:
+    # Multiple facets should combine with AND semantics.
+    r = client.get(
+        "/api/stats/locations",
+        params={
+            "level": "country",
+            "limit": 100,
+            "country": "India",
+            "certifications": "ISO9001",
+            "chemistries": "HYDROGENATION",
+        },
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data == [{"key": "India", "count": 2, "geometry": None}]
+
+

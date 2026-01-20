@@ -6,7 +6,7 @@ from typing import Any, Literal
 from sqlalchemy import Select, distinct, func, select
 from sqlalchemy.orm import Session
 
-from app.models import Company, CompanyProcess, CompanyProduct, ProcessType
+from app.models import CertificationType, Company, CompanyCertification, CompanyProcess, CompanyProduct, ProcessType
 
 
 LocationLevel = Literal["point", "country", "state", "city"]
@@ -24,6 +24,8 @@ class CompanyFilters:
     city: str | None = None
     # Values are ProcessType.code (e.g. "HYDROGENATION"). Stored normalized (uppercased, deduped).
     chemistries: tuple[str, ...] = ()
+    # Values are CertificationType.code (e.g. "USFDA"). Stored normalized (uppercased, deduped).
+    certifications: tuple[str, ...] = ()
 
 
 def normalize_company_filters(
@@ -32,6 +34,7 @@ def normalize_company_filters(
     state: str | None = None,
     city: str | None = None,
     chemistries: list[str] | None = None,
+    certifications: list[str] | None = None,
 ) -> CompanyFilters:
     def _norm_text(v: str | None) -> str | None:
         if v is None:
@@ -39,15 +42,14 @@ def normalize_company_filters(
         v = v.strip()
         return v or None
 
-    def _norm_chemistries(values: list[str] | None) -> tuple[str, ...]:
+    def _norm_codes(values: list[str] | None) -> tuple[str, ...]:
         if not values:
             return ()
         parts: list[str] = []
         for item in values:
             if item is None:
                 continue
-            # Support both repeated query params (?chemistries=A&chemistries=B)
-            # and comma-separated (?chemistries=A,B).
+            # Support both repeated query params (?x=A&x=B) and comma-separated (?x=A,B).
             for p in str(item).split(","):
                 p = p.strip()
                 if p:
@@ -64,12 +66,13 @@ def normalize_company_filters(
         country=_norm_text(country),
         state=_norm_text(state),
         city=_norm_text(city),
-        chemistries=_norm_chemistries(chemistries),
+        chemistries=_norm_codes(chemistries),
+        certifications=_norm_codes(certifications),
     )
 
 
 def _has_any_filters(filters: CompanyFilters) -> bool:
-    return bool(filters.country or filters.state or filters.city or filters.chemistries)
+    return bool(filters.country or filters.state or filters.city or filters.chemistries or filters.certifications)
 
 
 def _company_ids_select(filters: CompanyFilters) -> Select | None:
@@ -92,14 +95,27 @@ def _company_ids_select(filters: CompanyFilters) -> Select | None:
 
     if filters.chemistries:
         # AND semantics within the same facet: company must match *all* selected chemistries.
-        stmt = (
-            stmt.join(CompanyProcess, CompanyProcess.company_id == Company.id)
+        chem_company_ids = (
+            select(CompanyProcess.company_id)
             .join(ProcessType, ProcessType.id == CompanyProcess.process_type_id)
             .where(CompanyProcess.available.is_(True))
             .where(ProcessType.code.in_(filters.chemistries))
-            .group_by(Company.id)
+            .group_by(CompanyProcess.company_id)
             .having(func.count(distinct(ProcessType.code)) == len(filters.chemistries))
         )
+        stmt = stmt.where(Company.id.in_(chem_company_ids))
+
+    if filters.certifications:
+        # AND semantics within the same facet: company must match *all* selected certifications.
+        cert_company_ids = (
+            select(CompanyCertification.company_id)
+            .join(CertificationType, CertificationType.id == CompanyCertification.certification_type_id)
+            .where(CompanyCertification.has_cert.is_(True))
+            .where(CertificationType.code.in_(filters.certifications))
+            .group_by(CompanyCertification.company_id)
+            .having(func.count(distinct(CertificationType.code)) == len(filters.certifications))
+        )
+        stmt = stmt.where(Company.id.in_(cert_company_ids))
 
     return stmt
 

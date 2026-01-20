@@ -38,9 +38,16 @@ def stats_locations(
     state: str | None = Query(None),
     city: str | None = Query(None),
     chemistries: list[str] | None = Query(None),
+    certifications: list[str] | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    filters = crud.normalize_company_filters(country=country, state=state, city=city, chemistries=chemistries)
+    filters = crud.normalize_company_filters(
+        country=country,
+        state=state,
+        city=city,
+        chemistries=chemistries,
+        certifications=certifications,
+    )
     cache_key = (level, limit, filters)
     if cache_key in _cache_locations:
         return _cache_locations[cache_key]
@@ -56,9 +63,16 @@ def stats_chemistries(
     state: str | None = Query(None),
     city: str | None = Query(None),
     chemistries: list[str] | None = Query(None),
+    certifications: list[str] | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    filters = crud.normalize_company_filters(country=country, state=state, city=city, chemistries=chemistries)
+    filters = crud.normalize_company_filters(
+        country=country,
+        state=state,
+        city=city,
+        chemistries=chemistries,
+        certifications=certifications,
+    )
     cache_key = (limit, filters)
     if cache_key in _cache_chemistries:
         return _cache_chemistries[cache_key]
@@ -75,9 +89,16 @@ def stats_products(
     state: str | None = Query(None),
     city: str | None = Query(None),
     chemistries: list[str] | None = Query(None),
+    certifications: list[str] | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    filters = crud.normalize_company_filters(country=country, state=state, city=city, chemistries=chemistries)
+    filters = crud.normalize_company_filters(
+        country=country,
+        state=state,
+        city=city,
+        chemistries=chemistries,
+        certifications=certifications,
+    )
     cache_key = (by, limit, filters)
     if cache_key in _cache_products:
         return _cache_products[cache_key]
