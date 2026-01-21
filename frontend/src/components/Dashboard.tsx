@@ -222,11 +222,11 @@ export function Dashboard() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-foreground">Covenants</span>
+              <span className="font-semibold text-foreground">Covenants PharmaChem</span>
               <span className="text-muted-foreground text-sm">© 2026</span>
             </div>
             <p className="text-sm text-muted-foreground text-center md:text-right">
-              Connecting pharmaceutical buyers with verified Indian manufacturers.
+              We take care of all your pharmaceutical and chemical needs.
             </p>
           </div>
         </div>
