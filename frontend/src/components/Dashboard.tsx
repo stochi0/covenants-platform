@@ -36,8 +36,8 @@ export function Dashboard() {
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-accent animate-pulse-soft" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground tracking-tight">Covenants</h1>
-                <p className="text-xs text-muted-foreground">Pharmaceutical Intelligence Platform</p>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">Capilia</h1>
+                <p className="text-xs text-muted-foreground">Covenants Platform</p>
               </div>
             </div>
 
