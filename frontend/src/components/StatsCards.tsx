@@ -68,7 +68,7 @@ export function StatsCards() {
     {
       title: 'Chemistries',
       value: 25,
-      subtitle: 'Unique chemical compounds',
+      subtitle: 'Unique chemical processes',
       icon: <FlaskConical className="w-5 h-5" />,
       trend: { value: 15.8, isPositive: true },
     },

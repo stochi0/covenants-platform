@@ -106,7 +106,6 @@ export function Dashboard() {
                 Platform Overview
               </h2>
               <p className="text-muted-foreground max-w-2xl">
-                Real-time insights into India's pharmaceutical manufacturing ecosystem. 
                 Discover products, connect with manufacturers, and streamline your sourcing.
               </p>
             </div>
