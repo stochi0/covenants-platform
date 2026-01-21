@@ -53,21 +53,21 @@ export function StatsCards() {
   const stats = [
     {
       title: 'Products',
-      value: 12847,
+      value: 5000,
       subtitle: 'Active pharmaceutical products',
       icon: <Package className="w-5 h-5" />,
       trend: { value: 12.5, isPositive: true },
     },
     {
       title: 'Manufacturers',
-      value: 2341,
+      value: 121,
       subtitle: 'Verified manufacturers',
       icon: <Factory className="w-5 h-5" />,
       trend: { value: 8.2, isPositive: true },
     },
     {
       title: 'Chemistries',
-      value: 5892,
+      value: 25,
       subtitle: 'Unique chemical compounds',
       icon: <FlaskConical className="w-5 h-5" />,
       trend: { value: 15.8, isPositive: true },
