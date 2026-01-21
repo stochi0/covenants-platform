@@ -17,51 +17,51 @@ interface StateData {
 // Facility data by state (using various possible property names)
 const facilitiesData: Record<string, number> = {
   // Standard names
-  'Maharashtra': 312,
-  'Gujarat': 234,
-  'Karnataka': 198,
-  'Telangana': 187,
-  'Tamil Nadu': 165,
-  'Uttar Pradesh': 156,
-  'Andhra Pradesh': 145,
-  'Madhya Pradesh': 112,
-  'Delhi': 89,
-  'NCT of Delhi': 89,
-  'Rajasthan': 78,
-  'Kerala': 76,
-  'Haryana': 67,
-  'West Bengal': 56,
-  'Odisha': 48,
-  'Orissa': 48,
-  'Punjab': 45,
-  'Jharkhand': 42,
-  'Chhattisgarh': 38,
-  'Uttarakhand': 35,
-  'Uttaranchal': 35,
-  'Bihar': 34,
-  'Himachal Pradesh': 28,
-  'Assam': 18,
-  'Jammu and Kashmir': 12,
-  'Jammu & Kashmir': 12,
-  'Goa': 15,
-  'Sikkim': 8,
-  'Arunachal Pradesh': 6,
-  'Meghalaya': 5,
-  'Manipur': 4,
-  'Mizoram': 3,
-  'Nagaland': 4,
-  'Tripura': 5,
-  'Ladakh': 2,
-  'Puducherry': 8,
-  'Pondicherry': 8,
-  'Chandigarh': 6,
-  'Andaman and Nicobar Islands': 2,
-  'Andaman & Nicobar': 2,
-  'Andaman & Nicobar Island': 2,
-  'Dadra and Nagar Haveli and Daman and Diu': 4,
-  'Dadra & Nagar Haveli': 4,
-  'Daman & Diu': 4,
-  'Lakshadweep': 1,
+  'Maharashtra': 16,
+  'Gujarat': 12,
+  'Karnataka': 10,
+  'Telangana': 9,
+  'Tamil Nadu': 8,
+  'Uttar Pradesh': 8,
+  'Andhra Pradesh': 7,
+  'Madhya Pradesh': 5,
+  'Delhi': 4,
+  'NCT of Delhi': 4,
+  'Rajasthan': 3,
+  'Kerala': 4,
+  'Haryana': 4,
+  'West Bengal': 3,
+  'Odisha': 3,
+  'Orissa': 3,
+  'Punjab': 2,
+  'Jharkhand': 2,
+  'Chhattisgarh': 2,
+  'Uttarakhand': 2,
+  'Uttaranchal': 2,
+  'Bihar': 2,
+  'Himachal Pradesh': 2,
+  'Assam': 1,
+  'Jammu and Kashmir': 1,
+  'Jammu & Kashmir': 1,
+  'Goa': 1,
+  'Sikkim': 0,
+  'Arunachal Pradesh': 0,
+  'Meghalaya': 0,
+  'Manipur': 0,
+  'Mizoram': 0,
+  'Nagaland': 0,
+  'Tripura': 0,
+  'Ladakh': 0,
+  'Puducherry': 0,
+  'Pondicherry': 0,
+  'Chandigarh': 0,
+  'Andaman and Nicobar Islands': 0,
+  'Andaman & Nicobar': 0,
+  'Andaman & Nicobar Island': 0,
+  'Dadra and Nagar Haveli and Daman and Diu': 0,
+  'Dadra & Nagar Haveli': 0,
+  'Daman & Diu': 0,
+  'Lakshadweep': 0,
 };
 
 const getStateName = (properties: Record<string, unknown>): string => {
@@ -78,14 +78,14 @@ const getFacilities = (stateName: string): number => {
     if (key.toLowerCase() === lowerName) return value;
   }
   
-  return 5; // Default for any unmatched state
+  return 0; // Default for any unmatched state
 };
 
 const getColorByFacilities = (facilities: number): string => {
-  if (facilities >= 200) return '#0d6e5f';
-  if (facilities >= 100) return '#2a9d8f';
-  if (facilities >= 50) return '#52b788';
-  if (facilities >= 20) return '#95d5b2';
+  if (facilities >= 10) return '#0d6e5f';
+  if (facilities >= 5) return '#2a9d8f';
+  if (facilities >= 3) return '#52b788';
+  if (facilities >= 1) return '#95d5b2';
   return '#b7e4c7';
 };
 
@@ -93,7 +93,7 @@ const IndiaMapComponent = () => {
   const [hoveredState, setHoveredState] = useState<StateData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  const totalFacilities = 2213; // Pre-calculated total
+  const totalFacilities = 121; // Pre-calculated total
 
   return (
     <TooltipProvider delayDuration={0}>

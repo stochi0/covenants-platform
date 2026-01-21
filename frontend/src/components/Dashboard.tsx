@@ -138,11 +138,11 @@ export function Dashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {[
-                      { state: 'Maharashtra', facilities: 312, share: 16.8 },
-                      { state: 'Gujarat', facilities: 234, share: 12.6 },
-                      { state: 'Karnataka', facilities: 198, share: 10.7 },
-                      { state: 'Telangana', facilities: 187, share: 10.1 },
-                      { state: 'Tamil Nadu', facilities: 165, share: 8.9 },
+                      { state: 'Maharashtra', facilities: 16, share: 13.2 },
+                      { state: 'Gujarat', facilities: 12, share: 9.9 },
+                      { state: 'Karnataka', facilities: 10, share: 8.3 },
+                      { state: 'Telangana', facilities: 9, share: 7.4 },
+                      { state: 'Tamil Nadu', facilities: 8, share: 6.6 },
                     ].map((item, index) => (
                       <div key={item.state} className="flex items-center gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
