@@ -9,6 +9,7 @@ import { ProductResults } from './ProductResults';
 import { FlaskConical, LayoutDashboard, Search, Building2, Globe } from 'lucide-react';
 
 export function Dashboard() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'search' | 'manufacturers'>('overview');
   const [searchFilters, setSearchFilters] = useState<FilterType>({
     productName: '',
     casNumber: '',
@@ -42,30 +43,47 @@ export function Dashboard() {
             </div>
 
             <nav className="hidden md:flex items-center gap-1">
-              <a 
-                href="#" 
-                className="px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                className={
+                  activeTab === 'overview'
+                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
+                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                }
               >
                 Dashboard
-              </a>
-              <a 
-                href="#" 
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('search')}
+                className={
+                  activeTab === 'search'
+                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
+                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                }
               >
                 Products
-              </a>
-              <a 
-                href="#" 
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('manufacturers')}
+                className={
+                  activeTab === 'manufacturers'
+                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
+                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                }
               >
                 Manufacturers
-              </a>
-              <a 
-                href="#" 
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              </button>
+              <button
+                type="button"
+                disabled
+                className="px-4 py-2 text-sm font-medium text-muted-foreground/60 rounded-lg transition-colors cursor-not-allowed"
+                title="Analytics coming soon"
               >
                 Analytics
-              </a>
+              </button>
             </nav>
 
             <div className="flex items-center gap-3">
@@ -80,7 +98,7 @@ export function Dashboard() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-8">
-        <Tabs defaultValue="overview" className="space-y-8">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-8">
           <TabsList className="bg-muted/50 p-1 rounded-xl">
             <TabsTrigger 
               value="overview" 
@@ -95,6 +113,13 @@ export function Dashboard() {
             >
               <Search className="w-4 h-4" />
               Product Search
+            </TabsTrigger>
+            <TabsTrigger
+              value="manufacturers"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg gap-2"
+            >
+              <Building2 className="w-4 h-4" />
+              Manufacturers
             </TabsTrigger>
           </TabsList>
 
@@ -169,7 +194,11 @@ export function Dashboard() {
                   <CardContent className="p-5">
                     <h3 className="font-semibold text-foreground mb-3">Quick Actions</h3>
                     <div className="space-y-2">
-                      <button className="w-full text-left px-4 py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('search')}
+                        className="w-full text-left px-4 py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group"
+                      >
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                             <Search className="w-4 h-4" />
@@ -180,7 +209,11 @@ export function Dashboard() {
                           </div>
                         </div>
                       </button>
-                      <button className="w-full text-left px-4 py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('manufacturers')}
+                        className="w-full text-left px-4 py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group"
+                      >
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                             <Building2 className="w-4 h-4" />
@@ -211,6 +244,21 @@ export function Dashboard() {
 
             {/* Results Section */}
             <ProductResults filters={searchFilters} />
+          </TabsContent>
+
+          {/* Manufacturers Tab */}
+          <TabsContent value="manufacturers" className="space-y-6 mt-0">
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary" />
+                  Manufacturers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Manufacturers browsing is coming next. For now, use Product Search to discover suppliers by product.
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
