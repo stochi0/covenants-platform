@@ -1,122 +1,186 @@
-import { useState } from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useState, memo } from 'react';
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+} from 'react-simple-maps';
+import { TooltipProvider } from '@/components/ui/tooltip';
+
+// Local India GeoJSON file
+const INDIA_GEO_JSON = "/india-states.json";
 
 interface StateData {
-  id: string;
   name: string;
   facilities: number;
-  path: string;
 }
 
-// Simplified India map paths for major states
-const statesData: StateData[] = [
-  { id: 'JK', name: 'Jammu & Kashmir', facilities: 12, path: 'M180,30 L220,35 L225,70 L200,85 L170,75 L165,50 Z' },
-  { id: 'HP', name: 'Himachal Pradesh', facilities: 28, path: 'M200,85 L225,70 L245,85 L235,105 L210,110 L195,100 Z' },
-  { id: 'PB', name: 'Punjab', facilities: 45, path: 'M170,95 L195,100 L210,110 L200,130 L175,125 L165,110 Z' },
-  { id: 'HR', name: 'Haryana', facilities: 67, path: 'M175,125 L200,130 L210,150 L195,165 L175,155 L170,140 Z' },
-  { id: 'UK', name: 'Uttarakhand', facilities: 35, path: 'M210,110 L235,105 L260,120 L250,145 L225,150 L210,135 Z' },
-  { id: 'DL', name: 'Delhi', facilities: 89, path: 'M192,148 L202,148 L202,160 L192,160 Z' },
-  { id: 'UP', name: 'Uttar Pradesh', facilities: 156, path: 'M210,150 L250,145 L295,160 L310,200 L280,230 L230,220 L200,190 L195,165 Z' },
-  { id: 'RJ', name: 'Rajasthan', facilities: 78, path: 'M100,130 L170,140 L175,155 L195,165 L200,190 L180,230 L130,260 L85,220 L80,170 Z' },
-  { id: 'GJ', name: 'Gujarat', facilities: 234, path: 'M45,210 L80,170 L85,220 L130,260 L120,300 L80,330 L35,310 L20,270 L30,230 Z' },
-  { id: 'MP', name: 'Madhya Pradesh', facilities: 112, path: 'M130,260 L180,230 L230,220 L275,240 L290,290 L250,320 L180,310 L140,290 L120,300 Z' },
-  { id: 'BR', name: 'Bihar', facilities: 34, path: 'M310,200 L350,195 L365,220 L345,240 L305,235 L295,215 Z' },
-  { id: 'JH', name: 'Jharkhand', facilities: 42, path: 'M305,235 L345,240 L360,270 L330,290 L295,280 L280,255 Z' },
-  { id: 'WB', name: 'West Bengal', facilities: 56, path: 'M345,240 L365,220 L385,230 L390,290 L370,330 L345,310 L330,290 L360,270 Z' },
-  { id: 'OR', name: 'Odisha', facilities: 48, path: 'M280,290 L330,290 L345,310 L360,350 L320,380 L270,360 L260,320 L275,295 Z' },
-  { id: 'CG', name: 'Chhattisgarh', facilities: 38, path: 'M275,290 L295,280 L330,290 L320,340 L280,355 L260,320 Z' },
-  { id: 'MH', name: 'Maharashtra', facilities: 312, path: 'M80,330 L120,300 L140,290 L180,310 L250,320 L260,360 L240,410 L170,420 L100,390 L60,360 Z' },
-  { id: 'TG', name: 'Telangana', facilities: 187, path: 'M180,360 L240,350 L270,380 L250,420 L200,430 L170,400 Z' },
-  { id: 'AP', name: 'Andhra Pradesh', facilities: 145, path: 'M200,430 L250,420 L290,450 L310,500 L270,520 L220,510 L180,470 Z' },
-  { id: 'KA', name: 'Karnataka', facilities: 198, path: 'M100,390 L170,420 L200,430 L180,470 L160,520 L100,530 L70,480 L75,420 Z' },
-  { id: 'KL', name: 'Kerala', facilities: 76, path: 'M100,530 L130,530 L145,600 L120,630 L95,610 L90,560 Z' },
-  { id: 'TN', name: 'Tamil Nadu', facilities: 165, path: 'M130,530 L160,520 L220,510 L240,550 L210,610 L160,620 L145,600 Z' },
-  { id: 'AS', name: 'Assam', facilities: 18, path: 'M400,180 L450,175 L480,195 L470,220 L420,230 L395,210 Z' },
-  { id: 'NE', name: 'North East', facilities: 24, path: 'M450,175 L495,165 L520,190 L510,230 L480,245 L470,220 L480,195 Z' },
-  { id: 'SK', name: 'Sikkim', facilities: 8, path: 'M375,175 L395,170 L400,190 L385,200 L372,190 Z' },
-  { id: 'AR', name: 'Arunachal Pradesh', facilities: 6, path: 'M470,140 L530,130 L545,160 L520,180 L480,170 L465,155 Z' },
-];
-
-const getColorIntensity = (facilities: number, max: number) => {
-  const ratio = facilities / max;
-  if (ratio > 0.7) return 'fill-primary';
-  if (ratio > 0.4) return 'fill-primary/70';
-  if (ratio > 0.2) return 'fill-primary/50';
-  return 'fill-primary/30';
+// Facility data by state (using various possible property names)
+const facilitiesData: Record<string, number> = {
+  // Standard names
+  'Maharashtra': 312,
+  'Gujarat': 234,
+  'Karnataka': 198,
+  'Telangana': 187,
+  'Tamil Nadu': 165,
+  'Uttar Pradesh': 156,
+  'Andhra Pradesh': 145,
+  'Madhya Pradesh': 112,
+  'Delhi': 89,
+  'NCT of Delhi': 89,
+  'Rajasthan': 78,
+  'Kerala': 76,
+  'Haryana': 67,
+  'West Bengal': 56,
+  'Odisha': 48,
+  'Orissa': 48,
+  'Punjab': 45,
+  'Jharkhand': 42,
+  'Chhattisgarh': 38,
+  'Uttarakhand': 35,
+  'Uttaranchal': 35,
+  'Bihar': 34,
+  'Himachal Pradesh': 28,
+  'Assam': 18,
+  'Jammu and Kashmir': 12,
+  'Jammu & Kashmir': 12,
+  'Goa': 15,
+  'Sikkim': 8,
+  'Arunachal Pradesh': 6,
+  'Meghalaya': 5,
+  'Manipur': 4,
+  'Mizoram': 3,
+  'Nagaland': 4,
+  'Tripura': 5,
+  'Ladakh': 2,
+  'Puducherry': 8,
+  'Pondicherry': 8,
+  'Chandigarh': 6,
+  'Andaman and Nicobar Islands': 2,
+  'Andaman & Nicobar': 2,
+  'Andaman & Nicobar Island': 2,
+  'Dadra and Nagar Haveli and Daman and Diu': 4,
+  'Dadra & Nagar Haveli': 4,
+  'Daman & Diu': 4,
+  'Lakshadweep': 1,
 };
 
-export function IndiaMap() {
+const getStateName = (properties: Record<string, unknown>): string => {
+  return (properties.ST_NM || properties.NAME_1 || properties.name || properties.NAME || properties.state || 'Unknown') as string;
+};
+
+const getFacilities = (stateName: string): number => {
+  // Try exact match first
+  if (facilitiesData[stateName]) return facilitiesData[stateName];
+  
+  // Try case-insensitive match
+  const lowerName = stateName.toLowerCase();
+  for (const [key, value] of Object.entries(facilitiesData)) {
+    if (key.toLowerCase() === lowerName) return value;
+  }
+  
+  return 5; // Default for any unmatched state
+};
+
+const getColorByFacilities = (facilities: number): string => {
+  if (facilities >= 200) return '#0d6e5f';
+  if (facilities >= 100) return '#2a9d8f';
+  if (facilities >= 50) return '#52b788';
+  if (facilities >= 20) return '#95d5b2';
+  return '#b7e4c7';
+};
+
+const IndiaMapComponent = () => {
   const [hoveredState, setHoveredState] = useState<StateData | null>(null);
-  const maxFacilities = Math.max(...statesData.map(s => s.facilities));
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  const totalFacilities = 2213; // Pre-calculated total
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="relative w-full h-full min-h-[400px] flex items-center justify-center">
-        <svg
-          viewBox="0 0 550 680"
-          className="w-full h-full max-w-[450px]"
-          style={{ filter: 'drop-shadow(0 4px 6px rgb(0 0 0 / 0.05))' }}
+      <div className="relative w-full h-full min-h-[450px] flex items-center justify-center">
+        <ComposableMap
+          projection="geoMercator"
+          projectionConfig={{
+            scale: 1000,
+            center: [82.5, 22],
+          }}
+          style={{ width: '100%', height: '100%', maxHeight: '500px' }}
         >
-          {/* Background glow */}
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient id="stateGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="oklch(0.45 0.12 175)" />
-              <stop offset="100%" stopColor="oklch(0.55 0.14 175)" />
-            </linearGradient>
-          </defs>
+          <Geographies geography={INDIA_GEO_JSON}>
+            {({ geographies }) =>
+              geographies.map((geo) => {
+                const stateName = getStateName(geo.properties);
+                const facilities = getFacilities(stateName);
+                
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    onMouseEnter={(e) => {
+                      setHoveredState({ name: stateName, facilities });
+                      const rect = (e.target as SVGElement).getBoundingClientRect();
+                      setTooltipPosition({ x: rect.x + rect.width / 2, y: rect.y });
+                    }}
+                    onMouseLeave={() => setHoveredState(null)}
+                    style={{
+                      default: {
+                        fill: getColorByFacilities(facilities),
+                        stroke: '#ffffff',
+                        strokeWidth: 0.5,
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                      },
+                      hover: {
+                        fill: getColorByFacilities(facilities),
+                        stroke: '#ffffff',
+                        strokeWidth: 1,
+                        outline: 'none',
+                        filter: 'brightness(0.85)',
+                        cursor: 'pointer',
+                      },
+                      pressed: {
+                        fill: getColorByFacilities(facilities),
+                        stroke: '#ffffff',
+                        strokeWidth: 1,
+                        outline: 'none',
+                      },
+                    }}
+                  />
+                );
+              })
+            }
+          </Geographies>
+        </ComposableMap>
 
-          {statesData.map((state) => (
-            <Tooltip key={state.id}>
-              <TooltipTrigger asChild>
-                <path
-                  d={state.path}
-                  className={`state-path ${getColorIntensity(state.facilities, maxFacilities)} stroke-white/60`}
-                  strokeWidth="1.5"
-                  onMouseEnter={() => setHoveredState(state)}
-                  onMouseLeave={() => setHoveredState(null)}
-                  style={{
-                    filter: hoveredState?.id === state.id ? 'url(#glow)' : undefined,
-                  }}
-                />
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="bg-card border-border shadow-lg"
-              >
-                <div className="text-center">
-                  <p className="font-semibold text-foreground">{state.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-mono text-primary font-semibold">{state.facilities}</span> facilities
-                  </p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </svg>
+        {/* Hover Tooltip */}
+        {hoveredState && (
+          <div
+            className="fixed z-50 px-3 py-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
+            style={{
+              left: tooltipPosition.x,
+              top: tooltipPosition.y - 60,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <p className="font-semibold text-foreground text-sm">{hoveredState.name}</p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-mono text-primary font-semibold">{hoveredState.facilities}</span> facilities
+            </p>
+          </div>
+        )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 right-4 bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-border">
+        <div className="absolute bottom-4 right-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 border border-border shadow-sm">
           <p className="text-xs font-medium text-muted-foreground mb-2">Facilities</p>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-primary/30" />
+              <div className="w-3 h-3 rounded" style={{ background: '#b7e4c7' }} />
               <span className="text-xs text-muted-foreground">Low</span>
             </div>
+            <div className="w-3 h-3 rounded" style={{ background: '#95d5b2' }} />
+            <div className="w-3 h-3 rounded" style={{ background: '#52b788' }} />
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-primary/50" />
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-primary/70" />
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-primary" />
+              <div className="w-3 h-3 rounded" style={{ background: '#0d6e5f' }} />
               <span className="text-xs text-muted-foreground">High</span>
             </div>
           </div>
@@ -125,12 +189,11 @@ export function IndiaMap() {
         {/* Total facilities badge */}
         <div className="absolute top-4 left-4 bg-primary text-primary-foreground rounded-lg px-3 py-2 shadow-lg">
           <p className="text-xs font-medium opacity-90">Total Facilities</p>
-          <p className="text-2xl font-bold font-mono">
-            {statesData.reduce((sum, s) => sum + s.facilities, 0).toLocaleString()}
-          </p>
+          <p className="text-2xl font-bold font-mono">{totalFacilities.toLocaleString()}</p>
         </div>
       </div>
     </TooltipProvider>
   );
-}
+};
 
+export const IndiaMap = memo(IndiaMapComponent);
