@@ -134,7 +134,7 @@ export function Dashboard() {
                 {/* Top States */}
                 <Card className="border-border/50">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold">Top Manufacturing States</CardTitle>
+                    <CardTitle className="text-base font-semibold">Our Manufacturing Presence</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {[
