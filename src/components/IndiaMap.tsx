@@ -97,7 +97,7 @@ const IndiaMapComponent = () => {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="relative w-full h-full min-h-[450px] flex items-center justify-center">
+      <div className="relative w-full h-full min-h-[280px] sm:min-h-[350px] md:min-h-[450px] flex items-center justify-center">
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{
@@ -155,41 +155,41 @@ const IndiaMapComponent = () => {
         {/* Hover Tooltip */}
         {hoveredState && (
           <div
-            className="fixed z-50 px-3 py-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
+            className="fixed z-50 px-2 sm:px-3 py-1.5 sm:py-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
             style={{
               left: tooltipPosition.x,
               top: tooltipPosition.y - 60,
               transform: 'translateX(-50%)',
             }}
           >
-            <p className="font-semibold text-foreground text-sm">{hoveredState.name}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground text-xs sm:text-sm">{hoveredState.name}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               <span className="font-mono text-primary font-semibold">{hoveredState.facilities}</span> facilities
             </p>
           </div>
         )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 right-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 border border-border shadow-sm">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Facilities</p>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded" style={{ background: '#b7e4c7' }} />
-              <span className="text-xs text-muted-foreground">Low</span>
+        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-card/90 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-border shadow-sm">
+          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1 sm:mb-2">Facilities</p>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded" style={{ background: '#b7e4c7' }} />
+              <span className="text-[10px] sm:text-xs text-muted-foreground">Low</span>
             </div>
-            <div className="w-3 h-3 rounded" style={{ background: '#95d5b2' }} />
-            <div className="w-3 h-3 rounded" style={{ background: '#52b788' }} />
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded" style={{ background: '#0d6e5f' }} />
-              <span className="text-xs text-muted-foreground">High</span>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded" style={{ background: '#95d5b2' }} />
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded" style={{ background: '#52b788' }} />
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded" style={{ background: '#0d6e5f' }} />
+              <span className="text-[10px] sm:text-xs text-muted-foreground">High</span>
             </div>
           </div>
         </div>
 
         {/* Total facilities badge */}
-        <div className="absolute top-4 left-4 bg-primary text-primary-foreground rounded-lg px-3 py-2 shadow-lg">
-          <p className="text-xs font-medium opacity-90">Total Facilities</p>
-          <p className="text-2xl font-bold font-mono">{totalFacilities.toLocaleString()}</p>
+        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-primary text-primary-foreground rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 shadow-lg">
+          <p className="text-[10px] sm:text-xs font-medium opacity-90">Total Facilities</p>
+          <p className="text-lg sm:text-2xl font-bold font-mono">{totalFacilities.toLocaleString()}</p>
         </div>
       </div>
     </TooltipProvider>

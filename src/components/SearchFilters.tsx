@@ -76,46 +76,46 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Search Header */}
       <div className="flex items-center gap-2">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <Sparkles className="w-5 h-5 text-primary" />
+        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
         </div>
         <div>
-          <h3 className="font-semibold text-foreground">Product Search</h3>
-          <p className="text-sm text-muted-foreground">Find pharmaceutical products and request quotes</p>
+          <h3 className="font-semibold text-foreground text-sm sm:text-base">Product Search</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">Find pharmaceutical products and request quotes</p>
         </div>
       </div>
 
       {/* Filter Inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="relative md:col-span-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Product name..."
             value={filters.productName}
             onChange={(e) => setFilters(prev => ({ ...prev, productName: e.target.value }))}
-            className="pl-10 bg-background border-input focus:ring-2 focus:ring-primary/20"
+            className="pl-10 bg-background border-input focus:ring-2 focus:ring-primary/20 text-sm"
           />
         </div>
 
-        <div className="relative md:col-span-1">
+        <div className="relative">
           <Input
             placeholder="CAS Number (e.g., 50-78-2)"
             value={filters.casNumber}
             onChange={(e) => setFilters(prev => ({ ...prev, casNumber: e.target.value }))}
-            className="font-mono bg-background border-input focus:ring-2 focus:ring-primary/20"
+            className="font-mono bg-background border-input focus:ring-2 focus:ring-primary/20 text-sm"
           />
         </div>
 
-        <div className="md:col-span-1">
+        <div>
           <Select
             value={filters.accreditation}
             onValueChange={(value) => setFilters(prev => ({ ...prev, accreditation: value }))}
           >
-            <SelectTrigger className="bg-background border-input focus:ring-2 focus:ring-primary/20">
-              <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+            <SelectTrigger className="bg-background border-input focus:ring-2 focus:ring-primary/20 text-sm">
+              <Filter className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
               <SelectValue placeholder="Accreditation" />
             </SelectTrigger>
             <SelectContent>
@@ -128,26 +128,26 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
           </Select>
         </div>
 
-        <div className="md:col-span-1">
+        <div>
           <Button 
             onClick={handleSearch} 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all text-sm"
           >
             <Search className="w-4 h-4 mr-2" />
-            Search Products
+            <span className="hidden xs:inline">Search</span> Products
           </Button>
         </div>
       </div>
 
       {/* Active Filters */}
       {activeFilters.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap pt-2">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
+        <div className="flex items-center gap-2 flex-wrap pt-1 sm:pt-2">
+          <span className="text-xs sm:text-sm text-muted-foreground">Active filters:</span>
           {activeFilters.map((filter) => (
             <Badge
               key={filter}
               variant="secondary"
-              className="pl-2 pr-1 py-1 gap-1 bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer"
+              className="pl-2 pr-1 py-0.5 sm:py-1 gap-1 bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer text-xs"
             >
               {filter}
               <button
@@ -162,7 +162,7 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
             variant="ghost"
             size="sm"
             onClick={clearAllFilters}
-            className="text-muted-foreground hover:text-foreground h-7"
+            className="text-muted-foreground hover:text-foreground h-6 sm:h-7 text-xs sm:text-sm px-2"
           >
             Clear all
           </Button>

@@ -159,16 +159,16 @@ export function ProductResults({ filters }: ProductResultsProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Results count */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Showing <span className="font-semibold text-foreground">{filteredProducts.length}</span> products
         </p>
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {filteredProducts.map((product, index) => (
           <Card 
             key={product.id}
@@ -176,55 +176,56 @@ export function ProductResults({ filters }: ProductResultsProps) {
             style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
             onClick={() => setSelectedProduct(product)}
           >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-4">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0">
                   {/* Product Header */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Package className="w-4 h-4" />
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex-shrink-0">
+                      <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base truncate">
                         {product.name}
                       </h4>
-                      <p className="text-xs font-mono text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs font-mono text-muted-foreground">
                         CAS: {product.casNumber}
                       </p>
                     </div>
                   </div>
 
                   {/* Product Details */}
-                  <div className="space-y-2 mt-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="w-4 h-4 flex-shrink-0" />
+                  <div className="space-y-1 sm:space-y-2 mt-2 sm:mt-3">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span className="truncate">{product.manufacturer}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span>{product.location}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Beaker className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Beaker className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span>Purity: {product.purity}</span>
                     </div>
                   </div>
 
                   {/* Accreditations */}
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {product.accreditations.slice(0, 3).map((acc) => (
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-3">
+                    {product.accreditations.slice(0, 2).map((acc) => (
                       <Badge 
                         key={acc} 
                         variant="outline" 
-                        className={`text-xs ${getAccreditationColor(acc)}`}
+                        className={`text-[10px] sm:text-xs py-0 sm:py-0.5 ${getAccreditationColor(acc)}`}
                       >
-                        <FileCheck className="w-3 h-3 mr-1" />
-                        {acc}
+                        <FileCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+                        <span className="hidden xs:inline">{acc}</span>
+                        <span className="xs:hidden">{acc.split(' ')[0]}</span>
                       </Badge>
                     ))}
-                    {product.accreditations.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{product.accreditations.length - 3} more
+                    {product.accreditations.length > 2 && (
+                      <Badge variant="outline" className="text-[10px] sm:text-xs py-0 sm:py-0.5">
+                        +{product.accreditations.length - 2}
                       </Badge>
                     )}
                   </div>
@@ -233,14 +234,14 @@ export function ProductResults({ filters }: ProductResultsProps) {
                 {/* RFQ Button */}
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm shrink-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm shrink-0 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedProduct(product);
                   }}
                 >
-                  <Send className="w-4 h-4 mr-1.5" />
-                  RFQ
+                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">RFQ</span>
                 </Button>
               </div>
             </CardContent>
@@ -250,10 +251,10 @@ export function ProductResults({ filters }: ProductResultsProps) {
 
       {/* Empty State */}
       {filteredProducts.length === 0 && (
-        <div className="text-center py-12">
-          <FlaskConical className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-          <h3 className="font-semibold text-foreground mb-1">No products found</h3>
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center py-8 sm:py-12">
+          <FlaskConical className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/40 mb-3 sm:mb-4" />
+          <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">No products found</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Try adjusting your search filters to find what you're looking for.
           </p>
         </div>
@@ -261,14 +262,14 @@ export function ProductResults({ filters }: ProductResultsProps) {
 
       {/* RFQ Dialog */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
           {rfqSubmitted ? (
-            <div className="py-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-accent" />
+            <div className="py-6 sm:py-8 text-center">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-accent" />
               </div>
-              <DialogTitle className="text-xl mb-2">RFQ Submitted!</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg sm:text-xl mb-2">RFQ Submitted!</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Your request for quote has been sent to {selectedProduct?.manufacturer}. 
                 You'll receive a response within 24-48 hours.
               </DialogDescription>
@@ -276,38 +277,38 @@ export function ProductResults({ filters }: ProductResultsProps) {
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Send className="w-5 h-5 text-primary" />
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                    <Send className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
                   Request for Quote
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-xs sm:text-sm">
                   Submit an RFQ for <span className="font-medium text-foreground">{selectedProduct?.name}</span> from {selectedProduct?.manufacturer}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4 py-4">
+              <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
                 {/* Product Summary */}
-                <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                <div className="p-3 sm:p-4 rounded-lg bg-muted/50 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Product</span>
-                    <span className="font-medium">{selectedProduct?.name}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">Product</span>
+                    <span className="font-medium text-sm sm:text-base">{selectedProduct?.name}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">CAS Number</span>
-                    <span className="font-mono text-sm">{selectedProduct?.casNumber}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">CAS Number</span>
+                    <span className="font-mono text-xs sm:text-sm">{selectedProduct?.casNumber}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Purity</span>
-                    <span className="font-medium">{selectedProduct?.purity}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">Purity</span>
+                    <span className="font-medium text-sm sm:text-base">{selectedProduct?.purity}</span>
                   </div>
                 </div>
 
                 {/* Quantity */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="col-span-2">
-                    <label className="text-sm font-medium text-foreground mb-1.5 block">
+                    <label className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-1.5 block">
                       Quantity Required
                     </label>
                     <Input
@@ -315,17 +316,18 @@ export function ProductResults({ filters }: ProductResultsProps) {
                       placeholder="Enter quantity"
                       value={rfqData.quantity}
                       onChange={(e) => setRfqData(prev => ({ ...prev, quantity: e.target.value }))}
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-1.5 block">
+                    <label className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-1.5 block">
                       Unit
                     </label>
                     <Select
                       value={rfqData.unit}
                       onValueChange={(value) => setRfqData(prev => ({ ...prev, unit: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -340,23 +342,24 @@ export function ProductResults({ filters }: ProductResultsProps) {
 
                 {/* Delivery Location */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  <label className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-1.5 block">
                     Delivery Location
                   </label>
                   <Input
                     placeholder="City, Country"
                     value={rfqData.deliveryLocation}
                     onChange={(e) => setRfqData(prev => ({ ...prev, deliveryLocation: e.target.value }))}
+                    className="text-sm"
                   />
                 </div>
 
                 {/* Packaging Preference */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  <label className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-1.5 block">
                     Packaging Preference
                   </label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select packaging" />
                     </SelectTrigger>
                     <SelectContent>
@@ -371,11 +374,11 @@ export function ProductResults({ filters }: ProductResultsProps) {
 
                 {/* Additional Notes */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  <label className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-1.5 block">
                     Additional Notes <span className="text-muted-foreground font-normal">(optional)</span>
                   </label>
                   <textarea
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                    className="flex min-h-[60px] sm:min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                     placeholder="Any specific requirements..."
                     value={rfqData.notes}
                     onChange={(e) => setRfqData(prev => ({ ...prev, notes: e.target.value }))}
@@ -383,14 +386,14 @@ export function ProductResults({ filters }: ProductResultsProps) {
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedProduct(null)}>
+              <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setSelectedProduct(null)} className="w-full sm:w-auto text-sm">
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleRfqSubmit}
                   disabled={!rfqData.quantity || !rfqData.deliveryLocation}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 w-full sm:w-auto text-sm"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Submit RFQ

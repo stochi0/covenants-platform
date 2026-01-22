@@ -19,28 +19,28 @@ function StatCard({ title, value, subtitle, icon, trend, delay = 0 }: StatCardPr
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold text-foreground font-mono tracking-tight">{value.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-0.5 sm:space-y-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground font-mono tracking-tight">{value.toLocaleString()}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{subtitle}</p>
           </div>
-          <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+          <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300 flex-shrink-0">
             {icon}
           </div>
         </div>
         
         {trend && (
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-1.5">
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/50">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
               <TrendingUp 
-                className={`w-4 h-4 ${trend.isPositive ? 'text-accent' : 'text-destructive rotate-180'}`} 
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${trend.isPositive ? 'text-accent' : 'text-destructive rotate-180'}`} 
               />
-              <span className={`text-sm font-medium ${trend.isPositive ? 'text-accent' : 'text-destructive'}`}>
+              <span className={`text-xs sm:text-sm font-medium ${trend.isPositive ? 'text-accent' : 'text-destructive'}`}>
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
-              <span className="text-xs text-muted-foreground">vs last month</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">vs last month</span>
             </div>
           </div>
         )}
@@ -75,7 +75,7 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
       {stats.map((stat, index) => (
         <StatCard key={stat.title} {...stat} delay={index * 100} />
       ))}
