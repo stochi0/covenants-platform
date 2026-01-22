@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { MapPin, X } from 'lucide-react';
 import { 
   stateLocations, 
-  regionCategories, 
   regionColors,
   getLocationByName,
   TOTAL_FACILITIES 

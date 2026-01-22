@@ -165,9 +165,6 @@ export function LocationFilter({ selectedLocations, onSelectionChange }: Locatio
                 const count = region === 'all' 
                   ? stateLocations.length 
                   : stateLocations.filter(l => l.region === region).length;
-                const facilityCount = region === 'all'
-                  ? TOTAL_FACILITIES
-                  : stateLocations.filter(l => l.region === region).reduce((sum, l) => sum + l.facilityCount, 0);
                 
                 return (
                   <button
