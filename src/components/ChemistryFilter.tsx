@@ -64,7 +64,7 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-semibold">
             <Beaker className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            Facilities by Chemistry
+            Chemistries
             <Badge variant="secondary" className="ml-1 text-xs font-mono">
               {selectedChemistries.length > 0 ? selectedChemistries.length : 25}
             </Badge>
