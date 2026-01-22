@@ -64,7 +64,7 @@ export function Dashboard() {
                 <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-accent animate-pulse-soft" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">Capilia</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">Capillia</h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground hidden xs:block">Covenants Platform</p>
               </div>
             </div>
