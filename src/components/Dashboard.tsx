@@ -8,8 +8,9 @@ import { SearchFilters, type SearchFilters as FilterType } from './SearchFilters
 import { ProductResults } from './ProductResults';
 import { ChemistryFilter } from './ChemistryFilter';
 import { AccreditationFilter } from './AccreditationFilter';
+import { LocationFilter } from './LocationFilter';
 import { FilterSummary } from './FilterSummary';
-import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPin } from 'lucide-react';
+import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
 import type { FilterState } from '@/lib/filterData';
 
 export function Dashboard() {
@@ -234,13 +235,24 @@ export function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-0">
             {/* Welcome Section */}
-            <div className="space-y-1 sm:space-y-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                Platform Overview
-              </h2>
-              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                Discover manufacturing facilities by chemistry capabilities, accreditations, and locations.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              <div className="space-y-1 sm:space-y-2">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+                  Platform Overview
+                </h2>
+                <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
+                  Explore manufacturing facilities by chemistry, accreditations, and locations.
+                </p>
+              </div>
+              {hasActiveFilters && (
+                <button
+                  onClick={handleClearAllFilters}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors self-start sm:self-auto"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Clear all filters
+                </button>
+              )}
             </div>
 
             {/* Stats Cards */}
@@ -257,8 +269,17 @@ export function Dashboard() {
               />
             )}
 
-            {/* Filter Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {/* Filter Section Header */}
+            <div className="flex items-center gap-2 pt-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Filter className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm sm:text-base">Filter Facilities</h3>
+              <span className="text-xs text-muted-foreground">Select multiple options across categories</span>
+            </div>
+
+            {/* Chemistry and Accreditation Filters */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               {/* Chemistry Filter */}
               <ChemistryFilter
                 selectedChemistries={selectedChemistries}
@@ -272,29 +293,40 @@ export function Dashboard() {
               />
             </div>
 
-            {/* Map Section */}
-            <Card className="border-border/50 overflow-hidden">
-              <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  Filter by Location
-                  <span className="text-xs font-normal text-muted-foreground ml-2">
-                    Click on states to filter
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2 sm:p-4">
-                <IndiaMap
-                  selectedLocations={selectedLocations}
-                  onLocationChange={setSelectedLocations}
-                  interactive={true}
-                />
-              </CardContent>
-            </Card>
+            {/* Map and Location Filter Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-6">
+              {/* India Map - Interactive visualization */}
+              <Card className="xl:col-span-3 border-border/50 overflow-hidden">
+                <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    Manufacturing Map
+                    <span className="text-xs font-normal text-muted-foreground ml-2">
+                      Click states to filter
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4">
+                  <IndiaMap
+                    selectedLocations={selectedLocations}
+                    onLocationChange={setSelectedLocations}
+                    interactive={true}
+                  />
+                </CardContent>
+              </Card>
 
-            {/* Quick Stats and Actions */}
+              {/* Location Filter - Side Panel */}
+              <div className="xl:col-span-2">
+                <LocationFilter
+                  selectedLocations={selectedLocations}
+                  onSelectionChange={setSelectedLocations}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Section - Stats and Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* Top States */}
+              {/* Top Manufacturing States */}
               <Card className="border-border/50">
                 <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
                   <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
