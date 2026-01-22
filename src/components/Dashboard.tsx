@@ -14,7 +14,7 @@ import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPi
 import type { FilterState } from '@/lib/filterData';
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'search' | 'manufacturers'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'search'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Unified filter state
@@ -95,17 +95,6 @@ export function Dashboard() {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('manufacturers')}
-                className={
-                  activeTab === 'manufacturers'
-                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
-                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                }
-              >
-                Manufacturers
-              </button>
-              <button
-                type="button"
                 disabled
                 className="px-4 py-2 text-sm font-medium text-muted-foreground/60 rounded-lg transition-colors cursor-not-allowed"
                 title="Analytics coming soon"
@@ -173,21 +162,6 @@ export function Dashboard() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('manufacturers');
-                  setMobileMenuOpen(false);
-                }}
-                className={
-                  activeTab === 'manufacturers'
-                    ? "px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors text-left flex items-center gap-3"
-                    : "px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors text-left flex items-center gap-3"
-                }
-              >
-                <Building2 className="w-4 h-4" />
-                Manufacturers
-              </button>
-              <button
-                type="button"
                 disabled
                 className="px-4 py-3 text-sm font-medium text-muted-foreground/60 rounded-lg transition-colors cursor-not-allowed text-left"
                 title="Analytics coming soon"
@@ -222,38 +196,22 @@ export function Dashboard() {
                 <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">Product</span> Search
               </TabsTrigger>
-              <TabsTrigger
-                value="manufacturers"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg gap-1.5 sm:gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
-              >
-                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Manufacturers
-              </TabsTrigger>
             </TabsList>
           </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-0">
-            {/* Welcome Section */}
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-              <div className="space-y-1 sm:space-y-2">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                  Platform Overview
-                </h2>
-                <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                  Explore manufacturing facilities by chemistry, accreditations, and locations.
-                </p>
-              </div>
-              {hasActiveFilters && (
+            {hasActiveFilters && (
+              <div className="flex justify-end">
                 <button
                   onClick={handleClearAllFilters}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors self-start sm:self-auto"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                   Clear all filters
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Stats Cards */}
             <StatsCards />
@@ -383,21 +341,6 @@ export function Dashboard() {
                         </div>
                       </div>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('manufacturers')}
-                      className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group"
-                    >
-                      <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-accent/10 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                          <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs sm:text-sm font-medium">Browse Manufacturers</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground">121 verified facilities</p>
-                        </div>
-                      </div>
-                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -417,21 +360,6 @@ export function Dashboard() {
 
             {/* Results Section */}
             <ProductResults filters={searchFilters} />
-          </TabsContent>
-
-          {/* Manufacturers Tab */}
-          <TabsContent value="manufacturers" className="space-y-4 sm:space-y-6 mt-0">
-            <Card className="border-border/50">
-              <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  Manufacturers
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-xs sm:text-sm text-muted-foreground px-4 sm:px-6 pb-4 sm:pb-6">
-                Manufacturers browsing is coming next. For now, use Product Search to discover suppliers by product.
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </main>
