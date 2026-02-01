@@ -1,7 +1,12 @@
 import { Dashboard } from "@/components/Dashboard"
+import { AuthWrapper } from "@/components/auth/AuthWrapper"
 
 function App() {
-  return <Dashboard />
+  return (
+    <AuthWrapper>
+      <Dashboard />
+    </AuthWrapper>
+  )
 }
 
 export default App
