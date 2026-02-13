@@ -93,14 +93,6 @@ export function Dashboard() {
               >
                 Products
               </button>
-              <button
-                type="button"
-                disabled
-                className="px-4 py-2 text-sm font-medium text-muted-foreground/60 rounded-lg transition-colors cursor-not-allowed"
-                title="Analytics coming soon"
-              >
-                Analytics
-              </button>
             </nav>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -159,14 +151,6 @@ export function Dashboard() {
               >
                 <Search className="w-4 h-4" />
                 Products
-              </button>
-              <button
-                type="button"
-                disabled
-                className="px-4 py-3 text-sm font-medium text-muted-foreground/60 rounded-lg transition-colors cursor-not-allowed text-left"
-                title="Analytics coming soon"
-              >
-                Analytics (Coming Soon)
               </button>
               <div className="flex sm:hidden items-center gap-2 px-4 py-2 mt-2 border-t border-border pt-3">
                 <Globe className="w-4 h-4 text-accent" />
