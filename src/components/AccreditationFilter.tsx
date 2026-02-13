@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Award, Check, ChevronDown, ChevronUp, X, ShieldCheck } from 'lucide-react';
+import { Award, Check, ChevronDown, ChevronUp, X, ShieldCheck, Loader2 } from 'lucide-react';
 import { 
-  accreditations, 
   accreditationCategories, 
   accreditationColors,
   type Accreditation 
 } from '@/lib/filterData';
+import { useFilterData } from '@/contexts/FilterDataContext';
 
 interface AccreditationFilterProps {
   selectedAccreditations: string[];
@@ -19,6 +19,7 @@ interface AccreditationFilterProps {
 export function AccreditationFilter({ selectedAccreditations, onSelectionChange }: AccreditationFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Accreditation['category'] | 'all'>('all');
+  const { accreditations, totalFacilities, isLoading } = useFilterData();
 
   const toggleAccreditation = (accId: string) => {
     if (selectedAccreditations.includes(accId)) {
@@ -44,7 +45,6 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
     ? accreditations 
     : accreditations.filter(a => a.category === activeCategory);
 
-  const totalFacilities = 121;
   const selectedFacilityCount = selectedAccreditations.length > 0
     ? Math.min(
         accreditations
@@ -57,6 +57,16 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
 
   const categories = ['all', 'regulatory', 'quality', 'environmental', 'international'] as const;
 
+  if (isLoading) {
+    return (
+      <Card className="border-border/50">
+        <CardContent className="p-8 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
@@ -65,7 +75,7 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
             <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Accreditations
             <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedAccreditations.length > 0 ? selectedAccreditations.length : 15}
+              {selectedAccreditations.length > 0 ? selectedAccreditations.length : accreditations.length}
             </Badge>
           </CardTitle>
           <Button
@@ -98,7 +108,7 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
               </>
             ) : (
               <>
-                All <span className="font-semibold text-foreground">15</span> accreditations • <span className="font-mono text-primary">{totalFacilities}</span> facilities
+                All <span className="font-semibold text-foreground">{accreditations.length}</span> accreditations • <span className="font-mono text-primary">{totalFacilities}</span> facilities
               </>
             )}
           </span>
@@ -168,7 +178,7 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
                 >
                   {cat === 'all' ? 'All' : accreditationCategories[cat]}
                   <span className="ml-1.5 font-mono opacity-70">
-                    {cat === 'all' ? 15 : accreditations.filter(a => a.category === cat).length}
+                    {cat === 'all' ? accreditations.length : accreditations.filter(a => a.category === cat).length}
                   </span>
                 </button>
               ))}
@@ -270,9 +280,9 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
           </div>
         )}
         
-        {!isExpanded && (
+        {!isExpanded && accreditations.length > 8 && (
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all 15 accreditations
+            Click expand to see all {accreditations.length} accreditations
           </p>
         )}
       </CardContent>

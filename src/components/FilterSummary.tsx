@@ -3,15 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Factory, Filter, X, Beaker, Award, MapPin, Sparkles } from 'lucide-react';
 import {
-  chemistries,
-  accreditations,
-  stateLocations,
   chemistryColors,
   accreditationColors,
   regionColors,
   calculateFilteredFacilities,
   type FilterState,
 } from '@/lib/filterData';
+import { useFilterData } from '@/contexts/FilterDataContext';
 
 interface FilterSummaryProps {
   filters: FilterState;
@@ -28,6 +26,8 @@ export function FilterSummary({
   onLocationRemove,
   onClearAll,
 }: FilterSummaryProps) {
+  const { chemistries, accreditations, stateLocations, totalFacilities } = useFilterData();
+
   const hasFilters = 
     filters.chemistries.length > 0 || 
     filters.accreditations.length > 0 || 
@@ -37,7 +37,12 @@ export function FilterSummary({
     return null;
   }
 
-  const filteredFacilityCount = calculateFilteredFacilities(filters);
+  const filteredFacilityCount = calculateFilteredFacilities(filters, {
+    chemistries,
+    accreditations,
+    stateLocations,
+    totalFacilities,
+  });
   const totalFilters = 
     filters.chemistries.length + 
     filters.accreditations.length + 

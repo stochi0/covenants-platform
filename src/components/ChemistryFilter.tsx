@@ -3,14 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Beaker, Check, ChevronDown, ChevronUp, X, Factory } from 'lucide-react';
+import { Beaker, Check, ChevronDown, ChevronUp, X, Factory, Loader2 } from 'lucide-react';
 import { 
-  chemistries, 
   chemistryCategories, 
   chemistryColors,
-  TOTAL_FACILITIES,
   type Chemistry 
 } from '@/lib/filterData';
+import { useFilterData } from '@/contexts/FilterDataContext';
 
 interface ChemistryFilterProps {
   selectedChemistries: string[];
@@ -20,6 +19,7 @@ interface ChemistryFilterProps {
 export function ChemistryFilter({ selectedChemistries, onSelectionChange }: ChemistryFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Chemistry['category'] | 'all'>('all');
+  const { chemistries, totalFacilities, isLoading } = useFilterData();
 
   const toggleChemistry = (chemId: string) => {
     if (selectedChemistries.includes(chemId)) {
@@ -52,11 +52,21 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
           .filter(c => selectedChemistries.includes(c.id))
           .reduce((max, c) => Math.max(max, c.facilityCount), 0) +
         Math.floor(selectedChemistries.length * 2.5), // Approximate overlap calculation
-        TOTAL_FACILITIES
+        totalFacilities
       )
-    : TOTAL_FACILITIES;
+    : totalFacilities;
 
   const categories = ['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const;
+
+  if (isLoading) {
+    return (
+      <Card className="border-border/50">
+        <CardContent className="p-8 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-border/50">
@@ -66,7 +76,7 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
             <Beaker className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Chemistries
             <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedChemistries.length > 0 ? selectedChemistries.length : 25}
+              {selectedChemistries.length > 0 ? selectedChemistries.length : chemistries.length}
             </Badge>
           </CardTitle>
           <Button
@@ -99,7 +109,7 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
               </>
             ) : (
               <>
-                All <span className="font-semibold text-foreground">25</span> chemistries • <span className="font-mono text-primary">{TOTAL_FACILITIES}</span> facilities
+                All <span className="font-semibold text-foreground">{chemistries.length}</span> chemistries • <span className="font-mono text-primary">{totalFacilities}</span> facilities
               </>
             )}
           </span>
@@ -169,7 +179,7 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
                 >
                   {cat === 'all' ? 'All' : chemistryCategories[cat]}
                   <span className="ml-1.5 font-mono opacity-70">
-                    {cat === 'all' ? 25 : chemistries.filter(c => c.category === cat).length}
+                    {cat === 'all' ? chemistries.length : chemistries.filter(c => c.category === cat).length}
                   </span>
                 </button>
               ))}
@@ -269,9 +279,9 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
           </div>
         )}
         
-        {!isExpanded && (
+        {!isExpanded && chemistries.length > 8 && (
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all 25 chemistries
+            Click expand to see all {chemistries.length} chemistries
           </p>
         )}
       </CardContent>

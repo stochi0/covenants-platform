@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FilterDataProvider } from '@/contexts/FilterDataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatsCards } from './StatsCards';
@@ -37,6 +38,7 @@ export function Dashboard() {
   const hasActiveFilters = selectedChemistries.length > 0 || selectedAccreditations.length > 0 || selectedLocations.length > 0;
 
   return (
+    <FilterDataProvider>
     <div className="min-h-screen bg-background overflow-y-auto">
       {/* Background Pattern */}
       <div className="fixed inset-0 bg-mesh-gradient pointer-events-none" />
@@ -297,6 +299,7 @@ export function Dashboard() {
         </div>
       </footer>
     </div>
+    </FilterDataProvider>
   );
 }
 

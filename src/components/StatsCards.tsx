@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Package, Factory, FlaskConical } from 'lucide-react';
+import { fetchPlatformStats } from '@/lib/stats';
 
 interface StatCardProps {
   title: string;
@@ -35,22 +37,44 @@ function StatCard({ title, value, subtitle, icon, delay = 0 }: StatCardProps) {
 }
 
 export function StatsCards() {
-  const stats = [
+  const [stats, setStats] = useState({
+    products: 0,
+    manufacturers: 0,
+    chemistries: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    fetchPlatformStats()
+      .then((data) => {
+        if (!cancelled) {
+          setStats(data);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const statCards = [
     {
       title: 'Products',
-      value: 5000,
+      value: isLoading ? '—' : stats.products,
       subtitle: 'Active pharmaceutical products',
       icon: <Package className="w-4 h-4" />,
     },
     {
       title: 'Manufacturers',
-      value: 121,
+      value: isLoading ? '—' : stats.manufacturers,
       subtitle: 'Verified manufacturers',
       icon: <Factory className="w-4 h-4" />,
     },
     {
       title: 'Chemistries',
-      value: 25,
+      value: isLoading ? '—' : stats.chemistries,
       subtitle: 'Unique chemical processes',
       icon: <FlaskConical className="w-4 h-4" />,
     },
@@ -58,7 +82,7 @@ export function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
-      {stats.map((stat, index) => (
+      {statCards.map((stat, index) => (
         <StatCard key={stat.title} {...stat} delay={index * 100} />
       ))}
     </div>

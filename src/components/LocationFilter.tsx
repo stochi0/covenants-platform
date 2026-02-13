@@ -3,14 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MapPin, Check, ChevronDown, ChevronUp, X, Factory } from 'lucide-react';
+import { MapPin, Check, ChevronDown, ChevronUp, X, Factory, Loader2 } from 'lucide-react';
 import { 
-  stateLocations, 
   regionCategories, 
   regionColors,
-  TOTAL_FACILITIES,
   type StateLocation 
 } from '@/lib/filterData';
+import { useFilterData } from '@/contexts/FilterDataContext';
 
 interface LocationFilterProps {
   selectedLocations: string[];
@@ -20,6 +19,7 @@ interface LocationFilterProps {
 export function LocationFilter({ selectedLocations, onSelectionChange }: LocationFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeRegion, setActiveRegion] = useState<StateLocation['region'] | 'all'>('all');
+  const { stateLocations, totalFacilities, isLoading } = useFilterData();
 
   const toggleLocation = (locId: string) => {
     if (selectedLocations.includes(locId)) {
@@ -57,12 +57,21 @@ export function LocationFilter({ selectedLocations, onSelectionChange }: Locatio
     ? stateLocations
         .filter(l => selectedLocations.includes(l.id))
         .reduce((sum, l) => sum + l.facilityCount, 0)
-    : TOTAL_FACILITIES;
+    : totalFacilities;
 
   const regions = ['all', 'west', 'south', 'north', 'central', 'east', 'northeast'] as const;
 
-  // Sort locations by facility count (descending) within each view
   const sortedLocations = [...filteredLocations].sort((a, b) => b.facilityCount - a.facilityCount);
+
+  if (isLoading) {
+    return (
+      <Card className="border-border/50">
+        <CardContent className="p-8 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-border/50">
@@ -72,7 +81,7 @@ export function LocationFilter({ selectedLocations, onSelectionChange }: Locatio
             <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Locations
             <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedLocations.length > 0 ? selectedLocations.length : 23}
+              {selectedLocations.length > 0 ? selectedLocations.length : stateLocations.length}
             </Badge>
           </CardTitle>
           <Button
@@ -105,7 +114,7 @@ export function LocationFilter({ selectedLocations, onSelectionChange }: Locatio
               </>
             ) : (
               <>
-                All <span className="font-semibold text-foreground">23</span> states • <span className="font-mono text-primary">{TOTAL_FACILITIES}</span> facilities
+                All <span className="font-semibold text-foreground">{stateLocations.length}</span> states • <span className="font-mono text-primary">{totalFacilities}</span> facilities
               </>
             )}
           </span>
@@ -302,9 +311,9 @@ export function LocationFilter({ selectedLocations, onSelectionChange }: Locatio
           </div>
         )}
         
-        {!isExpanded && (
+        {!isExpanded && stateLocations.length > 8 && (
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all 23 states by region
+            Click expand to see all {stateLocations.length} states by region
           </p>
         )}
       </CardContent>

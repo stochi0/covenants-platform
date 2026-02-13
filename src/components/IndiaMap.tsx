@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -8,14 +8,10 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, X } from 'lucide-react';
-import { 
-  stateLocations, 
-  regionColors,
-  getLocationByName,
-  TOTAL_FACILITIES 
-} from '@/lib/filterData';
+import { regionColors } from '@/lib/filterData';
+import type { StateLocation } from '@/lib/filterData';
+import { useFilterData } from '@/contexts/FilterDataContext';
 
-// Local India GeoJSON file
 const INDIA_GEO_JSON = "/india-states.json";
 
 interface StateData {
@@ -23,72 +19,17 @@ interface StateData {
   facilities: number;
 }
 
-// Facility data by state (using various possible property names)
-const facilitiesData: Record<string, number> = {
-  // Standard names
-  'Maharashtra': 16,
-  'Gujarat': 12,
-  'Karnataka': 10,
-  'Telangana': 9,
-  'Tamil Nadu': 8,
-  'Uttar Pradesh': 8,
-  'Andhra Pradesh': 7,
-  'Madhya Pradesh': 5,
-  'Delhi': 4,
-  'NCT of Delhi': 4,
-  'Rajasthan': 3,
-  'Kerala': 4,
-  'Haryana': 4,
-  'West Bengal': 3,
-  'Odisha': 3,
-  'Orissa': 3,
-  'Punjab': 2,
-  'Jharkhand': 2,
-  'Chhattisgarh': 2,
-  'Uttarakhand': 2,
-  'Uttaranchal': 2,
-  'Bihar': 2,
-  'Himachal Pradesh': 2,
-  'Assam': 1,
-  'Jammu and Kashmir': 1,
-  'Jammu & Kashmir': 1,
-  'Goa': 1,
-  'Sikkim': 0,
-  'Arunachal Pradesh': 0,
-  'Meghalaya': 0,
-  'Manipur': 0,
-  'Mizoram': 0,
-  'Nagaland': 0,
-  'Tripura': 0,
-  'Ladakh': 0,
-  'Puducherry': 0,
-  'Pondicherry': 0,
-  'Chandigarh': 0,
-  'Andaman and Nicobar Islands': 0,
-  'Andaman & Nicobar': 0,
-  'Andaman & Nicobar Island': 0,
-  'Dadra and Nagar Haveli and Daman and Diu': 0,
-  'Dadra & Nagar Haveli': 0,
-  'Daman & Diu': 0,
-  'Lakshadweep': 0,
-};
-
 const getStateName = (properties: Record<string, unknown>): string => {
   return (properties.ST_NM || properties.NAME_1 || properties.name || properties.NAME || properties.state || 'Unknown') as string;
 };
 
-const getFacilities = (stateName: string): number => {
-  // Try exact match first
-  if (facilitiesData[stateName]) return facilitiesData[stateName];
-  
-  // Try case-insensitive match
-  const lowerName = stateName.toLowerCase();
-  for (const [key, value] of Object.entries(facilitiesData)) {
-    if (key.toLowerCase() === lowerName) return value;
+function buildLocationLookup(locations: StateLocation[]) {
+  const byName = new Map<string, StateLocation>();
+  for (const loc of locations) {
+    byName.set(loc.name.toLowerCase().trim(), loc);
   }
-  
-  return 0; // Default for any unmatched state
-};
+  return byName;
+}
 
 interface IndiaMapProps {
   selectedLocations?: string[];
@@ -103,6 +44,18 @@ const IndiaMapComponent = ({
 }: IndiaMapProps) => {
   const [hoveredState, setHoveredState] = useState<StateData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const { stateLocations, totalFacilities } = useFilterData();
+
+  const locationLookup = useMemo(() => buildLocationLookup(stateLocations), [stateLocations]);
+
+  const getLocationByName = (stateName: string): StateLocation | undefined => {
+    return locationLookup.get(stateName.trim().toLowerCase());
+  };
+
+  const getFacilities = (stateName: string): number => {
+    const loc = getLocationByName(stateName);
+    return loc?.facilityCount ?? 0;
+  };
 
   const getColorByFacilities = (facilities: number, stateName: string): string => {
     const location = getLocationByName(stateName);
@@ -142,7 +95,7 @@ const IndiaMapComponent = ({
     ? stateLocations
         .filter(l => selectedLocations.includes(l.id))
         .reduce((sum, l) => sum + l.facilityCount, 0)
-    : TOTAL_FACILITIES;
+    : totalFacilities;
 
   const selectedStateNames = selectedLocations
     .map(id => stateLocations.find(l => l.id === id)?.name)
