@@ -207,7 +207,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-5xl p-0 gap-0 overflow-hidden max-h-[95vh] md:max-h-[85vh] w-[calc(100vw-2rem)] sm:w-full">
+        <DialogContent className="sm:max-w-5xl p-0 gap-0 overflow-hidden max-h-[95vh] md:max-h-[85vh] w-[calc(100vw-2rem)] sm:w-full pb-6">
           {/* Header */}
           <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border bg-gradient-to-b from-primary/5 to-transparent">
             <DialogHeader>
@@ -319,7 +319,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
           </div>
 
           {/* Results */}
-          <div className="flex flex-col md:flex-row h-[55vh] sm:h-[50vh] min-h-[350px] sm:min-h-[400px] relative">
+          <div className="flex flex-col md:flex-row h-[50vh] sm:h-[45vh] min-h-[320px] sm:min-h-[360px] relative">
             {/* Product List */}
             <div className="flex-1 md:border-r border-border overflow-hidden flex flex-col min-h-0">
               <div className="px-3 sm:px-4 py-2 bg-muted/30 border-b border-border flex items-center justify-between shrink-0">
@@ -495,7 +495,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
               </div>
 
               {/* Action Buttons */}
-              <div className="p-4 border-t border-border bg-background/50 space-y-2 shrink-0">
+              <div className="p-4 pb-5 border-t border-border bg-background/50 space-y-2 shrink-0">
                 {selectedProducts.length > 0 && (
                   <button
                     onClick={clearSelections}
