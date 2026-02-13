@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   type Accreditation 
 } from '@/lib/filterData';
 import { useFilterData } from '@/contexts/FilterDataContext';
+import { fetchFacilityCountByAccreditations } from '@/lib/filterDataApi';
 
 interface AccreditationFilterProps {
   selectedAccreditations: string[];
@@ -19,7 +20,25 @@ interface AccreditationFilterProps {
 export function AccreditationFilter({ selectedAccreditations, onSelectionChange }: AccreditationFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Accreditation['category'] | 'all'>('all');
+  const [selectedFacilityCount, setSelectedFacilityCount] = useState<number | null>(null);
   const { accreditations, totalFacilities, isLoading } = useFilterData();
+
+  useEffect(() => {
+    if (selectedAccreditations.length === 0) {
+      setSelectedFacilityCount(totalFacilities);
+      return;
+    }
+    let cancelled = false;
+    setSelectedFacilityCount(null);
+    fetchFacilityCountByAccreditations(selectedAccreditations)
+      .then((count) => {
+        if (!cancelled) setSelectedFacilityCount(count);
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedFacilityCount(0);
+      });
+    return () => { cancelled = true; };
+  }, [selectedAccreditations, totalFacilities]);
 
   const toggleAccreditation = (accId: string) => {
     if (selectedAccreditations.includes(accId)) {
@@ -45,15 +64,9 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
     ? accreditations 
     : accreditations.filter(a => a.category === activeCategory);
 
-  const selectedFacilityCount = selectedAccreditations.length > 0
-    ? Math.min(
-        accreditations
-          .filter(a => selectedAccreditations.includes(a.id))
-          .reduce((max, a) => Math.max(max, a.facilityCount), 0) +
-        Math.floor(selectedAccreditations.length * 3),
-        totalFacilities
-      )
-    : totalFacilities;
+  const displayFacilityCount = selectedAccreditations.length === 0
+    ? totalFacilities
+    : (selectedFacilityCount ?? '—');
 
   const categories = ['all', 'regulatory', 'quality', 'environmental', 'international'] as const;
 
@@ -104,7 +117,7 @@ export function AccreditationFilter({ selectedAccreditations, onSelectionChange 
           <span>
             {selectedAccreditations.length > 0 ? (
               <>
-                <span className="font-semibold text-foreground">{selectedAccreditations.length}</span> selected • <span className="font-mono text-primary">{selectedFacilityCount}</span> facilities
+                <span className="font-semibold text-foreground">{selectedAccreditations.length}</span> selected • <span className="font-mono text-primary">{displayFacilityCount}</span> facilities
               </>
             ) : (
               <>

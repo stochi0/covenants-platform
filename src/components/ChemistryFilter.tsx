@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   type Chemistry 
 } from '@/lib/filterData';
 import { useFilterData } from '@/contexts/FilterDataContext';
+import { fetchFacilityCountByChemistries } from '@/lib/filterDataApi';
 
 interface ChemistryFilterProps {
   selectedChemistries: string[];
@@ -19,7 +20,25 @@ interface ChemistryFilterProps {
 export function ChemistryFilter({ selectedChemistries, onSelectionChange }: ChemistryFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Chemistry['category'] | 'all'>('all');
+  const [selectedFacilityCount, setSelectedFacilityCount] = useState<number | null>(null);
   const { chemistries, totalFacilities, isLoading } = useFilterData();
+
+  useEffect(() => {
+    if (selectedChemistries.length === 0) {
+      setSelectedFacilityCount(totalFacilities);
+      return;
+    }
+    let cancelled = false;
+    setSelectedFacilityCount(null);
+    fetchFacilityCountByChemistries(selectedChemistries)
+      .then((count) => {
+        if (!cancelled) setSelectedFacilityCount(count);
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedFacilityCount(0);
+      });
+    return () => { cancelled = true; };
+  }, [selectedChemistries, totalFacilities]);
 
   const toggleChemistry = (chemId: string) => {
     if (selectedChemistries.includes(chemId)) {
@@ -45,16 +64,9 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
     ? chemistries 
     : chemistries.filter(c => c.category === activeCategory);
 
-  // Total facilities = 121 (unique), but when filtered we show max facilities with selected chemistries
-  const selectedFacilityCount = selectedChemistries.length > 0
-    ? Math.min(
-        chemistries
-          .filter(c => selectedChemistries.includes(c.id))
-          .reduce((max, c) => Math.max(max, c.facilityCount), 0) +
-        Math.floor(selectedChemistries.length * 2.5), // Approximate overlap calculation
-        totalFacilities
-      )
-    : totalFacilities;
+  const displayFacilityCount = selectedChemistries.length === 0
+    ? totalFacilities
+    : (selectedFacilityCount ?? '—');
 
   const categories = ['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const;
 
@@ -105,7 +117,7 @@ export function ChemistryFilter({ selectedChemistries, onSelectionChange }: Chem
           <span>
             {selectedChemistries.length > 0 ? (
               <>
-                <span className="font-semibold text-foreground">{selectedChemistries.length}</span> selected • <span className="font-mono text-primary">{selectedFacilityCount}</span> facilities
+                <span className="font-semibold text-foreground">{selectedChemistries.length}</span> selected • <span className="font-mono text-primary">{displayFacilityCount}</span> facilities
               </>
             ) : (
               <>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,10 @@ import {
   chemistryColors,
   accreditationColors,
   regionColors,
-  calculateFilteredFacilities,
   type FilterState,
 } from '@/lib/filterData';
 import { useFilterData } from '@/contexts/FilterDataContext';
+import { fetchFacilityCountByFilters } from '@/lib/filterDataApi';
 
 interface FilterSummaryProps {
   filters: FilterState;
@@ -26,23 +27,31 @@ export function FilterSummary({
   onLocationRemove,
   onClearAll,
 }: FilterSummaryProps) {
-  const { chemistries, accreditations, stateLocations, totalFacilities } = useFilterData();
+  const { chemistries, accreditations, stateLocations } = useFilterData();
+  const [filteredFacilityCount, setFilteredFacilityCount] = useState<number | null>(null);
 
-  const hasFilters = 
-    filters.chemistries.length > 0 || 
-    filters.accreditations.length > 0 || 
+  const hasFilters =
+    filters.chemistries.length > 0 ||
+    filters.accreditations.length > 0 ||
     filters.locations.length > 0;
+
+  useEffect(() => {
+    if (!hasFilters) return;
+    let cancelled = false;
+    setFilteredFacilityCount(null);
+    fetchFacilityCountByFilters(filters)
+      .then((count) => {
+        if (!cancelled) setFilteredFacilityCount(count);
+      })
+      .catch(() => {
+        if (!cancelled) setFilteredFacilityCount(0);
+      });
+    return () => { cancelled = true; };
+  }, [filters, hasFilters]);
 
   if (!hasFilters) {
     return null;
   }
-
-  const filteredFacilityCount = calculateFilteredFacilities(filters, {
-    chemistries,
-    accreditations,
-    stateLocations,
-    totalFacilities,
-  });
   const totalFilters = 
     filters.chemistries.length + 
     filters.accreditations.length + 
@@ -83,7 +92,7 @@ export function FilterSummary({
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
               <Factory className="w-4 h-4 text-primary" />
               <div className="text-right">
-                <p className="text-lg sm:text-xl font-bold font-mono text-primary">{filteredFacilityCount}</p>
+                <p className="text-lg sm:text-xl font-bold font-mono text-primary">{filteredFacilityCount ?? '—'}</p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">facilities match</p>
               </div>
             </div>

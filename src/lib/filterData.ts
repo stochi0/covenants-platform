@@ -24,12 +24,16 @@ export interface Accreditation {
 }
 
 // Location/State types
+export type StateRegion = 'north' | 'south' | 'east' | 'west' | 'central' | 'northeast';
 export interface StateLocation {
   id: string;
   name: string;
   facilityCount: number;
-  region: 'north' | 'south' | 'east' | 'west' | 'central' | 'northeast';
+  region: StateRegion;
 }
+
+export type ChemistryCategory = Chemistry['category'];
+export type AccreditationCategory = Accreditation['category'];
 
 // Chemistry categories
 export const chemistryCategories = {
@@ -57,46 +61,6 @@ export const regionCategories = {
   central: 'Central India',
   northeast: 'Northeast India',
 } as const;
-
-export interface FilterDataForCalculation {
-  chemistries: Chemistry[];
-  accreditations: Accreditation[];
-  stateLocations: StateLocation[];
-  totalFacilities: number;
-}
-
-// Calculate filtered facility count (approximate based on filter overlap)
-export function calculateFilteredFacilities(
-  filters: FilterState,
-  data: FilterDataForCalculation
-): number {
-  const { chemistries: chemIds, accreditations: accIds, locations: locIds } = filters;
-  const { chemistries: chemList, accreditations: accList, stateLocations: locList, totalFacilities: total } = data;
-
-  if (chemIds.length === 0 && accIds.length === 0 && locIds.length === 0) {
-    return total;
-  }
-
-  let baseCount = total;
-
-  if (locIds.length > 0) {
-    baseCount = locList
-      .filter((l) => locIds.includes(l.id))
-      .reduce((sum, l) => sum + l.facilityCount, 0);
-  }
-
-  if (chemIds.length > 0 && chemIds.length < chemList.length) {
-    const chemFactor = Math.min(1, chemIds.length / 5 + 0.3);
-    baseCount = Math.ceil(baseCount * chemFactor);
-  }
-
-  if (accIds.length > 0 && accIds.length < accList.length) {
-    const accFactor = Math.min(1, accIds.length / 3 + 0.4);
-    baseCount = Math.ceil(baseCount * accFactor);
-  }
-
-  return Math.max(1, baseCount);
-}
 
 // Color helpers for categories
 export const chemistryColors: Record<Chemistry['category'], string> = {
