@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { StatsCards } from './StatsCards';
 import { IndiaMap } from './IndiaMap';
 import { ChemistryFilter } from './ChemistryFilter';
@@ -10,8 +11,10 @@ import { FilterSummary } from './FilterSummary';
 import { ProductSearch } from './product-search';
 import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
 import type { FilterState } from '@/lib/filterData';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Dashboard() {
+  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'search'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
@@ -90,6 +93,16 @@ export function Dashboard() {
                 <span>India</span>
               </div>
               
+              <Button
+                onClick={() => signOut()}
+                variant="ghost"
+                size="sm"
+                className="hidden md:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">Sign out</span>
+              </Button>
+
               {/* Mobile Menu Button */}
               <button
                 type="button"
@@ -146,6 +159,17 @@ export function Dashboard() {
                 <Globe className="w-4 h-4 text-accent" />
                 <span className="text-sm text-muted-foreground">Region: <span className="text-accent font-medium">India</span></span>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  signOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors text-left flex items-center gap-3 border-t border-border mt-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </button>
             </nav>
           </div>
         )}
