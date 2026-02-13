@@ -8,7 +8,7 @@ import { AccreditationFilter } from './AccreditationFilter';
 import { LocationFilter } from './LocationFilter';
 import { FilterSummary } from './FilterSummary';
 import { ProductSearch } from './product-search';
-import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
+import { FlaskConical, LayoutDashboard, Search, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
 import type { FilterState } from '@/lib/filterData';
 
 export function Dashboard() {
@@ -254,70 +254,6 @@ export function Dashboard() {
                   onSelectionChange={setSelectedLocations}
                 />
               </div>
-            </div>
-
-            {/* Bottom Section - Stats and Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* Top Manufacturing States */}
-              <Card className="border-border/50">
-                <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-                  <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-primary" />
-                    Top Manufacturing States
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 px-4 sm:px-6 pb-4 sm:pb-6">
-                  {[
-                    { state: 'Maharashtra', facilities: 16, share: 13.2 },
-                    { state: 'Gujarat', facilities: 12, share: 9.9 },
-                    { state: 'Karnataka', facilities: 10, share: 8.3 },
-                    { state: 'Telangana', facilities: 9, share: 7.4 },
-                    { state: 'Tamil Nadu', facilities: 8, share: 6.6 },
-                  ].map((item, index) => (
-                    <div key={item.state} className="flex items-center gap-2 sm:gap-3">
-                      <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs sm:text-sm font-medium truncate">{item.state}</span>
-                          <span className="text-xs sm:text-sm font-mono text-muted-foreground">{item.facilities}</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-1 sm:h-1.5">
-                          <div 
-                            className="bg-primary rounded-full h-1 sm:h-1.5 transition-all duration-500"
-                            style={{ width: `${item.share * 5}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
-                <CardContent className="p-4 sm:p-5">
-                  <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">Quick Actions</h3>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => { setActiveTab('search'); setProductSearchOpen(true); }}
-                      className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group"
-                    >
-                      <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs sm:text-sm font-medium">Search Products</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground">Find APIs and intermediates</p>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
