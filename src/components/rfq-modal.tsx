@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import {
   Dialog,
@@ -29,7 +27,6 @@ import {
   Beaker,
   TestTubes,
   Layers,
-  X,
   Loader2,
   Trash2,
 } from 'lucide-react'
@@ -220,10 +217,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                                 {product.name}
                               </h4>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <Badge
-                                  variant={product.category as 'api' | 'impurity' | 'intermediate' | 'chemical'}
-                                  className="text-[10px]"
-                                >
+                                <Badge variant="secondary" className="text-[10px]">
                                   <span className="hidden sm:inline-flex">{categoryIcons[product.category]}</span>
                                   <span className="sm:ml-1">{info.label}</span>
                                 </Badge>

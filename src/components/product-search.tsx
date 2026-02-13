@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   Dialog,
@@ -11,9 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { ControlledCheckbox } from '@/components/ui/checkbox'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Search,
   FlaskConical,
@@ -34,7 +30,7 @@ import {
   ChevronDown,
   AlertCircle,
 } from 'lucide-react'
-import { searchProductsPaginated, categoryInfo, type Product, type SearchType, type PaginatedResponse } from '@/lib/products-data'
+import { searchProductsPaginated, categoryInfo, type Product, type SearchType } from '@/lib/products-data'
 import { RFQModal } from './rfq-modal'
 
 type Category = 'api' | 'impurity' | 'intermediate' | 'chemical'
@@ -78,7 +74,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
   // Refs
   const searchInputRef = useRef<HTMLInputElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Reset when dialog opens
   useEffect(() => {
@@ -325,7 +321,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
           {/* Results */}
           <div className="flex flex-col md:flex-row h-[55vh] sm:h-[50vh] min-h-[350px] sm:min-h-[400px] relative">
             {/* Product List */}
-            <div className="flex-1 md:border-r border-border overflow-hidden flex flex-col">
+            <div className="flex-1 md:border-r border-border overflow-hidden flex flex-col min-h-0">
               <div className="px-3 sm:px-4 py-2 bg-muted/30 border-b border-border flex items-center justify-between shrink-0">
                 <span className="text-[10px] sm:text-xs text-muted-foreground">
                   {hasSearched ? (
@@ -370,7 +366,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                 </div>
               </div>
 
-              <ScrollArea className="flex-1" ref={scrollAreaRef}>
+              <div ref={scrollAreaRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                 <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
                   {/* Loading state */}
                   {isLoading && (
@@ -407,7 +403,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                   )}
 
                   {/* Product list */}
-                  {!isLoading && products.map((product, index) => (
+                  {!isLoading && products.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -442,11 +438,11 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
 
             {/* Selected Products Panel - Desktop */}
-            <div className="hidden md:flex w-72 bg-muted/20 flex-col">
+            <div className="hidden md:flex w-72 bg-muted/20 flex-col min-h-0">
               <div className="px-4 py-3 bg-muted/30 border-b border-border shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -459,7 +455,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                 </div>
               </div>
 
-              <ScrollArea className="flex-1">
+              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                 {selectedProducts.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <div className="p-3 rounded-full bg-muted/50 mb-3">
@@ -496,7 +492,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                     ))}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
 
               {/* Action Buttons */}
               <div className="p-4 border-t border-border bg-background/50 space-y-2 shrink-0">
@@ -542,7 +538,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                   </button>
                 </div>
 
-                <ScrollArea className="flex-1">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                   {selectedProducts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                       <div className="p-3 rounded-full bg-muted/50 mb-3">
@@ -579,7 +575,7 @@ export function ProductSearch({ open, onOpenChange }: ProductSearchProps) {
                       ))}
                     </div>
                   )}
-                </ScrollArea>
+                </div>
 
                 {/* Mobile Cart Actions */}
                 <div className="p-4 border-t border-border bg-background space-y-3 shrink-0">
@@ -710,7 +706,7 @@ function ProductCard({ product, isSelected, onToggle, searchType, searchQuery }:
           <h3 className="font-medium text-xs sm:text-sm text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 flex-1 min-w-0">
             {searchType === 'name' ? highlightMatch(product.name, searchQuery) : product.name}
           </h3>
-          <Badge variant={product.category as 'api' | 'impurity' | 'intermediate' | 'chemical'} className="shrink-0 text-[10px] sm:text-xs whitespace-nowrap">
+          <Badge variant="secondary" className="shrink-0 text-[10px] sm:text-xs whitespace-nowrap">
             <span className="hidden sm:inline-flex">{categoryIcons[product.category]}</span>
             <span className="sm:ml-1">{info.label}</span>
           </Badge>

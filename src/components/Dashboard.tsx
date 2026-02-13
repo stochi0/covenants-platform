@@ -1,37 +1,26 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatsCards } from './StatsCards';
 import { IndiaMap } from './IndiaMap';
-import { SearchFilters, type SearchFilters as FilterType } from './SearchFilters';
-import { ProductResults } from './ProductResults';
 import { ChemistryFilter } from './ChemistryFilter';
 import { AccreditationFilter } from './AccreditationFilter';
 import { LocationFilter } from './LocationFilter';
 import { FilterSummary } from './FilterSummary';
+import { ProductSearch } from './product-search';
 import { FlaskConical, LayoutDashboard, Search, Building2, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
 import type { FilterState } from '@/lib/filterData';
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'search'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
   
   // Unified filter state
   const [selectedChemistries, setSelectedChemistries] = useState<string[]>([]);
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   
-  const [searchFilters, setSearchFilters] = useState<FilterType>({
-    productName: '',
-    casNumber: '',
-    accreditation: 'all',
-  });
-
-  const handleSearch = (filters: FilterType) => {
-    setSearchFilters(filters);
-  };
-
   // Combined filter state for FilterSummary
   const filters: FilterState = {
     chemistries: selectedChemistries,
@@ -48,7 +37,7 @@ export function Dashboard() {
   const hasActiveFilters = selectedChemistries.length > 0 || selectedAccreditations.length > 0 || selectedLocations.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-y-auto">
       {/* Background Pattern */}
       <div className="fixed inset-0 bg-mesh-gradient pointer-events-none" />
 
@@ -84,7 +73,7 @@ export function Dashboard() {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('search')}
+                onClick={() => { setActiveTab('search'); setProductSearchOpen(true); }}
                 className={
                   activeTab === 'search'
                     ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
@@ -141,6 +130,7 @@ export function Dashboard() {
                 type="button"
                 onClick={() => {
                   setActiveTab('search');
+                  setProductSearchOpen(true);
                   setMobileMenuOpen(false);
                 }}
                 className={
@@ -312,7 +302,7 @@ export function Dashboard() {
                   <div className="space-y-2">
                     <button
                       type="button"
-                      onClick={() => setActiveTab('search')}
+                      onClick={() => { setActiveTab('search'); setProductSearchOpen(true); }}
                       className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-background hover:bg-muted transition-colors border border-border/50 group"
                     >
                       <div className="flex items-center gap-2.5 sm:gap-3">
@@ -331,19 +321,26 @@ export function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Search Tab */}
+          {/* Search Tab - Product Search */}
           <TabsContent value="search" className="space-y-4 sm:space-y-6 mt-0">
-            {/* Search Section */}
             <Card className="border-border/50">
-              <CardContent className="p-4 sm:p-6">
-                <SearchFilters onSearch={handleSearch} />
+              <CardContent className="flex flex-col items-center justify-center py-16 sm:py-24 px-4">
+                <div className="p-4 rounded-2xl bg-primary/10 mb-4">
+                  <Search className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">Product Search</h2>
+                <p className="text-muted-foreground text-center max-w-sm mb-6">Search APIs, impurities, intermediates, and chemicals by name or CAS number.</p>
+                <button
+                  type="button"
+                  onClick={() => setProductSearchOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Search className="w-4 h-4" />
+                  Open Product Search
+                </button>
               </CardContent>
             </Card>
-
-            <Separator />
-
-            {/* Results Section */}
-            <ProductResults filters={searchFilters} />
+            <ProductSearch open={productSearchOpen} onOpenChange={setProductSearchOpen} />
           </TabsContent>
         </Tabs>
       </main>
