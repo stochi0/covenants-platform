@@ -13,12 +13,23 @@ import {
   fetchStateLocations,
   fetchTotalFacilities,
 } from '@/lib/filterDataApi'
+import {
+  fetchPlatformStats,
+  type PlatformStats,
+} from '@/lib/stats'
+
+const DEFAULT_PLATFORM_STATS: PlatformStats = {
+  products: 0,
+  manufacturers: 0,
+  chemistries: 0,
+}
 
 interface FilterDataContextValue {
   chemistries: Chemistry[]
   accreditations: Accreditation[]
   stateLocations: StateLocation[]
   totalFacilities: number
+  platformStats: PlatformStats
   isLoading: boolean
   refresh: () => Promise<void>
 }
@@ -30,24 +41,27 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
   const [accreditations, setAccreditations] = useState<Accreditation[]>([])
   const [stateLocations, setStateLocations] = useState<StateLocation[]>([])
   const [totalFacilities, setTotalFacilities] = useState(0)
+  const [platformStats, setPlatformStats] = useState<PlatformStats>(DEFAULT_PLATFORM_STATS)
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
-    const [chems, accs, locs, total] = await Promise.all([
+    const [chems, accs, locs, total, stats] = await Promise.all([
       fetchChemistries(),
       fetchAccreditations(),
       fetchStateLocations(),
       fetchTotalFacilities(),
+      fetchPlatformStats(),
     ])
     setChemistries(chems)
     setAccreditations(accs)
     setStateLocations(locs)
     setTotalFacilities(total)
+    setPlatformStats(stats)
   }, [])
 
   useEffect(() => {
     let cancelled = false
-    setIsLoading(true)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
       .finally(() => {
         if (!cancelled) setIsLoading(false)
@@ -66,6 +80,7 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
     accreditations,
     stateLocations,
     totalFacilities,
+    platformStats,
     isLoading,
     refresh,
   }
@@ -77,6 +92,7 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFilterData() {
   const ctx = useContext(FilterDataContext)
   if (!ctx) {

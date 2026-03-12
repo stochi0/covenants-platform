@@ -1,23 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Factory, Filter, X, Beaker, Award, MapPin, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { Beaker, Factory, Filter, MapPin, ShieldCheck, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
-  chemistryColors,
   accreditationColors,
-  regionColors,
+  chemistryColors,
   type FilterState,
-} from '@/lib/filterData';
-import { useFilterData } from '@/contexts/FilterDataContext';
-import { fetchFacilityCountByFilters } from '@/lib/filterDataApi';
+} from '@/lib/filterData'
+import { fetchFacilityCountByFilters } from '@/lib/filterDataApi'
+import { useFilterData } from '@/contexts/FilterDataContext'
 
 interface FilterSummaryProps {
-  filters: FilterState;
-  onChemistryRemove: (id: string) => void;
-  onAccreditationRemove: (id: string) => void;
-  onLocationRemove: (id: string) => void;
-  onClearAll: () => void;
+  filters: FilterState
+  onChemistryRemove: (id: string) => void
+  onAccreditationRemove: (id: string) => void
+  onLocationRemove: (id: string) => void
+  onClearAll: () => void
 }
 
 export function FilterSummary({
@@ -27,181 +26,104 @@ export function FilterSummary({
   onLocationRemove,
   onClearAll,
 }: FilterSummaryProps) {
-  const { chemistries, accreditations, stateLocations } = useFilterData();
-  const [filteredFacilityCount, setFilteredFacilityCount] = useState<number | null>(null);
+  const { chemistries, accreditations, stateLocations } = useFilterData()
+  const [filteredFacilityCount, setFilteredFacilityCount] = useState<{ key: string; value: number } | null>(null)
 
-  const hasFilters =
-    filters.chemistries.length > 0 ||
-    filters.accreditations.length > 0 ||
-    filters.locations.length > 0;
+  const hasFilters = filters.chemistries.length > 0
+    || filters.accreditations.length > 0
+    || filters.locations.length > 0
+
+  const filterKey = [
+    filters.chemistries.join('|'),
+    filters.accreditations.join('|'),
+    filters.locations.join('|'),
+  ].join('::')
 
   useEffect(() => {
-    if (!hasFilters) return;
-    let cancelled = false;
-    setFilteredFacilityCount(null);
+    if (!hasFilters) return
+
+    let cancelled = false
     fetchFacilityCountByFilters(filters)
       .then((count) => {
-        if (!cancelled) setFilteredFacilityCount(count);
+        if (!cancelled) setFilteredFacilityCount({ key: filterKey, value: count })
       })
       .catch(() => {
-        if (!cancelled) setFilteredFacilityCount(0);
-      });
-    return () => { cancelled = true; };
-  }, [filters, hasFilters]);
+        if (!cancelled) setFilteredFacilityCount({ key: filterKey, value: 0 })
+      })
 
-  if (!hasFilters) {
-    return null;
-  }
-  const totalFilters = 
-    filters.chemistries.length + 
-    filters.accreditations.length + 
-    filters.locations.length;
+    return () => {
+      cancelled = true
+    }
+  }, [filterKey, filters, hasFilters])
 
-  // Get selected items
+  if (!hasFilters) return null
+
   const selectedChemistries = filters.chemistries
-    .map(id => chemistries.find(c => c.id === id))
-    .filter(Boolean);
-  
+    .map((id) => chemistries.find((chemistry) => chemistry.id === id))
+    .filter(Boolean)
+
   const selectedAccreditations = filters.accreditations
-    .map(id => accreditations.find(a => a.id === id))
-    .filter(Boolean);
-  
+    .map((id) => accreditations.find((accreditation) => accreditation.id === id))
+    .filter(Boolean)
+
   const selectedLocations = filters.locations
-    .map(id => stateLocations.find(l => l.id === id))
-    .filter(Boolean);
+    .map((id) => stateLocations.find((location) => location.id === id))
+    .filter(Boolean)
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
-      <CardContent className="p-4 sm:p-5">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground text-sm sm:text-base">Active Filters</h3>
-              <p className="text-xs text-muted-foreground">
-                {totalFilters} filter{totalFilters !== 1 ? 's' : ''} applied
-              </p>
-            </div>
-          </div>
-          
+    <Card className="rounded-[1.5rem] border-primary/15 bg-white/88 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            {/* Results Count */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
-              <Factory className="w-4 h-4 text-primary" />
-              <div className="text-right">
-                <p className="text-lg sm:text-xl font-bold font-mono text-primary">{filteredFacilityCount ?? '—'}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">facilities match</p>
-              </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Filter className="h-4 w-4" />
             </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClearAll}
-              className="h-8 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-3.5 h-3.5 mr-1" />
-              Clear all
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Active filters</span>
+              <Badge className="border-primary/10 bg-primary/10 text-primary">
+                <Factory className="mr-1 h-3 w-3" />
+                {filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : '—'}
+              </Badge>
+            </div>
           </div>
+
+          <Button type="button" variant="ghost" size="sm" onClick={onClearAll} className="rounded-full">
+            Clear
+          </Button>
         </div>
 
-        {/* Filter Tags */}
-        <div className="space-y-3">
-          {/* Chemistries */}
-          {selectedChemistries.length > 0 && (
-            <div className="flex items-start gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-[90px] sm:min-w-[100px] pt-0.5">
-                <Beaker className="w-3.5 h-3.5" />
-                <span>Chemistries</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedChemistries.map(chem => (
-                  <Badge
-                    key={chem!.id}
-                    variant="secondary"
-                    className={`pl-2 pr-1 py-0.5 gap-1 text-xs ${chemistryColors[chem!.category]}`}
-                  >
-                    {chem!.name}
-                    <button
-                      onClick={() => onChemistryRemove(chem!.id)}
-                      className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="flex flex-wrap gap-2">
+          {selectedChemistries.map((chemistry) => (
+            <Badge key={chemistry!.id} className={`${chemistryColors[chemistry!.category]} gap-1.5 pl-3 pr-2 py-1.5`}>
+              <Beaker className="h-3 w-3" />
+              {chemistry!.name}
+              <button type="button" onClick={() => onChemistryRemove(chemistry!.id)}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
 
-          {/* Accreditations */}
-          {selectedAccreditations.length > 0 && (
-            <div className="flex items-start gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-[90px] sm:min-w-[100px] pt-0.5">
-                <Award className="w-3.5 h-3.5" />
-                <span>Accreditations</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedAccreditations.map(acc => (
-                  <Badge
-                    key={acc!.id}
-                    variant="secondary"
-                    className={`pl-2 pr-1 py-0.5 gap-1 text-xs ${accreditationColors[acc!.category]}`}
-                  >
-                    {acc!.shortName}
-                    <button
-                      onClick={() => onAccreditationRemove(acc!.id)}
-                      className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {selectedAccreditations.map((accreditation) => (
+            <Badge key={accreditation!.id} className={`${accreditationColors[accreditation!.category]} gap-1.5 pl-3 pr-2 py-1.5`}>
+              <ShieldCheck className="h-3 w-3" />
+              {accreditation!.shortName}
+              <button type="button" onClick={() => onAccreditationRemove(accreditation!.id)}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
 
-          {/* Locations */}
-          {selectedLocations.length > 0 && (
-            <div className="flex items-start gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-[90px] sm:min-w-[100px] pt-0.5">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Locations</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedLocations.map(loc => (
-                  <Badge
-                    key={loc!.id}
-                    variant="secondary"
-                    className={`pl-2 pr-1 py-0.5 gap-1 text-xs ${regionColors[loc!.region]}`}
-                  >
-                    {loc!.name}
-                    <button
-                      onClick={() => onLocationRemove(loc!.id)}
-                      className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Tip */}
-        <div className="mt-4 pt-3 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
-          <Sparkles className="w-3.5 h-3.5 text-accent" />
-          <span>
-            Filters work together to narrow down facilities. Click on map states or use the filter panels above.
-          </span>
+          {selectedLocations.map((location) => (
+            <Badge key={location!.id} className="gap-1.5 border-primary/10 bg-primary/10 pl-3 pr-2 py-1.5 text-primary">
+              <MapPin className="h-3 w-3" />
+              {location!.name}
+              <button type="button" onClick={() => onLocationRemove(location!.id)}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-

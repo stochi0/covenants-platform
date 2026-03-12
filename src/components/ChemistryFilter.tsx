@@ -1,303 +1,201 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Beaker, Check, ChevronDown, ChevronUp, X, Factory, Loader2 } from 'lucide-react';
-import { 
-  chemistryCategories, 
+import { useEffect, useMemo, useState } from 'react'
+import { Beaker, Check, Search } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  chemistryCategories,
   chemistryColors,
-  type Chemistry 
-} from '@/lib/filterData';
-import { useFilterData } from '@/contexts/FilterDataContext';
-import { fetchFacilityCountByChemistries } from '@/lib/filterDataApi';
+  type Chemistry,
+} from '@/lib/filterData'
+import { fetchFacilityCountByChemistries } from '@/lib/filterDataApi'
+import { useFilterData } from '@/contexts/FilterDataContext'
 
 interface ChemistryFilterProps {
-  selectedChemistries: string[];
-  onSelectionChange: (selected: string[]) => void;
+  selectedChemistries: string[]
+  onSelectionChange: (selected: string[]) => void
 }
 
-export function ChemistryFilter({ selectedChemistries, onSelectionChange }: ChemistryFilterProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<Chemistry['category'] | 'all'>('all');
-  const [selectedFacilityCount, setSelectedFacilityCount] = useState<number | null>(null);
-  const { chemistries, totalFacilities, isLoading } = useFilterData();
+export function ChemistryFilter({
+  selectedChemistries,
+  onSelectionChange,
+}: ChemistryFilterProps) {
+  const { chemistries, totalFacilities, isLoading } = useFilterData()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<Chemistry['category'] | 'all'>('all')
+  const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
+
+  const selectedKey = selectedChemistries.join('|')
 
   useEffect(() => {
-    if (selectedChemistries.length === 0) {
-      setSelectedFacilityCount(totalFacilities);
-      return;
-    }
-    let cancelled = false;
-    setSelectedFacilityCount(null);
+    if (!selectedKey) return
+
+    let cancelled = false
     fetchFacilityCountByChemistries(selectedChemistries)
       .then((count) => {
-        if (!cancelled) setSelectedFacilityCount(count);
+        if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: count })
       })
       .catch(() => {
-        if (!cancelled) setSelectedFacilityCount(0);
-      });
-    return () => { cancelled = true; };
-  }, [selectedChemistries, totalFacilities]);
+        if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: 0 })
+      })
 
-  const toggleChemistry = (chemId: string) => {
-    if (selectedChemistries.includes(chemId)) {
-      onSelectionChange(selectedChemistries.filter(id => id !== chemId));
-    } else {
-      onSelectionChange([...selectedChemistries, chemId]);
+    return () => {
+      cancelled = true
     }
-  };
+  }, [selectedChemistries, selectedKey])
 
-  const clearAll = () => {
-    onSelectionChange([]);
-  };
+  const visibleChemistries = useMemo(() => {
+    const normalized = searchQuery.trim().toLowerCase()
+    const filtered = chemistries.filter((chemistry) => {
+      const matchesCategory = activeCategory === 'all' || chemistry.category === activeCategory
+      const matchesQuery = !normalized || chemistry.name.toLowerCase().includes(normalized)
+      return matchesCategory && matchesQuery
+    })
 
-  const selectAllInCategory = (category: Chemistry['category']) => {
-    const categoryChemIds = chemistries
-      .filter(c => c.category === category)
-      .map(c => c.id);
-    const newSelection = [...new Set([...selectedChemistries, ...categoryChemIds])];
-    onSelectionChange(newSelection);
-  };
-
-  const filteredChemistries = activeCategory === 'all' 
-    ? chemistries 
-    : chemistries.filter(c => c.category === activeCategory);
+    return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
+  }, [activeCategory, chemistries, searchQuery])
 
   const displayFacilityCount = selectedChemistries.length === 0
     ? totalFacilities
-    : (selectedFacilityCount ?? '—');
+    : (selectedFacilityCount?.key === selectedKey ? selectedFacilityCount.value : '—')
 
-  const categories = ['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const;
+  const toggleChemistry = (chemistryId: string) => {
+    if (selectedChemistries.includes(chemistryId)) {
+      onSelectionChange(selectedChemistries.filter((id) => id !== chemistryId))
+      return
+    }
+
+    onSelectionChange([...selectedChemistries, chemistryId])
+  }
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
-        <CardContent className="p-8 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <Card className="rounded-[1.5rem] border-white/70 bg-white/85">
+        <CardContent className="flex min-h-[320px] items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <Card className="border-border/50">
-      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-            <Beaker className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+    <Card className="rounded-[1.5rem] border-white/70 bg-white/85 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
+      <CardHeader className="space-y-4 px-5 pb-0 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Beaker className="h-4 w-4 text-primary" />
             Chemistries
-            <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedChemistries.length > 0 ? selectedChemistries.length : chemistries.length}
-            </Badge>
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="h-8 px-2 text-muted-foreground hover:text-foreground"
-          >
-            {isExpanded ? (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Collapse</span>
-                <ChevronUp className="w-4 h-4" />
-              </>
-            ) : (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Expand</span>
-                <ChevronDown className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        
-        {/* Selected count summary */}
-        <div className="flex items-center gap-2 mt-2 text-xs sm:text-sm text-muted-foreground">
-          <Factory className="w-3.5 h-3.5 text-accent" />
-          <span>
-            {selectedChemistries.length > 0 ? (
-              <>
-                <span className="font-semibold text-foreground">{selectedChemistries.length}</span> selected • <span className="font-mono text-primary">{displayFacilityCount}</span> facilities
-              </>
-            ) : (
-              <>
-                All <span className="font-semibold text-foreground">{chemistries.length}</span> chemistries • <span className="font-mono text-primary">{totalFacilities}</span> facilities
-              </>
-            )}
-          </span>
           {selectedChemistries.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground ml-auto"
-            >
-              Clear all
+            <Button type="button" variant="ghost" size="sm" onClick={() => onSelectionChange([])} className="rounded-full">
+              Clear
             </Button>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-[1.1rem] border border-primary/10 bg-primary/[0.06] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Selected
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {selectedChemistries.length}
+            </p>
+          </div>
+          <div className="rounded-[1.1rem] border border-border/70 bg-white px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Facilities
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {displayFacilityCount}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search chemistries"
+            className="h-11 rounded-[1rem] border-border/70 bg-white pl-10"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const).map((category) => {
+            const count = category === 'all'
+              ? chemistries.length
+              : chemistries.filter((chemistry) => chemistry.category === category).length
+
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActiveCategory(category)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                  activeCategory === category
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/70 bg-white text-foreground hover:border-primary/20'
+                }`}
+              >
+                {category === 'all' ? 'All' : chemistryCategories[category]}
+                <span className={`rounded-full px-1.5 py-0.5 font-mono ${activeCategory === category ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </CardHeader>
 
-      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-        {/* Selected Chemistries Pills */}
-        {selectedChemistries.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {selectedChemistries.slice(0, isExpanded ? undefined : 5).map(chemId => {
-              const chem = chemistries.find(c => c.id === chemId);
-              if (!chem) return null;
-              return (
-                <Badge
-                  key={chem.id}
-                  variant="secondary"
-                  className={`pl-2 pr-1 py-0.5 gap-1 cursor-pointer hover:opacity-80 transition-opacity text-xs ${chemistryColors[chem.category]}`}
-                >
-                  {chem.name}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleChemistry(chem.id);
-                    }}
-                    className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              );
-            })}
-            {!isExpanded && selectedChemistries.length > 5 && (
-              <Badge variant="outline" className="text-xs">
-                +{selectedChemistries.length - 5} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Expanded View */}
-        {isExpanded && (
-          <div className="space-y-4 animate-fade-in-up">
-            {/* Category Tabs */}
-            <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
-                    ${activeCategory === cat 
-                      ? 'bg-primary text-primary-foreground shadow-sm' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }
-                  `}
-                >
-                  {cat === 'all' ? 'All' : chemistryCategories[cat]}
-                  <span className="ml-1.5 font-mono opacity-70">
-                    {cat === 'all' ? chemistries.length : chemistries.filter(c => c.category === cat).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Chemistry Grid */}
-            <ScrollArea className="h-[280px] sm:h-[320px] pr-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {filteredChemistries.map(chem => {
-                  const isSelected = selectedChemistries.includes(chem.id);
-                  return (
-                    <button
-                      key={chem.id}
-                      onClick={() => toggleChemistry(chem.id)}
-                      className={`
-                        flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border text-left transition-all group
-                        ${isSelected 
-                          ? 'border-primary bg-primary/5 shadow-sm' 
-                          : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                        }
-                      `}
-                    >
-                      <div className={`
-                        w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors
-                        ${isSelected 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted group-hover:bg-primary/20'
-                        }
-                      `}>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                          {chem.name}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">
-                          <span className="font-mono">{chem.facilityCount}</span> facilities
-                        </p>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[10px] hidden sm:flex ${chemistryColors[chem.category]}`}
-                      >
-                        {chemistryCategories[chem.category].split(' ')[0]}
-                      </Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-
-            {/* Quick Actions */}
-            {activeCategory !== 'all' && (
-              <div className="flex justify-end pt-2 border-t border-border/50">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => selectAllInCategory(activeCategory)}
-                  className="text-xs h-7"
-                >
-                  Select all in {chemistryCategories[activeCategory]}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Collapsed Preview */}
-        {!isExpanded && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {chemistries.slice(0, 8).map(chem => {
-              const isSelected = selectedChemistries.includes(chem.id);
+      <CardContent className="px-5 pb-5 pt-5">
+        <ScrollArea className="h-[320px] pr-4">
+          <div className="space-y-2.5">
+            {visibleChemistries.map((chemistry) => {
+              const isSelected = selectedChemistries.includes(chemistry.id)
               return (
                 <button
-                  key={chem.id}
-                  onClick={() => toggleChemistry(chem.id)}
-                  className={`
-                    flex items-center gap-1.5 p-2 rounded-lg border text-left transition-all text-xs
-                    ${isSelected 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                    }
-                  `}
+                  key={chemistry.id}
+                  type="button"
+                  onClick={() => toggleChemistry(chemistry.id)}
+                  className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                    isSelected
+                      ? 'border-primary/30 bg-primary/[0.06]'
+                      : 'border-border/70 bg-white hover:border-primary/20'
+                  }`}
                 >
-                  <div className={`
-                    w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors
-                    ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'}
-                  `}>
-                    {isSelected && <Check className="w-2.5 h-2.5" />}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      isSelected
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-muted text-transparent'
+                    }`}>
+                      <Check className="h-3 w-3" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {chemistry.name}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`truncate ${isSelected ? 'text-primary font-medium' : 'text-foreground'}`}>
-                    {chem.name}
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${chemistryColors[chemistry.category]} hidden sm:inline-flex`}>
+                      {chemistryCategories[chemistry.category]}
+                    </Badge>
+                    <Badge variant="secondary" className="font-mono">
+                      {chemistry.facilityCount}
+                    </Badge>
+                  </div>
                 </button>
-              );
+              )
             })}
           </div>
-        )}
-        
-        {!isExpanded && chemistries.length > 8 && (
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all {chemistries.length} chemistries
-          </p>
-        )}
+        </ScrollArea>
       </CardContent>
     </Card>
-  );
+  )
 }
-

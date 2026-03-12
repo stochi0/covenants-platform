@@ -1,305 +1,206 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Award, Check, ChevronDown, ChevronUp, X, ShieldCheck, Loader2 } from 'lucide-react';
-import { 
-  accreditationCategories, 
+import { useEffect, useMemo, useState } from 'react'
+import { Check, Search, ShieldCheck } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  accreditationCategories,
   accreditationColors,
-  type Accreditation 
-} from '@/lib/filterData';
-import { useFilterData } from '@/contexts/FilterDataContext';
-import { fetchFacilityCountByAccreditations } from '@/lib/filterDataApi';
+  type Accreditation,
+} from '@/lib/filterData'
+import { fetchFacilityCountByAccreditations } from '@/lib/filterDataApi'
+import { useFilterData } from '@/contexts/FilterDataContext'
 
 interface AccreditationFilterProps {
-  selectedAccreditations: string[];
-  onSelectionChange: (selected: string[]) => void;
+  selectedAccreditations: string[]
+  onSelectionChange: (selected: string[]) => void
 }
 
-export function AccreditationFilter({ selectedAccreditations, onSelectionChange }: AccreditationFilterProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<Accreditation['category'] | 'all'>('all');
-  const [selectedFacilityCount, setSelectedFacilityCount] = useState<number | null>(null);
-  const { accreditations, totalFacilities, isLoading } = useFilterData();
+export function AccreditationFilter({
+  selectedAccreditations,
+  onSelectionChange,
+}: AccreditationFilterProps) {
+  const { accreditations, totalFacilities, isLoading } = useFilterData()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<Accreditation['category'] | 'all'>('all')
+  const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
+
+  const selectedKey = selectedAccreditations.join('|')
 
   useEffect(() => {
-    if (selectedAccreditations.length === 0) {
-      setSelectedFacilityCount(totalFacilities);
-      return;
-    }
-    let cancelled = false;
-    setSelectedFacilityCount(null);
+    if (!selectedKey) return
+
+    let cancelled = false
     fetchFacilityCountByAccreditations(selectedAccreditations)
       .then((count) => {
-        if (!cancelled) setSelectedFacilityCount(count);
+        if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: count })
       })
       .catch(() => {
-        if (!cancelled) setSelectedFacilityCount(0);
-      });
-    return () => { cancelled = true; };
-  }, [selectedAccreditations, totalFacilities]);
+        if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: 0 })
+      })
 
-  const toggleAccreditation = (accId: string) => {
-    if (selectedAccreditations.includes(accId)) {
-      onSelectionChange(selectedAccreditations.filter(id => id !== accId));
-    } else {
-      onSelectionChange([...selectedAccreditations, accId]);
+    return () => {
+      cancelled = true
     }
-  };
+  }, [selectedAccreditations, selectedKey])
 
-  const clearAll = () => {
-    onSelectionChange([]);
-  };
+  const visibleAccreditations = useMemo(() => {
+    const normalized = searchQuery.trim().toLowerCase()
+    const filtered = accreditations.filter((accreditation) => {
+      const matchesCategory = activeCategory === 'all' || accreditation.category === activeCategory
+      const matchesQuery = !normalized
+        || accreditation.shortName.toLowerCase().includes(normalized)
+        || accreditation.name.toLowerCase().includes(normalized)
+      return matchesCategory && matchesQuery
+    })
 
-  const selectAllInCategory = (category: Accreditation['category']) => {
-    const categoryAccIds = accreditations
-      .filter(a => a.category === category)
-      .map(a => a.id);
-    const newSelection = [...new Set([...selectedAccreditations, ...categoryAccIds])];
-    onSelectionChange(newSelection);
-  };
-
-  const filteredAccreditations = activeCategory === 'all' 
-    ? accreditations 
-    : accreditations.filter(a => a.category === activeCategory);
+    return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.shortName.localeCompare(b.shortName))
+  }, [accreditations, activeCategory, searchQuery])
 
   const displayFacilityCount = selectedAccreditations.length === 0
     ? totalFacilities
-    : (selectedFacilityCount ?? '—');
+    : (selectedFacilityCount?.key === selectedKey ? selectedFacilityCount.value : '—')
 
-  const categories = ['all', 'regulatory', 'quality', 'environmental', 'international'] as const;
+  const toggleAccreditation = (accreditationId: string) => {
+    if (selectedAccreditations.includes(accreditationId)) {
+      onSelectionChange(selectedAccreditations.filter((id) => id !== accreditationId))
+      return
+    }
+
+    onSelectionChange([...selectedAccreditations, accreditationId])
+  }
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
-        <CardContent className="p-8 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <Card className="rounded-[1.5rem] border-white/70 bg-white/85">
+        <CardContent className="flex min-h-[320px] items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <Card className="border-border/50">
-      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-            <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+    <Card className="rounded-[1.5rem] border-white/70 bg-white/85 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
+      <CardHeader className="space-y-4 px-5 pb-0 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ShieldCheck className="h-4 w-4 text-primary" />
             Accreditations
-            <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedAccreditations.length > 0 ? selectedAccreditations.length : accreditations.length}
-            </Badge>
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="h-8 px-2 text-muted-foreground hover:text-foreground"
-          >
-            {isExpanded ? (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Collapse</span>
-                <ChevronUp className="w-4 h-4" />
-              </>
-            ) : (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Expand</span>
-                <ChevronDown className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        
-        {/* Selected count summary */}
-        <div className="flex items-center gap-2 mt-2 text-xs sm:text-sm text-muted-foreground">
-          <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-          <span>
-            {selectedAccreditations.length > 0 ? (
-              <>
-                <span className="font-semibold text-foreground">{selectedAccreditations.length}</span> selected • <span className="font-mono text-primary">{displayFacilityCount}</span> facilities
-              </>
-            ) : (
-              <>
-                All <span className="font-semibold text-foreground">{accreditations.length}</span> accreditations • <span className="font-mono text-primary">{totalFacilities}</span> facilities
-              </>
-            )}
-          </span>
           {selectedAccreditations.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground ml-auto"
-            >
-              Clear all
+            <Button type="button" variant="ghost" size="sm" onClick={() => onSelectionChange([])} className="rounded-full">
+              Clear
             </Button>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-[1.1rem] border border-primary/10 bg-primary/[0.06] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Selected
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {selectedAccreditations.length}
+            </p>
+          </div>
+          <div className="rounded-[1.1rem] border border-border/70 bg-white px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Facilities
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {displayFacilityCount}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search accreditations"
+            className="h-11 rounded-[1rem] border-border/70 bg-white pl-10"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'regulatory', 'quality', 'environmental', 'international'] as const).map((category) => {
+            const count = category === 'all'
+              ? accreditations.length
+              : accreditations.filter((accreditation) => accreditation.category === category).length
+
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActiveCategory(category)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                  activeCategory === category
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/70 bg-white text-foreground hover:border-primary/20'
+                }`}
+              >
+                {category === 'all' ? 'All' : accreditationCategories[category]}
+                <span className={`rounded-full px-1.5 py-0.5 font-mono ${activeCategory === category ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </CardHeader>
 
-      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-        {/* Selected Accreditations Pills */}
-        {selectedAccreditations.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {selectedAccreditations.slice(0, isExpanded ? undefined : 5).map(accId => {
-              const acc = accreditations.find(a => a.id === accId);
-              if (!acc) return null;
-              return (
-                <Badge
-                  key={acc.id}
-                  variant="secondary"
-                  className={`pl-2 pr-1 py-0.5 gap-1 cursor-pointer hover:opacity-80 transition-opacity text-xs ${accreditationColors[acc.category]}`}
-                >
-                  {acc.shortName}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleAccreditation(acc.id);
-                    }}
-                    className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              );
-            })}
-            {!isExpanded && selectedAccreditations.length > 5 && (
-              <Badge variant="outline" className="text-xs">
-                +{selectedAccreditations.length - 5} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Expanded View */}
-        {isExpanded && (
-          <div className="space-y-4 animate-fade-in-up">
-            {/* Category Tabs */}
-            <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
-                    ${activeCategory === cat 
-                      ? 'bg-primary text-primary-foreground shadow-sm' 
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }
-                  `}
-                >
-                  {cat === 'all' ? 'All' : accreditationCategories[cat]}
-                  <span className="ml-1.5 font-mono opacity-70">
-                    {cat === 'all' ? accreditations.length : accreditations.filter(a => a.category === cat).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Accreditation Grid */}
-            <ScrollArea className="h-[240px] sm:h-[280px] pr-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {filteredAccreditations.map(acc => {
-                  const isSelected = selectedAccreditations.includes(acc.id);
-                  return (
-                    <button
-                      key={acc.id}
-                      onClick={() => toggleAccreditation(acc.id)}
-                      className={`
-                        flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border text-left transition-all group
-                        ${isSelected 
-                          ? 'border-primary bg-primary/5 shadow-sm' 
-                          : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                        }
-                      `}
-                    >
-                      <div className={`
-                        w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors
-                        ${isSelected 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted group-hover:bg-primary/20'
-                        }
-                      `}>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                            {acc.shortName}
-                          </p>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-[10px] hidden sm:flex ${accreditationColors[acc.category]}`}
-                          >
-                            {accreditationCategories[acc.category].split(' ')[0]}
-                          </Badge>
-                        </div>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                          {acc.name} • <span className="font-mono">{acc.facilityCount}</span> facilities
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-
-            {/* Quick Actions */}
-            {activeCategory !== 'all' && (
-              <div className="flex justify-end pt-2 border-t border-border/50">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => selectAllInCategory(activeCategory)}
-                  className="text-xs h-7"
-                >
-                  Select all {accreditationCategories[activeCategory]}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Collapsed Preview */}
-        {!isExpanded && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {accreditations.slice(0, 8).map(acc => {
-              const isSelected = selectedAccreditations.includes(acc.id);
+      <CardContent className="px-5 pb-5 pt-5">
+        <ScrollArea className="h-[320px] pr-4">
+          <div className="space-y-2.5">
+            {visibleAccreditations.map((accreditation) => {
+              const isSelected = selectedAccreditations.includes(accreditation.id)
               return (
                 <button
-                  key={acc.id}
-                  onClick={() => toggleAccreditation(acc.id)}
-                  className={`
-                    flex items-center gap-1.5 p-2 rounded-lg border text-left transition-all text-xs
-                    ${isSelected 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                    }
-                  `}
+                  key={accreditation.id}
+                  type="button"
+                  onClick={() => toggleAccreditation(accreditation.id)}
+                  className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                    isSelected
+                      ? 'border-primary/30 bg-primary/[0.06]'
+                      : 'border-border/70 bg-white hover:border-primary/20'
+                  }`}
                 >
-                  <div className={`
-                    w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors
-                    ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'}
-                  `}>
-                    {isSelected && <Check className="w-2.5 h-2.5" />}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      isSelected
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-muted text-transparent'
+                    }`}>
+                      <Check className="h-3 w-3" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {accreditation.shortName}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {accreditation.name}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`truncate ${isSelected ? 'text-primary font-medium' : 'text-foreground'}`}>
-                    {acc.shortName}
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${accreditationColors[accreditation.category]} hidden sm:inline-flex`}>
+                      {accreditationCategories[accreditation.category]}
+                    </Badge>
+                    <Badge variant="secondary" className="font-mono">
+                      {accreditation.facilityCount}
+                    </Badge>
+                  </div>
                 </button>
-              );
+              )
             })}
           </div>
-        )}
-        
-        {!isExpanded && accreditations.length > 8 && (
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all {accreditations.length} accreditations
-          </p>
-        )}
+        </ScrollArea>
       </CardContent>
     </Card>
-  );
+  )
 }
-

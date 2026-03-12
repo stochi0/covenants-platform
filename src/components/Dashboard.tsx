@@ -1,305 +1,230 @@
-import { useState } from 'react';
-import { FilterDataProvider } from '@/contexts/FilterDataContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatsCards } from './StatsCards';
-import { IndiaMap } from './IndiaMap';
-import { ChemistryFilter } from './ChemistryFilter';
-import { AccreditationFilter } from './AccreditationFilter';
-import { LocationFilter } from './LocationFilter';
-import { FilterSummary } from './FilterSummary';
-import { ProductSearch } from './product-search';
-import { FlaskConical, LayoutDashboard, Search, Globe, Menu, X, MapPin, Filter } from 'lucide-react';
-import type { FilterState } from '@/lib/filterData';
+import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
+import { Building2, Filter, LayoutDashboard, Search } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { FilterDataProvider, useFilterData } from '@/contexts/FilterDataContext'
+import type { FilterState } from '@/lib/filterData'
+import { StatsCards } from './StatsCards'
+import { LocationFilter } from './LocationFilter'
+import { ChemistryFilter } from './ChemistryFilter'
+import { AccreditationFilter } from './AccreditationFilter'
+import { FilterSummary } from './FilterSummary'
+import { ProductSearch } from './product-search'
 
-export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'search'>('overview');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [productSearchOpen, setProductSearchOpen] = useState(false);
-  
-  // Unified filter state
-  const [selectedChemistries, setSelectedChemistries] = useState<string[]>([]);
-  const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  
-  // Combined filter state for FilterSummary
+type DashboardTab = 'overview' | 'search'
+
+function OverviewHeader({
+  onOpenSearch,
+}: {
+  onOpenSearch: () => void
+}) {
+  const { stateLocations, chemistries, accreditations } = useFilterData()
+
+  const highlights = useMemo(() => {
+    const topLocation = [...stateLocations].sort((a, b) => b.facilityCount - a.facilityCount)[0]
+    const topChemistry = [...chemistries].sort((a, b) => b.facilityCount - a.facilityCount)[0]
+    const topAccreditation = [...accreditations].sort((a, b) => b.facilityCount - a.facilityCount)[0]
+
+    return [
+      topLocation ? topLocation.name : null,
+      topChemistry ? topChemistry.name : null,
+      topAccreditation ? topAccreditation.shortName : null,
+    ].filter(Boolean) as string[]
+  }, [accreditations, chemistries, stateLocations])
+
+  return (
+    <Card className="rounded-[1.5rem] border-white/80 bg-white/84 shadow-[0_24px_80px_-52px_rgba(15,118,110,0.45)]">
+      <CardContent className="space-y-5 p-5 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Find the right manufacturing partner.
+            </h1>
+            <div className="flex flex-wrap gap-2">
+              {highlights.map((item) => (
+                <Badge key={item} className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
+                  {item}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
+          >
+            <Search className="h-4 w-4" />
+            Search products
+          </button>
+        </div>
+
+        <StatsCards />
+      </CardContent>
+    </Card>
+  )
+}
+
+function NavButton({
+  active,
+  label,
+  icon,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  icon: ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+}
+
+function DashboardContent() {
+  const { platformStats } = useFilterData()
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+
+  const [selectedChemistries, setSelectedChemistries] = useState<string[]>([])
+  const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([])
+
   const filters: FilterState = {
     chemistries: selectedChemistries,
     accreditations: selectedAccreditations,
     locations: selectedLocations,
-  };
+  }
 
-  const handleClearAllFilters = () => {
-    setSelectedChemistries([]);
-    setSelectedAccreditations([]);
-    setSelectedLocations([]);
-  };
+  const hasActiveFilters = selectedChemistries.length > 0
+    || selectedAccreditations.length > 0
+    || selectedLocations.length > 0
 
-  const hasActiveFilters = selectedChemistries.length > 0 || selectedAccreditations.length > 0 || selectedLocations.length > 0;
+  const clearAllFilters = () => {
+    setSelectedChemistries([])
+    setSelectedAccreditations([])
+    setSelectedLocations([])
+  }
 
   return (
-    <FilterDataProvider>
-    <div className="min-h-screen bg-background overflow-y-auto">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 bg-mesh-gradient pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_22%),linear-gradient(to_bottom,rgba(240,253,250,0.92),rgba(248,250,252,1))]" />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/25">
-                  <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+      <div className="relative z-10">
+        <header className="sticky top-0 z-30 border-b border-white/70 bg-background/80 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_18px_40px_-24px_rgba(15,118,110,0.9)]">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                  Covenants Platform
+                </p>
+                <p className="truncate text-sm text-muted-foreground">
+                  Manufacturing intelligence
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-full border border-white/80 bg-white/82 p-1 shadow-sm">
+                <NavButton
+                  active={activeTab === 'overview'}
+                  label="Overview"
+                  icon={<LayoutDashboard className="h-4 w-4" />}
+                  onClick={() => setActiveTab('overview')}
+                />
+                <NavButton
+                  active={activeTab === 'search'}
+                  label="Search"
+                  icon={<Search className="h-4 w-4" />}
+                  onClick={() => setActiveTab('search')}
+                />
+              </div>
+
+              <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
+                {platformStats.products.toLocaleString()}
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          {activeTab === 'overview' ? (
+            <div className="space-y-6">
+              <OverviewHeader onOpenSearch={() => setActiveTab('search')} />
+
+              {hasActiveFilters && (
+                <FilterSummary
+                  filters={filters}
+                  onChemistryRemove={(id) => setSelectedChemistries((prev) => prev.filter((item) => item !== id))}
+                  onAccreditationRemove={(id) => setSelectedAccreditations((prev) => prev.filter((item) => item !== id))}
+                  onLocationRemove={(id) => setSelectedLocations((prev) => prev.filter((item) => item !== id))}
+                  onClearAll={clearAllFilters}
+                />
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Filter className="h-4 w-4" />
+                  </div>
+                  Filters
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-accent animate-pulse-soft" />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">Capillia</h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground hidden xs:block">Covenants Platform</p>
-              </div>
-            </div>
-
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className={
-                  activeTab === 'overview'
-                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
-                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                }
-              >
-                Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={() => { setActiveTab('search'); setProductSearchOpen(true); }}
-                className={
-                  activeTab === 'search'
-                    ? "px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors"
-                    : "px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                }
-              >
-                Products
-              </button>
-            </nav>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium">
-                <Globe className="w-4 h-4" />
-                <span>India</span>
-              </div>
-              
-              {/* Mobile Menu Button */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-foreground" />
-                ) : (
-                  <Menu className="w-5 h-5 text-foreground" />
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Clear all
+                  </button>
                 )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
-            <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('overview');
-                  setMobileMenuOpen(false);
-                }}
-                className={
-                  activeTab === 'overview'
-                    ? "px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors text-left flex items-center gap-3"
-                    : "px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors text-left flex items-center gap-3"
-                }
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('search');
-                  setProductSearchOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className={
-                  activeTab === 'search'
-                    ? "px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg transition-colors text-left flex items-center gap-3"
-                    : "px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors text-left flex items-center gap-3"
-                }
-              >
-                <Search className="w-4 h-4" />
-                Products
-              </button>
-              <div className="flex sm:hidden items-center gap-2 px-4 py-2 mt-2 border-t border-border pt-3">
-                <Globe className="w-4 h-4 text-accent" />
-                <span className="text-sm text-muted-foreground">Region: <span className="text-accent font-medium">India</span></span>
               </div>
-            </nav>
-          </div>
-        )}
-      </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4 sm:space-y-8">
-          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-thin">
-            <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-auto min-w-full sm:min-w-0">
-              <TabsTrigger 
-                value="overview" 
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg gap-1.5 sm:gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger 
-                value="search" 
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg gap-1.5 sm:gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
-              >
-                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Product</span> Search
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-0">
-            {hasActiveFilters && (
-              <div className="flex justify-end">
-                <button
-                  onClick={handleClearAllFilters}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Clear all filters
-                </button>
-              </div>
-            )}
-
-            {/* Stats Cards */}
-            <StatsCards />
-
-            {/* Filter Summary - Shows when filters are active */}
-            {hasActiveFilters && (
-              <FilterSummary
-                filters={filters}
-                onChemistryRemove={(id) => setSelectedChemistries(prev => prev.filter(c => c !== id))}
-                onAccreditationRemove={(id) => setSelectedAccreditations(prev => prev.filter(a => a !== id))}
-                onLocationRemove={(id) => setSelectedLocations(prev => prev.filter(l => l !== id))}
-                onClearAll={handleClearAllFilters}
-              />
-            )}
-
-            {/* Filter Section Header */}
-            <div className="flex items-center gap-2 pt-2">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <Filter className="w-4 h-4 text-primary" />
-              </div>
-              <h3 className="font-semibold text-foreground text-sm sm:text-base">Filter Facilities</h3>
-              <span className="text-xs text-muted-foreground">Select multiple options across categories</span>
-            </div>
-
-            {/* Chemistry and Accreditation Filters */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-              {/* Chemistry Filter */}
-              <ChemistryFilter
-                selectedChemistries={selectedChemistries}
-                onSelectionChange={setSelectedChemistries}
-              />
-
-              {/* Accreditation Filter */}
-              <AccreditationFilter
-                selectedAccreditations={selectedAccreditations}
-                onSelectionChange={setSelectedAccreditations}
-              />
-            </div>
-
-            {/* Map and Location Filter Section */}
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-6">
-              {/* India Map - Interactive visualization */}
-              <Card className="xl:col-span-3 border-border/50 overflow-hidden">
-                <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                    Manufacturing Map
-                    <span className="text-xs font-normal text-muted-foreground ml-2">
-                      Click states to filter
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-2 sm:p-4">
-                  <IndiaMap
-                    selectedLocations={selectedLocations}
-                    onLocationChange={setSelectedLocations}
-                    interactive={true}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Location Filter - Side Panel */}
-              <div className="xl:col-span-2">
+              <div className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
                 <LocationFilter
                   selectedLocations={selectedLocations}
                   onSelectionChange={setSelectedLocations}
                 />
+
+                <div className="space-y-6">
+                  <ChemistryFilter
+                    selectedChemistries={selectedChemistries}
+                    onSelectionChange={setSelectedChemistries}
+                  />
+                  <AccreditationFilter
+                    selectedAccreditations={selectedAccreditations}
+                    onSelectionChange={setSelectedAccreditations}
+                  />
+                </div>
               </div>
             </div>
-          </TabsContent>
-
-          {/* Search Tab - Product Search */}
-          <TabsContent value="search" className="space-y-4 sm:space-y-6 mt-0">
-            <Card className="border-border/50">
-              <CardContent className="flex flex-col items-center justify-center py-16 sm:py-24 px-4">
-                <div className="p-4 rounded-2xl bg-primary/10 mb-4">
-                  <Search className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">Product Search</h2>
-                <p className="text-muted-foreground text-center max-w-sm mb-6">Search APIs, impurities, intermediates, and chemicals by name or CAS number.</p>
-                <button
-                  type="button"
-                  onClick={() => setProductSearchOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
-                >
-                  <Search className="w-4 h-4" />
-                  Open Product Search
-                </button>
-              </CardContent>
-            </Card>
-            <ProductSearch open={productSearchOpen} onOpenChange={setProductSearchOpen} />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-border bg-muted/30 mt-8 sm:mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground text-sm sm:text-base">Covenants PharmaChem</span>
-              <span className="text-muted-foreground text-xs sm:text-sm">© 2026</span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground text-center md:text-right">
-              We take care of all your pharmaceutical and chemical needs.
-            </p>
-          </div>
-        </div>
-      </footer>
+          ) : (
+            <ProductSearch />
+          )}
+        </main>
+      </div>
     </div>
-    </FilterDataProvider>
-  );
+  )
 }
 
+export function Dashboard() {
+  return (
+    <FilterDataProvider>
+      <DashboardContent />
+    </FilterDataProvider>
+  )
+}

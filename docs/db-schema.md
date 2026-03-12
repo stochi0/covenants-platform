@@ -63,14 +63,6 @@ CREATE TABLE public.facility_chemistries (
   CONSTRAINT facility_chemistries_facility_id_fkey FOREIGN KEY (facility_id) REFERENCES public.facilities(id),
   CONSTRAINT facility_chemistries_chemistry_id_fkey FOREIGN KEY (chemistry_id) REFERENCES public.chemistries(id)
 );
-CREATE TABLE public.facility_meta (
-  facility_id uuid NOT NULL,
-  tags ARRAY DEFAULT '{}'::text[],
-  notes text,
-  extra jsonb DEFAULT '{}'::jsonb,
-  CONSTRAINT facility_meta_pkey PRIMARY KEY (facility_id),
-  CONSTRAINT facility_meta_facility_id_fkey FOREIGN KEY (facility_id) REFERENCES public.facilities(id)
-);
 CREATE TABLE public.facility_products (
   facility_id uuid NOT NULL,
   product_id text NOT NULL,
@@ -105,4 +97,13 @@ CREATE TABLE public.spatial_ref_sys (
   srtext character varying,
   proj4text character varying,
   CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL,
+  email text,
+  full_name text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

@@ -24,3 +24,8 @@ scripts/
 *.sln
 *.sw?
 .env*
+
+.cursor/
+platform-data/
+docs/
+docs/db-schema.md

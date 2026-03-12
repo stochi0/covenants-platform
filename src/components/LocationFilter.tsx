@@ -1,323 +1,167 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { MapPin, Check, ChevronDown, ChevronUp, X, Factory, Loader2 } from 'lucide-react';
-import { 
-  regionCategories, 
-  regionColors,
-  type StateLocation 
-} from '@/lib/filterData';
-import { useFilterData } from '@/contexts/FilterDataContext';
+import { useMemo, useState } from 'react'
+import { Check, MapPin, Search } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useFilterData } from '@/contexts/FilterDataContext'
 
 interface LocationFilterProps {
-  selectedLocations: string[];
-  onSelectionChange: (selected: string[]) => void;
+  selectedLocations: string[]
+  onSelectionChange: (selected: string[]) => void
 }
 
-export function LocationFilter({ selectedLocations, onSelectionChange }: LocationFilterProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeRegion, setActiveRegion] = useState<StateLocation['region'] | 'all'>('all');
-  const { stateLocations, totalFacilities, isLoading } = useFilterData();
+export function LocationFilter({
+  selectedLocations,
+  onSelectionChange,
+}: LocationFilterProps) {
+  const { stateLocations, totalFacilities, isLoading } = useFilterData()
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const toggleLocation = (locId: string) => {
-    if (selectedLocations.includes(locId)) {
-      onSelectionChange(selectedLocations.filter(id => id !== locId));
-    } else {
-      onSelectionChange([...selectedLocations, locId]);
-    }
-  };
+  const visibleLocations = useMemo(() => {
+    const normalized = searchQuery.trim().toLowerCase()
+    const filtered = normalized
+      ? stateLocations.filter((location) => location.name.toLowerCase().includes(normalized))
+      : stateLocations
 
-  const clearAll = () => {
-    onSelectionChange([]);
-  };
+    return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
+  }, [searchQuery, stateLocations])
 
-  const selectAllInRegion = (region: StateLocation['region']) => {
-    const regionLocIds = stateLocations
-      .filter(l => l.region === region)
-      .map(l => l.id);
-    const allSelected = regionLocIds.every(id => selectedLocations.includes(id));
-    
-    if (allSelected) {
-      // Deselect all in this region
-      onSelectionChange(selectedLocations.filter(id => !regionLocIds.includes(id)));
-    } else {
-      // Select all in this region
-      const newSelection = [...new Set([...selectedLocations, ...regionLocIds])];
-      onSelectionChange(newSelection);
-    }
-  };
-
-  const filteredLocations = activeRegion === 'all' 
-    ? stateLocations 
-    : stateLocations.filter(l => l.region === activeRegion);
+  const topLocations = visibleLocations.slice(0, 5)
 
   const selectedFacilityCount = selectedLocations.length > 0
     ? stateLocations
-        .filter(l => selectedLocations.includes(l.id))
-        .reduce((sum, l) => sum + l.facilityCount, 0)
-    : totalFacilities;
+        .filter((location) => selectedLocations.includes(location.id))
+        .reduce((sum, location) => sum + location.facilityCount, 0)
+    : totalFacilities
 
-  const regions = ['all', 'west', 'south', 'north', 'central', 'east', 'northeast'] as const;
+  const toggleLocation = (locationId: string) => {
+    if (selectedLocations.includes(locationId)) {
+      onSelectionChange(selectedLocations.filter((id) => id !== locationId))
+      return
+    }
 
-  const sortedLocations = [...filteredLocations].sort((a, b) => b.facilityCount - a.facilityCount);
+    onSelectionChange([...selectedLocations, locationId])
+  }
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
-        <CardContent className="p-8 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <Card className="rounded-[1.5rem] border-white/70 bg-white/85">
+        <CardContent className="flex min-h-[360px] items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <Card className="border-border/50">
-      <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            Locations
-            <Badge variant="secondary" className="ml-1 text-xs font-mono">
-              {selectedLocations.length > 0 ? selectedLocations.length : stateLocations.length}
-            </Badge>
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="h-8 px-2 text-muted-foreground hover:text-foreground"
-          >
-            {isExpanded ? (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Collapse</span>
-                <ChevronUp className="w-4 h-4" />
-              </>
-            ) : (
-              <>
-                <span className="text-xs mr-1 hidden sm:inline">Expand</span>
-                <ChevronDown className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        
-        {/* Selected count summary */}
-        <div className="flex items-center gap-2 mt-2 text-xs sm:text-sm text-muted-foreground">
-          <Factory className="w-3.5 h-3.5 text-accent" />
-          <span>
-            {selectedLocations.length > 0 ? (
-              <>
-                <span className="font-semibold text-foreground">{selectedLocations.length}</span> states • <span className="font-mono text-primary">{selectedFacilityCount}</span> facilities
-              </>
-            ) : (
-              <>
-                All <span className="font-semibold text-foreground">{stateLocations.length}</span> states • <span className="font-mono text-primary">{totalFacilities}</span> facilities
-              </>
-            )}
-          </span>
+    <Card className="rounded-[1.5rem] border-white/70 bg-white/85 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
+      <CardHeader className="space-y-4 px-5 pb-0 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MapPin className="h-4 w-4 text-primary" />
+              Locations
+            </CardTitle>
+          </div>
           {selectedLocations.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground ml-auto"
-            >
-              Clear all
+            <Button type="button" variant="ghost" size="sm" onClick={() => onSelectionChange([])} className="rounded-full">
+              Clear
             </Button>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-[1.1rem] border border-primary/10 bg-primary/[0.06] px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Scope
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {selectedFacilityCount.toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-[1.1rem] border border-border/70 bg-white px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Selected
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">
+              {selectedLocations.length || stateLocations.length}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search locations"
+            className="h-11 rounded-[1rem] border-border/70 bg-white pl-10"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {topLocations.map((location) => {
+            const isSelected = selectedLocations.includes(location.id)
+            return (
+              <button
+                key={location.id}
+                type="button"
+                onClick={() => toggleLocation(location.id)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                  isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/70 bg-white text-foreground hover:border-primary/20'
+                }`}
+              >
+                {location.name}
+                <span className={`rounded-full px-1.5 py-0.5 font-mono ${isSelected ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
+                  {location.facilityCount}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </CardHeader>
 
-      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-        {/* Selected Locations Pills */}
-        {selectedLocations.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {selectedLocations.slice(0, isExpanded ? undefined : 5).map(locId => {
-              const loc = stateLocations.find(l => l.id === locId);
-              if (!loc) return null;
+      <CardContent className="px-5 pb-5 pt-5">
+        <ScrollArea className="h-[340px] pr-4">
+          <div className="space-y-2.5">
+            {visibleLocations.map((location) => {
+              const isSelected = selectedLocations.includes(location.id)
               return (
-                <Badge
-                  key={loc.id}
-                  variant="secondary"
-                  className={`pl-2 pr-1 py-0.5 gap-1 cursor-pointer hover:opacity-80 transition-opacity text-xs ${regionColors[loc.region]}`}
+                <button
+                  key={location.id}
+                  type="button"
+                  onClick={() => toggleLocation(location.id)}
+                  className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                    isSelected
+                      ? 'border-primary/30 bg-primary/[0.06]'
+                      : 'border-border/70 bg-white hover:border-primary/20'
+                  }`}
                 >
-                  {loc.name}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLocation(loc.id);
-                    }}
-                    className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              );
-            })}
-            {!isExpanded && selectedLocations.length > 5 && (
-              <Badge variant="outline" className="text-xs">
-                +{selectedLocations.length - 5} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Expanded View */}
-        {isExpanded && (
-          <div className="space-y-4 animate-fade-in-up">
-            {/* Region Tabs */}
-            <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
-              {regions.map(region => {
-                const count = region === 'all' 
-                  ? stateLocations.length 
-                  : stateLocations.filter(l => l.region === region).length;
-                
-                return (
-                  <button
-                    key={region}
-                    onClick={() => setActiveRegion(region)}
-                    className={`
-                      px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
-                      ${activeRegion === region 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }
-                    `}
-                  >
-                    {region === 'all' ? 'All Regions' : regionCategories[region]}
-                    <span className="ml-1.5 font-mono opacity-70">
-                      {count}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      isSelected
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-muted text-transparent'
+                    }`}>
+                      <Check className="h-3 w-3" />
+                    </div>
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {location.name}
                     </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Region Summary when not "All" */}
-            {activeRegion !== 'all' && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={`${regionColors[activeRegion]}`}>
-                    {regionCategories[activeRegion]}
+                  </div>
+                  <Badge variant="secondary" className="shrink-0 font-mono">
+                    {location.facilityCount}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    <span className="font-mono text-foreground font-medium">
-                      {stateLocations.filter(l => l.region === activeRegion).reduce((sum, l) => sum + l.facilityCount, 0)}
-                    </span> facilities
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => selectAllInRegion(activeRegion)}
-                  className="text-xs h-7"
-                >
-                  {stateLocations.filter(l => l.region === activeRegion).every(l => selectedLocations.includes(l.id))
-                    ? 'Deselect All'
-                    : 'Select All'}
-                </Button>
-              </div>
-            )}
-
-            {/* Location Grid */}
-            <ScrollArea className="h-[280px] sm:h-[320px] pr-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {sortedLocations.map(loc => {
-                  const isSelected = selectedLocations.includes(loc.id);
-                  return (
-                    <button
-                      key={loc.id}
-                      onClick={() => toggleLocation(loc.id)}
-                      className={`
-                        flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border text-left transition-all group
-                        ${isSelected 
-                          ? 'border-primary bg-primary/5 shadow-sm' 
-                          : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                        }
-                      `}
-                    >
-                      <div className={`
-                        w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors
-                        ${isSelected 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted group-hover:bg-primary/20'
-                        }
-                      `}>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                            {loc.name}
-                          </p>
-                        </div>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
-                          <span className="font-mono">{loc.facilityCount}</span> facilities
-                          <span className="text-muted-foreground/50">•</span>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-[9px] px-1.5 py-0 h-4 ${regionColors[loc.region]}`}
-                          >
-                            {regionCategories[loc.region].replace(' India', '')}
-                          </Badge>
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+                </button>
+              )
+            })}
           </div>
-        )}
-
-        {/* Collapsed Preview - Show top states by facility count */}
-        {!isExpanded && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {stateLocations
-              .sort((a, b) => b.facilityCount - a.facilityCount)
-              .slice(0, 8)
-              .map(loc => {
-                const isSelected = selectedLocations.includes(loc.id);
-                return (
-                  <button
-                    key={loc.id}
-                    onClick={() => toggleLocation(loc.id)}
-                    className={`
-                      flex items-center gap-1.5 p-2 rounded-lg border text-left transition-all text-xs
-                      ${isSelected 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border/50 bg-background hover:border-primary/30 hover:bg-muted/30'
-                      }
-                    `}
-                  >
-                    <div className={`
-                      w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors
-                      ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'}
-                    `}>
-                      {isSelected && <Check className="w-2.5 h-2.5" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className={`truncate block ${isSelected ? 'text-primary font-medium' : 'text-foreground'}`}>
-                        {loc.name}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">{loc.facilityCount}</span>
-                    </div>
-                  </button>
-                );
-              })}
-          </div>
-        )}
-        
-        {!isExpanded && stateLocations.length > 8 && (
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Click expand to see all {stateLocations.length} states by region
-          </p>
-        )}
+        </ScrollArea>
       </CardContent>
     </Card>
-  );
+  )
 }
-

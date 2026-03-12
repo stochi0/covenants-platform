@@ -12,7 +12,13 @@
     "server": "tsx server/index.ts",
     "seed": "tsx scripts/seed-dummy-data.ts",
     "seed:csv": "tsx scripts/seed-from-csv.ts",
-    "clear": "tsx scripts/clear-data.ts"
+    "clear": "tsx scripts/clear-data.ts",
+    "load:platform": "tsx scripts/load-platform-data.ts",
+    "load:data": "tsx scripts/load-data.ts",
+    "load:data:ipv4": "NODE_OPTIONS='--dns-result-order=ipv4first' tsx scripts/load-data.ts",
+    "load:facilities": "tsx scripts/g.ts",
+    "load:empty-tables": "tsx scripts/upsert-platform-empty-tables.ts",
+    "clean:data": "tsx scripts/clean-db-data.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -31,6 +37,7 @@
     "express": "^5.2.1",
     "lucide-react": "^0.562.0",
     "nodemailer": "^8.0.1",
+    "pg": "^8.18.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-simple-maps": "^3.0.0",
@@ -43,6 +50,7 @@
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.9",
     "@types/papaparse": "^5.5.2",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",

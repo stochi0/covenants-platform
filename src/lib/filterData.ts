@@ -54,36 +54,35 @@ export const accreditationCategories = {
 
 // Region categories
 export const regionCategories = {
-  north: 'North India',
-  south: 'South India',
-  east: 'East India',
-  west: 'West India',
-  central: 'Central India',
-  northeast: 'Northeast India',
+  north: 'North',
+  south: 'South',
+  east: 'East',
+  west: 'West',
+  central: 'Central',
+  northeast: 'Northeast',
 } as const;
 
 // Color helpers for categories
 export const chemistryColors: Record<Chemistry['category'], string> = {
-  synthesis: 'bg-blue-500/10 text-blue-700 border-blue-200',
+  synthesis: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
   fermentation: 'bg-green-500/10 text-green-700 border-green-200',
-  extraction: 'bg-amber-500/10 text-amber-700 border-amber-200',
-  biotechnology: 'bg-purple-500/10 text-purple-700 border-purple-200',
-  specialty: 'bg-rose-500/10 text-rose-700 border-rose-200',
+  extraction: 'bg-teal-500/10 text-teal-700 border-teal-200',
+  biotechnology: 'bg-lime-500/10 text-lime-700 border-lime-200',
+  specialty: 'bg-green-600/10 text-green-800 border-green-200',
 };
 
 export const accreditationColors: Record<Accreditation['category'], string> = {
-  regulatory: 'bg-red-500/10 text-red-700 border-red-200',
-  quality: 'bg-blue-500/10 text-blue-700 border-blue-200',
-  environmental: 'bg-green-500/10 text-green-700 border-green-200',
-  international: 'bg-purple-500/10 text-purple-700 border-purple-200',
+  regulatory: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
+  quality: 'bg-green-500/10 text-green-700 border-green-200',
+  environmental: 'bg-teal-500/10 text-teal-700 border-teal-200',
+  international: 'bg-lime-500/10 text-lime-700 border-lime-200',
 };
 
 export const regionColors: Record<StateLocation['region'], string> = {
-  north: 'bg-sky-500/10 text-sky-700 border-sky-200',
-  south: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  east: 'bg-amber-500/10 text-amber-700 border-amber-200',
-  west: 'bg-violet-500/10 text-violet-700 border-violet-200',
-  central: 'bg-orange-500/10 text-orange-700 border-orange-200',
-  northeast: 'bg-teal-500/10 text-teal-700 border-teal-200',
+  north: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
+  south: 'bg-green-500/10 text-green-700 border-green-200',
+  east: 'bg-teal-500/10 text-teal-700 border-teal-200',
+  west: 'bg-lime-500/10 text-lime-700 border-lime-200',
+  central: 'bg-green-600/10 text-green-800 border-green-200',
+  northeast: 'bg-emerald-600/10 text-emerald-800 border-emerald-200',
 };
-

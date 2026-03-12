@@ -134,6 +134,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "ss02", "cv01";
+    min-height: 100vh;
+  }
+  #root {
+    min-height: 100vh;
   }
 }
 
