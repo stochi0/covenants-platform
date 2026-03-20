@@ -75,7 +75,7 @@ function App() {
     event.preventDefault()
 
     if (!supabase) {
-      setAuthError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+      setAuthError('Authentication is currently unavailable. Please try again later.')
       return
     }
 
@@ -95,7 +95,7 @@ function App() {
         }
 
         if (!data.session) {
-          throw new Error('No session was returned from Supabase.')
+          throw new Error('Unable to start a session. Please try again.')
         }
 
         setSession(data.session)
@@ -168,33 +168,16 @@ function App() {
                 <Building2 className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-sm font-semibold tracking-[0.24em] text-primary/75 uppercase">Covenants Platform</p>
-                <p className="text-sm text-muted-foreground">Authenticated access for product discovery and RFQ workflows.</p>
+                <p className="text-sm font-semibold tracking-[0.24em] text-primary/75 uppercase">Capillia</p>
+                <p className="text-sm text-muted-foreground">A Covenants Platform for product search and RFQs.</p>
               </div>
             </div>
 
             <div className="max-w-xl space-y-4">
               <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Sign in or create an account to access Capillia.
+                {mode === 'signin' ? 'Sign in to continue' : 'Create your account'}
               </h1>
-              <p className="text-base leading-7 text-muted-foreground sm:text-lg">
-                This platform now uses the same Supabase session model as the admin console. Sessions persist across refreshes and the dashboard is only available after authentication.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
-                <p className="text-sm font-semibold text-foreground">Secure session persistence</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Active users stay signed in with Supabase token refresh enabled.
-                </p>
-              </div>
-              <div className="rounded-3xl border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
-                <p className="text-sm font-semibold text-foreground">Self-serve onboarding</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  New users can register directly here and confirm by email if your Supabase project requires it.
-                </p>
-              </div>
+              <p className="text-base leading-7 text-muted-foreground sm:text-lg">Use your email and password to access the platform.</p>
             </div>
           </section>
 
@@ -308,9 +291,7 @@ function App() {
               ) : null}
 
               {!supabase ? (
-                <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  Set <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to enable authentication.
-                </p>
+                <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">Authentication is temporarily unavailable.</p>
               ) : null}
 
               <button
