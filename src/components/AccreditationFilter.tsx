@@ -44,10 +44,12 @@ export function AccreditationFilter({
     const normalized = searchQuery.trim().toLowerCase()
     const filtered = normalized
       ? accreditations.filter((accreditation) =>
-          accreditation.shortName.toLowerCase().includes(normalized)
-          || accreditation.name.toLowerCase().includes(normalized)
+          accreditation.facilityCount > 0 && (
+            accreditation.shortName.toLowerCase().includes(normalized)
+            || accreditation.name.toLowerCase().includes(normalized)
+          )
         )
-      : accreditations
+      : accreditations.filter((accreditation) => accreditation.facilityCount > 0)
 
     return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.shortName.localeCompare(b.shortName))
   }, [accreditations, searchQuery])
@@ -89,7 +91,7 @@ export function AccreditationFilter({
               Accreditations
             </CardTitle>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Narrow results by certification and compliance signals from the live accreditation tables.
+              Narrow results by accreditation.
             </p>
           </div>
 
@@ -106,29 +108,29 @@ export function AccreditationFilter({
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
+        <div className="grid items-stretch gap-3 sm:grid-cols-3">
+          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Selected
             </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            <p className="text-3xl font-semibold tracking-tight text-foreground">
               {selectedAccreditations.length}
             </p>
           </div>
-          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
+          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Matching facilities
             </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            <p className="text-3xl font-semibold tracking-tight text-foreground">
               {displayFacilityCount}
             </p>
           </div>
-          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
+          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Available accreditations
             </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {accreditations.length}
+            <p className="text-3xl font-semibold tracking-tight text-foreground">
+              {accreditations.filter((accreditation) => accreditation.facilityCount > 0).length}
             </p>
           </div>
         </div>

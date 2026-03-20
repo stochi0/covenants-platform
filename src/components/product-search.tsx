@@ -224,10 +224,10 @@ export function ProductSearch() {
                 Product search
               </p>
               <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-                Search live product records from Supabase
+                Search products
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Search by product name or CAS number, filter by the product categories currently present in the database, and build a shortlist for RFQ.
+                Search by name or CAS number and build a shortlist for RFQ.
               </p>
             </div>
 

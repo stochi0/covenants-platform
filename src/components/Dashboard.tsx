@@ -54,10 +54,6 @@ function DashboardContent() {
     locations: selectedLocations,
   }
 
-  const hasActiveFilters = selectedChemistries.length > 0
-    || selectedAccreditations.length > 0
-    || selectedLocations.length > 0
-
   const clearAllFilters = () => {
     setSelectedChemistries([])
     setSelectedAccreditations([])
@@ -107,15 +103,13 @@ function DashboardContent() {
         <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
           {activeTab === 'overview' ? (
             <div className="space-y-6">
-              {hasActiveFilters && (
-                <FilterSummary
-                  filters={filters}
-                  onChemistryRemove={(id) => setSelectedChemistries((prev) => prev.filter((item) => item !== id))}
-                  onAccreditationRemove={(id) => setSelectedAccreditations((prev) => prev.filter((item) => item !== id))}
-                  onLocationRemove={(id) => setSelectedLocations((prev) => prev.filter((item) => item !== id))}
-                  onClearAll={clearAllFilters}
-                />
-              )}
+              <FilterSummary
+                filters={filters}
+                onChemistryRemove={(id) => setSelectedChemistries((prev) => prev.filter((item) => item !== id))}
+                onAccreditationRemove={(id) => setSelectedAccreditations((prev) => prev.filter((item) => item !== id))}
+                onLocationRemove={(id) => setSelectedLocations((prev) => prev.filter((item) => item !== id))}
+                onClearAll={clearAllFilters}
+              />
 
               <LocationFilter
                 selectedLocations={selectedLocations}

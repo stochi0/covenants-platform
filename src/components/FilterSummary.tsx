@@ -52,8 +52,6 @@ export function FilterSummary({
     }
   }, [filterKey, filters, hasFilters])
 
-  if (!hasFilters) return null
-
   const selectedChemistries = filters.chemistries
     .map((id) => chemistries.find((chemistry) => chemistry.id === id))
     .filter(Boolean)
@@ -67,8 +65,14 @@ export function FilterSummary({
     .filter(Boolean)
 
   return (
-    <Card className="rounded-[1.5rem] border-[#d7ece8] bg-white/92 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.32)]">
-      <CardContent className="space-y-4 p-4 sm:p-5">
+    <Card
+      className={`overflow-hidden rounded-[1.5rem] border-[#d7ece8] bg-white/92 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.32)] transition-all duration-200 ${
+        hasFilters
+          ? 'max-h-[240px] opacity-100'
+          : 'max-h-0 border-transparent bg-transparent opacity-0 shadow-none'
+      }`}
+    >
+      <CardContent className={`space-y-4 p-4 sm:p-5 ${hasFilters ? '' : 'pointer-events-none'}`}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">

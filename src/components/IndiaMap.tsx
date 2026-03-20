@@ -69,13 +69,17 @@ const IndiaMapComponent = ({
                 const location = locationLookup.get(stateName.trim().toLowerCase())
                 const facilities = location?.facilityCount ?? 0
                 const isSelected = location ? selectedLocations.includes(location.id) : false
-                const isClickable = interactive && Boolean(location)
+                const isClickable = interactive && Boolean(location) && facilities > 0
 
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     onMouseEnter={() => {
+                      if (facilities === 0) {
+                        setHoveredState(null)
+                        return
+                      }
                       setHoveredState({
                         id: location?.id,
                         name: stateName,

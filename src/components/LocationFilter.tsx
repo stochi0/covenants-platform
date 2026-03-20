@@ -28,8 +28,8 @@ export function LocationFilter({
   const visibleLocations = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()
     const base = normalized
-      ? stateLocations.filter((location) => location.name.toLowerCase().includes(normalized))
-      : stateLocations
+      ? stateLocations.filter((location) => location.facilityCount > 0 && location.name.toLowerCase().includes(normalized))
+      : stateLocations.filter((location) => location.facilityCount > 0)
 
     return [...base].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
   }, [searchQuery, stateLocations])

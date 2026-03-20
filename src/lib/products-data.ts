@@ -30,6 +30,9 @@ export interface SearchParams {
   pageSize: number
 }
 
+const PRODUCT_CATEGORY_ORDER = ['api', 'intermediate', 'chemical', 'impurity'] as const
+let productCategoryFacetCache: ProductCategoryFacet[] | null = null
+
 function mapRow(row: {
   id: string
   product_name: string | null
@@ -56,24 +59,28 @@ export function formatProductCategoryLabel(category: string | null | undefined) 
 
 export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> {
   if (!supabase) return []
+  if (productCategoryFacetCache) return productCategoryFacetCache
+  const client = supabase
 
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('category')
-      .not('category', 'is', null)
+    const categoryCounts = await Promise.all(
+      PRODUCT_CATEGORY_ORDER.map(async (category) => {
+        const { count, error } = await client
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('category', category)
 
-    if (error) throw error
+        if (error) throw error
 
-    const countByCategory = new Map<string, number>()
-    for (const row of data ?? []) {
-      if (!row.category) continue
-      countByCategory.set(row.category, (countByCategory.get(row.category) ?? 0) + 1)
-    }
+        return {
+          value: category,
+          count: count ?? 0,
+        }
+      })
+    )
 
-    return [...countByCategory.entries()]
-      .map(([value, count]) => ({ value, count }))
-      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    productCategoryFacetCache = categoryCounts.filter((category) => category.count > 0)
+    return productCategoryFacetCache
   } catch (err) {
     console.error('Error fetching product categories:', err)
     return []
