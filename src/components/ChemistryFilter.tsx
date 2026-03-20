@@ -5,11 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  chemistryCategories,
-  chemistryColors,
-  type Chemistry,
-} from '@/lib/filterData'
 import { fetchFacilityCountByChemistries } from '@/lib/filterDataApi'
 import { useFilterData } from '@/contexts/FilterDataContext'
 
@@ -24,7 +19,6 @@ export function ChemistryFilter({
 }: ChemistryFilterProps) {
   const { chemistries, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState<Chemistry['category'] | 'all'>('all')
   const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
 
   const selectedKey = selectedChemistries.join('|')
@@ -48,68 +42,90 @@ export function ChemistryFilter({
 
   const visibleChemistries = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()
-    const filtered = chemistries.filter((chemistry) => {
-      const matchesCategory = activeCategory === 'all' || chemistry.category === activeCategory
-      const matchesQuery = !normalized || chemistry.name.toLowerCase().includes(normalized)
-      return matchesCategory && matchesQuery
-    })
+    const filtered = normalized
+      ? chemistries.filter((chemistry) => chemistry.name.toLowerCase().includes(normalized))
+      : chemistries
 
     return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
-  }, [activeCategory, chemistries, searchQuery])
+  }, [chemistries, searchQuery])
+
+  const selectedChemistryObjects = useMemo(
+    () => chemistries.filter((chemistry) => selectedChemistries.includes(chemistry.id)),
+    [chemistries, selectedChemistries]
+  )
 
   const displayFacilityCount = selectedChemistries.length === 0
     ? totalFacilities
     : (selectedFacilityCount?.key === selectedKey ? selectedFacilityCount.value : '—')
 
   const toggleChemistry = (chemistryId: string) => {
-    if (selectedChemistries.includes(chemistryId)) {
-      onSelectionChange(selectedChemistries.filter((id) => id !== chemistryId))
-      return
-    }
-
-    onSelectionChange([...selectedChemistries, chemistryId])
+    onSelectionChange(
+      selectedChemistries.includes(chemistryId)
+        ? selectedChemistries.filter((id) => id !== chemistryId)
+        : [...selectedChemistries, chemistryId]
+    )
   }
 
   if (isLoading) {
     return (
-      <Card className="rounded-[1.5rem] border-white/70 bg-white/85">
+      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
         <CardContent className="flex min-h-[320px] items-center justify-center">
-          <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="rounded-[1.5rem] border-white/70 bg-white/85 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
+    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
       <CardHeader className="space-y-4 px-5 pb-0 pt-5">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Beaker className="h-4 w-4 text-primary" />
-            Chemistries
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Beaker className="h-5 w-5 text-primary" />
+              Chemistries
+            </CardTitle>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Filter by chemistry capability directly from the `chemistries` and `facility_chemistries` tables.
+            </p>
+          </div>
+
           {selectedChemistries.length > 0 && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => onSelectionChange([])} className="rounded-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onSelectionChange([])}
+              className="rounded-full border-[#d7ece8] bg-white"
+            >
               Clear
             </Button>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-[1.1rem] border border-primary/10 bg-primary/[0.06] px-4 py-3">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Selected
             </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {selectedChemistries.length}
             </p>
           </div>
-          <div className="rounded-[1.1rem] border border-border/70 bg-white px-4 py-3">
+          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Facilities
+              Matching facilities
             </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {displayFacilityCount}
+            </p>
+          </div>
+          <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Available chemistries
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {chemistries.length}
             </p>
           </div>
         </div>
@@ -119,28 +135,24 @@ export function ChemistryFilter({
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search chemistries"
-            className="h-11 rounded-[1rem] border-border/70 bg-white pl-10"
+            placeholder="Search chemistry capabilities"
+            className="h-12 rounded-[1rem] border-[#d7ece8] bg-white pl-10"
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {(['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const).map((category) => {
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setActiveCategory(category)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                  activeCategory === category
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border/70 bg-white text-foreground hover:border-primary/20'
-                }`}
+          {selectedChemistryObjects.length > 0 ? (
+            selectedChemistryObjects.map((chemistry) => (
+              <Badge
+                key={chemistry.id}
+                className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary"
               >
-                {category === 'all' ? 'All' : chemistryCategories[category]}
-              </button>
-            )
-          })}
+                {chemistry.name}
+              </Badge>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No chemistry filters selected.</p>
+          )}
         </div>
       </CardHeader>
 
@@ -156,30 +168,26 @@ export function ChemistryFilter({
                   onClick={() => toggleChemistry(chemistry.id)}
                   className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
                     isSelected
-                      ? 'border-primary/30 bg-primary/[0.06]'
-                      : 'border-border/70 bg-white hover:border-primary/20'
+                      ? 'border-primary/25 bg-primary/[0.06]'
+                      : 'border-[#d7ece8] bg-white hover:border-primary/20'
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
                       isSelected
                         ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-muted text-transparent'
+                        : 'border-[#d7ece8] bg-[#f3fbfa] text-transparent'
                     }`}>
                       <Check className="h-3 w-3" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {chemistry.name}
-                      </p>
-                    </div>
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {chemistry.name}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Badge className={`${chemistryColors[chemistry.category]} hidden sm:inline-flex`}>
-                      {chemistryCategories[chemistry.category]}
-                    </Badge>
-                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {chemistry.facilityCount.toLocaleString()}
+                  </span>
                 </button>
               )
             })}

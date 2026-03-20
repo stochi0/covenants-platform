@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Check, MapPin, Search } from 'lucide-react'
+import { Check, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { useFilterData } from '@/contexts/FilterDataContext'
+import { IndiaMap } from './IndiaMap'
 
 interface LocationFilterProps {
   selectedLocations: string[]
@@ -18,142 +20,190 @@ export function LocationFilter({
   const { stateLocations, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
 
+  const selectedLocationObjects = useMemo(
+    () => stateLocations.filter((location) => selectedLocations.includes(location.id)),
+    [selectedLocations, stateLocations]
+  )
+
   const visibleLocations = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()
-    const filtered = normalized
+    const base = normalized
       ? stateLocations.filter((location) => location.name.toLowerCase().includes(normalized))
       : stateLocations
 
-    return [...filtered].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
+    return [...base].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
   }, [searchQuery, stateLocations])
 
-  const topLocations = visibleLocations.slice(0, 5)
-
-  const selectedFacilityCount = selectedLocations.length > 0
-    ? stateLocations
-        .filter((location) => selectedLocations.includes(location.id))
-        .reduce((sum, location) => sum + location.facilityCount, 0)
-    : totalFacilities
+  const selectedFacilityCount = selectedLocationObjects.reduce(
+    (sum, location) => sum + location.facilityCount,
+    0
+  )
 
   const toggleLocation = (locationId: string) => {
-    if (selectedLocations.includes(locationId)) {
-      onSelectionChange(selectedLocations.filter((id) => id !== locationId))
-      return
-    }
-
-    onSelectionChange([...selectedLocations, locationId])
+    onSelectionChange(
+      selectedLocations.includes(locationId)
+        ? selectedLocations.filter((id) => id !== locationId)
+        : [...selectedLocations, locationId]
+    )
   }
 
   if (isLoading) {
     return (
-      <Card className="rounded-[1.5rem] border-white/70 bg-white/85">
-        <CardContent className="flex min-h-[360px] items-center justify-center">
-          <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+        <CardContent className="flex min-h-[420px] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="rounded-[1.5rem] border-white/70 bg-white/85 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
-      <CardHeader className="space-y-4 px-5 pb-0 pt-5">
-        <div className="flex items-center justify-between gap-3">
+    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
+      <CardHeader className="space-y-5 px-5 pb-0 pt-5 sm:px-6 sm:pt-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MapPin className="h-4 w-4 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <MapPin className="h-5 w-5 text-primary" />
               Locations
             </CardTitle>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Search by region name or use the India map to refine the manufacturing footprint.
+            </p>
           </div>
+
           {selectedLocations.length > 0 && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => onSelectionChange([])} className="rounded-full">
-              Clear
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onSelectionChange([])}
+              className="rounded-full border-[#d7ece8] bg-white"
+            >
+              Clear states
             </Button>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-[1.1rem] border border-primary/10 bg-primary/[0.06] px-4 py-3">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Scope
+              Total facilities
             </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {totalFacilities.toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-white px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Selected states
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {selectedLocations.length}
+            </p>
+          </div>
+          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-white px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Selected facilities
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {selectedFacilityCount.toLocaleString()}
             </p>
           </div>
-          <div className="rounded-[1.1rem] border border-border/70 bg-white px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Selected
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {selectedLocations.length || stateLocations.length}
-            </p>
-          </div>
-        </div>
-
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search locations"
-            className="h-11 rounded-[1rem] border-border/70 bg-white pl-10"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {topLocations.map((location) => {
-            const isSelected = selectedLocations.includes(location.id)
-            return (
-              <button
-                key={location.id}
-                type="button"
-                onClick={() => toggleLocation(location.id)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                  isSelected
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border/70 bg-white text-foreground hover:border-primary/20'
-                }`}
-              >
-                {location.name}
-              </button>
-            )
-          })}
         </div>
       </CardHeader>
 
-      <CardContent className="px-5 pb-5 pt-5">
-        <ScrollArea className="h-[340px] pr-4">
-          <div className="space-y-2.5">
-            {visibleLocations.map((location) => {
-              const isSelected = selectedLocations.includes(location.id)
-              return (
-                <button
-                  key={location.id}
-                  type="button"
-                  onClick={() => toggleLocation(location.id)}
-                  className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
-                    isSelected
-                      ? 'border-primary/30 bg-primary/[0.06]'
-                      : 'border-border/70 bg-white hover:border-primary/20'
-                  }`}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                      isSelected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-muted text-transparent'
-                    }`}>
-                      <Check className="h-3 w-3" />
-                    </div>
-                    <span className="truncate text-sm font-medium text-foreground">
-                      {location.name}
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
+      <CardContent className="space-y-5 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+        <IndiaMap
+          interactive
+          selectedLocations={selectedLocations}
+          onLocationChange={onSelectionChange}
+        />
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search states"
+                className="h-12 rounded-[1rem] border-[#d7ece8] bg-white pl-10"
+              />
+            </div>
+
+            <ScrollArea className="h-[340px] pr-4">
+              <div className="space-y-2.5">
+                {visibleLocations.map((location) => {
+                  const isSelected = selectedLocations.includes(location.id)
+                  return (
+                    <button
+                      key={location.id}
+                      type="button"
+                      onClick={() => toggleLocation(location.id)}
+                      className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                        isSelected
+                          ? 'border-primary/25 bg-primary/[0.06]'
+                          : 'border-[#d7ece8] bg-white hover:border-primary/20'
+                      }`}
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                          isSelected
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-[#d7ece8] bg-[#f3fbfa] text-transparent'
+                        }`}>
+                          <Check className="h-3 w-3" />
+                        </div>
+                        <span className="truncate text-sm font-medium text-foreground">
+                          {location.name}
+                        </span>
+                      </div>
+
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {location.facilityCount.toLocaleString()}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
+
+          <div className="rounded-[1.5rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(248,252,252,0.95),rgba(255,255,255,0.95))] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Active selection</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  The shortlist below updates directly from your live state filters.
+                </p>
+              </div>
+              <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
+                {selectedLocations.length}
+              </Badge>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedLocationObjects.length > 0 ? (
+                selectedLocationObjects.map((location) => (
+                  <Badge
+                    key={location.id}
+                    className="gap-1.5 border-[#d7ece8] bg-white px-3 py-1.5 text-foreground"
+                  >
+                    {location.name}
+                    <button type="button" onClick={() => toggleLocation(location.id)}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))
+              ) : (
+                <div className="rounded-[1rem] border border-dashed border-[#d7ece8] bg-white/80 px-4 py-6 text-sm text-muted-foreground">
+                  No states selected yet. Pick states from the map or the list.
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

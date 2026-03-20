@@ -1,17 +1,12 @@
-import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowRight,
-  Beaker,
   Check,
   FileText,
-  FlaskConical,
   Hash,
-  Layers,
   Loader2,
   Package,
   Search,
-  TestTubes,
   Type,
   X,
 } from 'lucide-react'
@@ -20,30 +15,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RFQModal } from './rfq-modal'
 import {
-  categoryInfo,
+  fetchProductCategories,
+  formatProductCategoryLabel,
   searchProductsPaginated,
   type Product,
+  type ProductCategoryFacet,
   type SearchType,
 } from '@/lib/products-data'
 import { useFilterData } from '@/contexts/FilterDataContext'
 
-type Category = 'api' | 'impurity' | 'intermediate' | 'chemical'
-
 const PAGE_SIZE = 24
-
-const categoryIcons: Record<Category, ReactNode> = {
-  api: <FlaskConical className="h-4 w-4" />,
-  impurity: <TestTubes className="h-4 w-4" />,
-  intermediate: <Beaker className="h-4 w-4" />,
-  chemical: <Layers className="h-4 w-4" />,
-}
-
-const categoryClasses: Record<Category, string> = {
-  api: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  impurity: 'border-teal-200 bg-teal-50 text-teal-800',
-  intermediate: 'border-lime-200 bg-lime-50 text-lime-800',
-  chemical: 'border-green-200 bg-green-50 text-green-800',
-}
 
 function highlightText(text: string, query: string) {
   const trimmed = query.trim()
@@ -53,20 +34,26 @@ function highlightText(text: string, query: string) {
   const regex = new RegExp(`(${escaped})`, 'gi')
   const parts = text.split(regex)
 
-  return parts.map((part, index) => {
-    if (part.toLowerCase() === trimmed.toLowerCase()) {
-      return (
-        <mark
-          key={`${part}-${index}`}
-          className="rounded bg-primary/15 px-1 py-0.5 text-foreground"
-        >
-          {part}
-        </mark>
-      )
-    }
+  return parts.map((part, index) => (
+    part.toLowerCase() === trimmed.toLowerCase()
+      ? (
+          <mark
+            key={`${part}-${index}`}
+            className="rounded bg-primary/15 px-1 py-0.5 text-foreground"
+          >
+            {part}
+          </mark>
+        )
+      : part
+  ))
+}
 
-    return part
-  })
+function ProductCategoryBadge({ category }: { category: string | null }) {
+  return (
+    <Badge className="border-[#d7ece8] bg-[#f3fbfa] px-3 py-1 text-foreground">
+      {formatProductCategoryLabel(category)}
+    </Badge>
+  )
 }
 
 export function ProductSearch() {
@@ -76,7 +63,8 @@ export function ProductSearch() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchType, setSearchType] = useState<SearchType>('name')
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [categoryFacets, setCategoryFacets] = useState<ProductCategoryFacet[]>([])
 
   const [products, setProducts] = useState<Product[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -84,6 +72,7 @@ export function ProductSearch() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isFacetLoading, setIsFacetLoading] = useState(true)
   const [hasSearched, setHasSearched] = useState(false)
 
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
@@ -99,11 +88,27 @@ export function ProductSearch() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+
+    fetchProductCategories()
+      .then((facets) => {
+        if (!cancelled) setCategoryFacets(facets)
+      })
+      .finally(() => {
+        if (!cancelled) setIsFacetLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const performSearch = useCallback(
     async (
       query: string,
       type: SearchType,
-      categories: Category[],
+      categories: string[],
       page: number,
       append = false
     ) => {
@@ -146,18 +151,14 @@ export function ProductSearch() {
   )
 
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current)
 
     debounceRef.current = setTimeout(() => {
       performSearch(searchQuery, searchType, selectedCategories, 1, false)
     }, 220)
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [performSearch, searchQuery, searchType, selectedCategories])
 
@@ -167,7 +168,7 @@ export function ProductSearch() {
     }
   }, [currentPage, hasMore, isLoadingMore, performSearch, searchQuery, searchType, selectedCategories])
 
-  const toggleCategory = useCallback((category: Category) => {
+  const toggleCategory = useCallback((category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((item) => item !== category)
@@ -216,25 +217,32 @@ export function ProductSearch() {
   return (
     <>
       <div className="space-y-6">
-        <section className="rounded-[1.5rem] border border-white/80 bg-white/84 p-4 shadow-[0_24px_80px_-52px_rgba(15,118,110,0.45)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+        <section className="rounded-[2rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-5 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:p-6">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                 Product search
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+                Search live product records from Supabase
               </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                Search by product name or CAS number, filter by the product categories currently present in the database, and build a shortlist for RFQ.
+              </p>
             </div>
-            <Badge className="w-fit border-primary/10 bg-primary/10 text-primary">
-              {platformStats.products.toLocaleString()}
+
+            <Badge className="w-fit border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
+              {platformStats.products.toLocaleString()} products
             </Badge>
           </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[180px_minmax(0,1fr)]">
-            <div className="rounded-[1rem] border border-border/70 bg-white p-1">
+          <div className="mt-6 grid gap-4 xl:grid-cols-[190px_minmax(0,1fr)]">
+            <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white p-1">
               <div className="grid grid-cols-2 gap-1">
                 <button
                   type="button"
                   onClick={() => setSearchType('name')}
-                  className={`flex items-center justify-center gap-2 rounded-[0.8rem] px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                     searchType === 'name'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
@@ -246,7 +254,7 @@ export function ProductSearch() {
                 <button
                   type="button"
                   onClick={() => setSearchType('cas')}
-                  className={`flex items-center justify-center gap-2 rounded-[0.8rem] px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                     searchType === 'cas'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
@@ -258,7 +266,7 @@ export function ProductSearch() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -266,8 +274,8 @@ export function ProductSearch() {
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder={searchType === 'cas' ? 'Search by CAS number' : 'Search by product name'}
-                  className="h-12 rounded-[1rem] border-border/70 bg-white pl-11 pr-11 text-sm shadow-none"
-                  style={{ fontFamily: searchType === 'cas' ? 'var(--font-jetbrains), monospace' : 'inherit' }}
+                  className="h-12 rounded-[1rem] border-[#d7ece8] bg-white pl-11 pr-11 text-sm shadow-none"
+                  style={{ fontFamily: searchType === 'cas' ? 'var(--font-mono)' : 'inherit' }}
                 />
                 {searchQuery && (
                   <button
@@ -281,26 +289,30 @@ export function ProductSearch() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {(['api', 'impurity', 'intermediate', 'chemical'] as Category[]).map((category) => {
-                  const isActive = selectedCategories.includes(category)
-                  return (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => toggleCategory(category)}
-                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                        isActive
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border/70 bg-white text-foreground hover:border-primary/20'
-                      }`}
-                    >
-                      <span className={isActive ? 'text-primary-foreground' : 'text-primary'}>
-                        {categoryIcons[category]}
-                      </span>
-                      {categoryInfo[category].label}
-                    </button>
-                  )
-                })}
+                {isFacetLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading categories...</div>
+                ) : (
+                  categoryFacets.map((category) => {
+                    const isActive = selectedCategories.includes(category.value)
+                    return (
+                      <button
+                        key={category.value}
+                        type="button"
+                        onClick={() => toggleCategory(category.value)}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                          isActive
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-[#d7ece8] bg-white text-foreground hover:border-primary/20'
+                        }`}
+                      >
+                        {formatProductCategoryLabel(category.value)}
+                        <span className={isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}>
+                          {category.count.toLocaleString()}
+                        </span>
+                      </button>
+                    )
+                  })
+                )}
                 {selectedCategories.length > 0 && (
                   <button
                     type="button"
@@ -315,9 +327,9 @@ export function ProductSearch() {
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_320px] lg:items-start">
-          <section className="min-w-0 rounded-[1.5rem] border border-white/80 bg-white/84 shadow-[0_24px_80px_-52px_rgba(15,118,110,0.45)]">
-            <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-4 sm:px-5">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_340px] lg:items-start">
+          <section className="min-w-0 rounded-[1.75rem] border border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#d7ece8] px-4 py-4 sm:px-5">
               <p className="text-sm font-medium text-foreground">{resultSummary}</p>
               {products.length > 0 && (
                 <Button
@@ -335,14 +347,12 @@ export function ProductSearch() {
                     setSelectedProducts((prev) => {
                       const next = [...prev]
                       for (const product of products) {
-                        if (!next.some((item) => item.id === product.id)) {
-                          next.push(product)
-                        }
+                        if (!next.some((item) => item.id === product.id)) next.push(product)
                       }
                       return next
                     })
                   }}
-                  className="rounded-full"
+                  className="rounded-full border-[#d7ece8] bg-white"
                 >
                   {allVisibleSelected ? 'Clear visible' : `Select visible (${products.length})`}
                 </Button>
@@ -396,7 +406,7 @@ export function ProductSearch() {
                       variant="outline"
                       onClick={handleLoadMore}
                       disabled={isLoadingMore}
-                      className="mt-2 h-11 w-full rounded-[1rem]"
+                      className="mt-2 h-11 w-full rounded-[1rem] border-[#d7ece8] bg-white"
                     >
                       {isLoadingMore ? (
                         <>
@@ -419,8 +429,8 @@ export function ProductSearch() {
           </section>
 
           <aside className="lg:sticky lg:top-24">
-            <div className="rounded-[1.5rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(240,253,250,0.96))] shadow-[0_24px_80px_-52px_rgba(15,118,110,0.35)]">
-              <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-4 sm:px-5">
+            <div className="rounded-[1.75rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,249,247,0.94))] shadow-[0_30px_80px_-56px_rgba(15,118,110,0.4)]">
+              <div className="flex items-center justify-between gap-3 border-b border-[#d7ece8] px-4 py-4 sm:px-5">
                 <p className="text-sm font-semibold text-foreground">Shortlist</p>
                 <Badge className="border-primary/10 bg-primary/10 text-primary">
                   {selectedProducts.length}
@@ -429,7 +439,7 @@ export function ProductSearch() {
 
               <div className="px-4 py-4 sm:px-5">
                 {selectedProducts.length === 0 ? (
-                  <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-primary/15 bg-white/70 px-6 text-center">
+                  <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-[#d7ece8] bg-white/80 px-6 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <FileText className="h-5 w-5" />
                     </div>
@@ -440,7 +450,7 @@ export function ProductSearch() {
                     {selectedProducts.map((product) => (
                       <div
                         key={product.id}
-                        className="rounded-[1rem] border border-white/80 bg-white/80 p-3"
+                        className="rounded-[1rem] border border-[#d7ece8] bg-white/85 p-3"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -460,10 +470,7 @@ export function ProductSearch() {
                           </button>
                         </div>
                         <div className="mt-3">
-                          <Badge className={categoryClasses[product.category]}>
-                            <span className="mr-1.5">{categoryIcons[product.category]}</span>
-                            {categoryInfo[product.category].label}
-                          </Badge>
+                          <ProductCategoryBadge category={product.category} />
                         </div>
                       </div>
                     ))}
@@ -471,7 +478,7 @@ export function ProductSearch() {
                 )}
               </div>
 
-              <div className="border-t border-border/70 px-4 py-4 sm:px-5">
+              <div className="border-t border-[#d7ece8] px-4 py-4 sm:px-5">
                 {selectedProducts.length > 0 && (
                   <button
                     type="button"
@@ -536,8 +543,8 @@ function ProductCard({
       onClick={onToggle}
       className={`w-full rounded-[1.1rem] border px-4 py-4 text-left transition-colors ${
         isSelected
-          ? 'border-primary/30 bg-primary/[0.06]'
-          : 'border-border/70 bg-white hover:border-primary/20'
+          ? 'border-primary/25 bg-primary/[0.06]'
+          : 'border-[#d7ece8] bg-white hover:border-primary/20'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -545,7 +552,7 @@ function ProductCard({
           className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
             isSelected
               ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-white text-transparent'
+              : 'border-[#d7ece8] bg-white text-transparent'
           }`}
         >
           <Check className="h-3.5 w-3.5" />
@@ -564,10 +571,7 @@ function ProductCard({
               </p>
             </div>
 
-            <Badge className={`${categoryClasses[product.category]} shrink-0`}>
-              <span className="mr-1.5">{categoryIcons[product.category]}</span>
-              {categoryInfo[product.category].label}
-            </Badge>
+            <ProductCategoryBadge category={product.category} />
           </div>
         </div>
       </div>

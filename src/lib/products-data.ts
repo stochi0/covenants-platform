@@ -1,17 +1,19 @@
 import { supabase } from './supabase'
 
-// Product Database Schema (matches Supabase products table)
 export interface Product {
   id: string
   name: string
   casNumber: string
-  category: 'api' | 'impurity' | 'intermediate' | 'chemical'
+  category: string | null
 }
 
-// Search types
+export interface ProductCategoryFacet {
+  value: string
+  count: number
+}
+
 export type SearchType = 'name' | 'cas'
 
-// Paginated response
 export interface PaginatedResponse {
   products: Product[]
   total: number
@@ -20,7 +22,6 @@ export interface PaginatedResponse {
   hasMore: boolean
 }
 
-// Search params
 export interface SearchParams {
   query: string
   searchType: SearchType
@@ -29,45 +30,56 @@ export interface SearchParams {
   pageSize: number
 }
 
-// Category display info
-export const categoryInfo = {
-  api: {
-    label: 'API',
-    fullName: 'Active Pharmaceutical Ingredient',
-    color: 'primary',
-    icon: 'FlaskConical',
-  },
-  impurity: {
-    label: 'Impurity',
-    fullName: 'Reference Standard / Impurity',
-    color: 'accent',
-    icon: 'TestTubes',
-  },
-  intermediate: {
-    label: 'Intermediate',
-    fullName: 'Pharmaceutical Intermediate',
-    color: 'primary',
-    icon: 'Beaker',
-  },
-  chemical: {
-    label: 'Chemical',
-    fullName: 'Specialty Chemical / Excipient',
-    color: 'accent',
-    icon: 'Layers',
-  },
-}
-
-// Map DB row to frontend Product
-function mapRow(row: { id: string; product_name: string; cas_number: string; category: Product['category'] }): Product {
+function mapRow(row: {
+  id: string
+  product_name: string | null
+  cas_number: string | null
+  category: string | null
+}): Product {
   return {
     id: row.id,
-    name: row.product_name,
-    casNumber: row.cas_number,
+    name: row.product_name ?? 'Unnamed product',
+    casNumber: row.cas_number ?? 'N/A',
     category: row.category,
   }
 }
 
-// Paginated search using Supabase client (Vite – no Next.js API)
+export function formatProductCategoryLabel(category: string | null | undefined) {
+  if (!category) return 'Uncategorized'
+
+  return category
+    .split(/[_-\s]+/)
+    .filter(Boolean)
+    .map((part) => (part.toLowerCase() === 'api' ? 'API' : `${part[0]?.toUpperCase() ?? ''}${part.slice(1).toLowerCase()}`))
+    .join(' ')
+}
+
+export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> {
+  if (!supabase) return []
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('category')
+      .not('category', 'is', null)
+
+    if (error) throw error
+
+    const countByCategory = new Map<string, number>()
+    for (const row of data ?? []) {
+      if (!row.category) continue
+      countByCategory.set(row.category, (countByCategory.get(row.category) ?? 0) + 1)
+    }
+
+    return [...countByCategory.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+  } catch (err) {
+    console.error('Error fetching product categories:', err)
+    return []
+  }
+}
+
 export async function searchProductsPaginated(params: SearchParams): Promise<PaginatedResponse> {
   const { query, searchType, categories, page, pageSize } = params
 
@@ -82,31 +94,21 @@ export async function searchProductsPaginated(params: SearchParams): Promise<Pag
   }
 
   try {
-    let q = supabase
-      .from('products')
-      .select('*', { count: 'exact' })
+    let q = supabase.from('products').select('*', { count: 'exact' })
 
     if (categories.length > 0) {
       q = q.in('category', categories)
     }
 
     if (query.trim()) {
-      if (searchType === 'cas') {
-        q = q.ilike('cas_number', `%${query.trim()}%`)
-      } else {
-        q = q.ilike('product_name', `%${query.trim()}%`)
-      }
+      q = searchType === 'cas'
+        ? q.ilike('cas_number', `%${query.trim()}%`)
+        : q.ilike('product_name', `%${query.trim()}%`)
     }
 
-    if (query.trim()) {
-      if (searchType === 'cas') {
-        q = q.order('cas_number', { ascending: true })
-      } else {
-        q = q.order('product_name', { ascending: true })
-      }
-    } else {
-      q = q.order('product_name', { ascending: true })
-    }
+    q = searchType === 'cas'
+      ? q.order('cas_number', { ascending: true })
+      : q.order('product_name', { ascending: true })
 
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1
@@ -119,45 +121,33 @@ export async function searchProductsPaginated(params: SearchParams): Promise<Pag
       throw new Error(error.message || 'Failed to fetch products')
     }
 
-    const products = (data || []).map(mapRow)
+    const products = (data ?? []).map(mapRow)
+    const searchTerm = query.toLowerCase().trim()
 
-    // Client-side sort for exact match prioritization
-    let sortedProducts = products
-    if (query.trim()) {
-      const searchTerm = query.toLowerCase().trim()
-      sortedProducts = [...products].sort((a, b) => {
-        if (searchType === 'cas') {
-          const aExact = a.casNumber.toLowerCase() === searchTerm
-          const bExact = b.casNumber.toLowerCase() === searchTerm
-          if (aExact && !bExact) return -1
-          if (!aExact && bExact) return 1
-          const aStarts = a.casNumber.toLowerCase().startsWith(searchTerm)
-          const bStarts = b.casNumber.toLowerCase().startsWith(searchTerm)
-          if (aStarts && !bStarts) return -1
-          if (!aStarts && bStarts) return 1
-        } else {
-          const aExact = a.name.toLowerCase() === searchTerm
-          const bExact = b.name.toLowerCase() === searchTerm
-          if (aExact && !bExact) return -1
-          if (!aExact && bExact) return 1
-          const aStarts = a.name.toLowerCase().startsWith(searchTerm)
-          const bStarts = b.name.toLowerCase().startsWith(searchTerm)
-          if (aStarts && !bStarts) return -1
-          if (!aStarts && bStarts) return 1
-        }
-        return a.name.localeCompare(b.name)
-      })
-    }
+    const sortedProducts = searchTerm
+      ? [...products].sort((a, b) => {
+          const aSource = searchType === 'cas' ? a.casNumber : a.name
+          const bSource = searchType === 'cas' ? b.casNumber : b.name
+          const aLower = aSource.toLowerCase()
+          const bLower = bSource.toLowerCase()
+          const aExact = aLower === searchTerm
+          const bExact = bLower === searchTerm
+          if (aExact !== bExact) return aExact ? -1 : 1
+          const aStarts = aLower.startsWith(searchTerm)
+          const bStarts = bLower.startsWith(searchTerm)
+          if (aStarts !== bStarts) return aStarts ? -1 : 1
+          return a.name.localeCompare(b.name)
+        })
+      : products
 
     const total = count ?? 0
-    const hasMore = to < total - 1
 
     return {
       products: sortedProducts,
       total,
       page,
       pageSize,
-      hasMore,
+      hasMore: to < total - 1,
     }
   } catch (err) {
     console.error('Product search error:', err)
@@ -165,7 +155,6 @@ export async function searchProductsPaginated(params: SearchParams): Promise<Pag
   }
 }
 
-// Get product by ID via Supabase client
 export async function getProductById(id: string): Promise<Product | undefined> {
   if (!supabase) return undefined
 
@@ -180,6 +169,7 @@ export async function getProductById(id: string): Promise<Product | undefined> {
       if (error.code === 'PGRST116') return undefined
       throw new Error(error.message)
     }
+
     return data ? mapRow(data) : undefined
   } catch (error) {
     console.error('Error fetching product:', error)
@@ -187,7 +177,6 @@ export async function getProductById(id: string): Promise<Product | undefined> {
   }
 }
 
-// Get products by IDs via Supabase client
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
   if (ids.length === 0 || !supabase) return []
 
@@ -198,7 +187,7 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
       .in('id', ids)
 
     if (error) throw new Error(error.message)
-    return (data || []).map(mapRow)
+    return (data ?? []).map(mapRow)
   } catch (error) {
     console.error('Error fetching products:', error)
     return []

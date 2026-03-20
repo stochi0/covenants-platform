@@ -3,11 +3,7 @@ import { Beaker, Factory, Filter, MapPin, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  accreditationColors,
-  chemistryColors,
-  type FilterState,
-} from '@/lib/filterData'
+import type { FilterState } from '@/lib/filterData'
 import { fetchFacilityCountByFilters } from '@/lib/filterDataApi'
 import { useFilterData } from '@/contexts/FilterDataContext'
 
@@ -71,30 +67,53 @@ export function FilterSummary({
     .filter(Boolean)
 
   return (
-    <Card className="rounded-[1.5rem] border-primary/15 bg-white/88 shadow-[0_18px_50px_-36px_rgba(15,118,110,0.45)]">
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/92 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.4)]">
+      <CardContent className="space-y-4 p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Filter className="h-4 w-4" />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Active filters</span>
-              <Badge className="border-primary/10 bg-primary/10 text-primary">
-                <Factory className="mr-1 h-3 w-3" />
-                {filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : '—'}
-              </Badge>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Active filters</p>
+              <p className="text-sm text-muted-foreground">
+                This view currently matches{' '}
+                <span className="font-semibold text-foreground">
+                  {filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : '—'}
+                </span>{' '}
+                facilities.
+              </p>
             </div>
           </div>
 
-          <Button type="button" variant="ghost" size="sm" onClick={onClearAll} className="rounded-full">
-            Clear
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
+              <Factory className="mr-1 h-3 w-3" />
+              {[
+                filters.locations.length,
+                filters.chemistries.length,
+                filters.accreditations.length,
+              ].reduce((sum, value) => sum + value, 0)} selected
+            </Badge>
+            <Button type="button" variant="outline" size="sm" onClick={onClearAll} className="rounded-full border-[#d7ece8] bg-white">
+              Clear all
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {selectedLocations.map((location) => (
+            <Badge key={location!.id} className="gap-1.5 border-[#d7ece8] bg-[#f3fbfa] px-3 py-1.5 text-foreground">
+              <MapPin className="h-3 w-3" />
+              {location!.name}
+              <button type="button" onClick={() => onLocationRemove(location!.id)}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+
           {selectedChemistries.map((chemistry) => (
-            <Badge key={chemistry!.id} className={`${chemistryColors[chemistry!.category]} gap-1.5 pl-3 pr-2 py-1.5`}>
+            <Badge key={chemistry!.id} className="gap-1.5 border-[#d7ece8] bg-[#f3fbfa] px-3 py-1.5 text-foreground">
               <Beaker className="h-3 w-3" />
               {chemistry!.name}
               <button type="button" onClick={() => onChemistryRemove(chemistry!.id)}>
@@ -104,20 +123,10 @@ export function FilterSummary({
           ))}
 
           {selectedAccreditations.map((accreditation) => (
-            <Badge key={accreditation!.id} className={`${accreditationColors[accreditation!.category]} gap-1.5 pl-3 pr-2 py-1.5`}>
+            <Badge key={accreditation!.id} className="gap-1.5 border-[#d7ece8] bg-[#f3fbfa] px-3 py-1.5 text-foreground">
               <ShieldCheck className="h-3 w-3" />
               {accreditation!.shortName}
               <button type="button" onClick={() => onAccreditationRemove(accreditation!.id)}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-
-          {selectedLocations.map((location) => (
-            <Badge key={location!.id} className="gap-1.5 border-primary/10 bg-primary/10 pl-3 pr-2 py-1.5 text-primary">
-              <MapPin className="h-3 w-3" />
-              {location!.name}
-              <button type="button" onClick={() => onLocationRemove(location!.id)}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>
