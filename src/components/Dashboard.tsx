@@ -73,10 +73,10 @@ function DashboardContent() {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-lg font-semibold tracking-tight text-foreground">
-                  Covenants Platform
+                  Capillia 
                 </p>
                 <p className="truncate text-sm text-muted-foreground">
-                  Manufacturing intelligence
+                  A Covenants Product
                 </p>
               </div>
             </div>
