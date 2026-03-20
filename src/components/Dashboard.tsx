@@ -3,6 +3,7 @@ import { useState } from 'react'
 import {
   Building2,
   LayoutDashboard,
+  LogOut,
   Search,
 } from 'lucide-react'
 import { FilterDataProvider } from '@/contexts/FilterDataContext'
@@ -42,7 +43,13 @@ function NavButton({
   )
 }
 
-function DashboardContent() {
+function DashboardContent({
+  onSignOut,
+  userEmail,
+}: {
+  onSignOut: () => Promise<void> | void
+  userEmail: string
+}) {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
   const [selectedChemistries, setSelectedChemistries] = useState<string[]>([])
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
@@ -82,6 +89,9 @@ function DashboardContent() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <div className="hidden rounded-full border border-white/80 bg-white/88 px-4 py-2 text-sm text-muted-foreground shadow-sm md:block">
+                {userEmail}
+              </div>
               <div className="inline-flex rounded-full border border-white/80 bg-white/88 p-1 shadow-sm">
                 <NavButton
                   active={activeTab === 'overview'}
@@ -96,6 +106,15 @@ function DashboardContent() {
                   onClick={() => setActiveTab('search')}
                 />
               </div>
+
+              <button
+                type="button"
+                onClick={() => void onSignOut()}
+                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-white"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </button>
             </div>
           </div>
         </header>
@@ -136,10 +155,16 @@ function DashboardContent() {
   )
 }
 
-export function Dashboard() {
+export function Dashboard({
+  onSignOut,
+  userEmail,
+}: {
+  onSignOut: () => Promise<void> | void
+  userEmail: string
+}) {
   return (
     <FilterDataProvider>
-      <DashboardContent />
+      <DashboardContent onSignOut={onSignOut} userEmail={userEmail} />
     </FilterDataProvider>
   )
 }
