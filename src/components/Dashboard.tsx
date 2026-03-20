@@ -94,7 +94,6 @@ function NavButton({
 }
 
 function DashboardContent() {
-  const { platformStats } = useFilterData()
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
 
   const [selectedChemistries, setSelectedChemistries] = useState<string[]>([])
@@ -153,10 +152,6 @@ function DashboardContent() {
                   onClick={() => setActiveTab('search')}
                 />
               </div>
-
-              <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
-                {platformStats.products.toLocaleString()}
-              </Badge>
             </div>
           </div>
         </header>

@@ -128,10 +128,6 @@ export function AccreditationFilter({
 
         <div className="flex flex-wrap gap-2">
           {(['all', 'regulatory', 'quality', 'environmental', 'international'] as const).map((category) => {
-            const count = category === 'all'
-              ? accreditations.length
-              : accreditations.filter((accreditation) => accreditation.category === category).length
-
             return (
               <button
                 key={category}
@@ -144,9 +140,6 @@ export function AccreditationFilter({
                 }`}
               >
                 {category === 'all' ? 'All' : accreditationCategories[category]}
-                <span className={`rounded-full px-1.5 py-0.5 font-mono ${activeCategory === category ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
-                  {count}
-                </span>
               </button>
             )
           })}
@@ -190,9 +183,6 @@ export function AccreditationFilter({
                   <div className="flex items-center gap-2">
                     <Badge className={`${accreditationColors[accreditation.category]} hidden sm:inline-flex`}>
                       {accreditationCategories[accreditation.category]}
-                    </Badge>
-                    <Badge variant="secondary" className="font-mono">
-                      {accreditation.facilityCount}
                     </Badge>
                   </div>
                 </button>

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Check, MapPin, Search } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -116,9 +115,6 @@ export function LocationFilter({
                 }`}
               >
                 {location.name}
-                <span className={`rounded-full px-1.5 py-0.5 font-mono ${isSelected ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
-                  {location.facilityCount}
-                </span>
               </button>
             )
           })}
@@ -153,9 +149,6 @@ export function LocationFilter({
                       {location.name}
                     </span>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 font-mono">
-                    {location.facilityCount}
-                  </Badge>
                 </button>
               )
             })}

@@ -126,10 +126,6 @@ export function ChemistryFilter({
 
         <div className="flex flex-wrap gap-2">
           {(['all', 'synthesis', 'fermentation', 'extraction', 'biotechnology', 'specialty'] as const).map((category) => {
-            const count = category === 'all'
-              ? chemistries.length
-              : chemistries.filter((chemistry) => chemistry.category === category).length
-
             return (
               <button
                 key={category}
@@ -142,9 +138,6 @@ export function ChemistryFilter({
                 }`}
               >
                 {category === 'all' ? 'All' : chemistryCategories[category]}
-                <span className={`rounded-full px-1.5 py-0.5 font-mono ${activeCategory === category ? 'bg-white/15' : 'bg-muted text-muted-foreground'}`}>
-                  {count}
-                </span>
               </button>
             )
           })}
@@ -185,9 +178,6 @@ export function ChemistryFilter({
                   <div className="flex items-center gap-2">
                     <Badge className={`${chemistryColors[chemistry.category]} hidden sm:inline-flex`}>
                       {chemistryCategories[chemistry.category]}
-                    </Badge>
-                    <Badge variant="secondary" className="font-mono">
-                      {chemistry.facilityCount}
                     </Badge>
                   </div>
                 </button>
