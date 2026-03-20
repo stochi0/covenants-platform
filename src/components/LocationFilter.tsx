@@ -59,16 +59,13 @@ export function LocationFilter({
 
   return (
     <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
-      <CardHeader className="space-y-5 px-5 pb-0 pt-5 sm:px-6 sm:pt-6">
+      <CardHeader className="space-y-4 px-5 pb-0 pt-5 sm:px-6 sm:pt-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
               <MapPin className="h-5 w-5 text-primary" />
               Locations
             </CardTitle>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Search by region name or use the India map to refine the manufacturing footprint.
-            </p>
           </div>
 
           {selectedLocations.length > 0 && (
@@ -84,31 +81,15 @@ export function LocationFilter({
           )}
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Total facilities
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {totalFacilities.toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-white px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Selected states
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {selectedLocations.length}
-            </p>
-          </div>
-          <div className="rounded-[1.25rem] border border-[#d7ece8] bg-white px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Selected facilities
-            </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {selectedFacilityCount.toLocaleString()}
-            </p>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
+            {totalFacilities.toLocaleString()} facilities
+          </Badge>
+          {selectedLocations.length > 0 && (
+            <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
+              {selectedLocations.length} states selected
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
@@ -119,7 +100,7 @@ export function LocationFilter({
           onLocationChange={onSelectionChange}
         />
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <div className="space-y-3">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -171,15 +152,10 @@ export function LocationFilter({
 
           <div className="rounded-[1.5rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(248,252,252,0.95),rgba(255,255,255,0.95))] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Active selection</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  The shortlist below updates directly from your live state filters.
-                </p>
-              </div>
-              <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
-                {selectedLocations.length}
-              </Badge>
+              <p className="text-sm font-semibold text-foreground">Selected states</p>
+              <span className="text-sm font-medium text-muted-foreground">
+                {selectedFacilityCount.toLocaleString()} facilities
+              </span>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -197,11 +173,10 @@ export function LocationFilter({
                 ))
               ) : (
                 <div className="rounded-[1rem] border border-dashed border-[#d7ece8] bg-white/80 px-4 py-6 text-sm text-muted-foreground">
-                  No states selected yet. Pick states from the map or the list.
+                  Pick states from the map or the list.
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </CardContent>

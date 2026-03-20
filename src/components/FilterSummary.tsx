@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Beaker, Factory, Filter, MapPin, ShieldCheck, X } from 'lucide-react'
+import { Beaker, MapPin, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -67,34 +67,23 @@ export function FilterSummary({
     .filter(Boolean)
 
   return (
-    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/92 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.4)]">
-      <CardContent className="space-y-4 p-5">
+    <Card className="rounded-[1.5rem] border-[#d7ece8] bg-white/92 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.32)]">
+      <CardContent className="space-y-4 p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Filter className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Active filters</p>
-              <p className="text-sm text-muted-foreground">
-                This view currently matches{' '}
-                <span className="font-semibold text-foreground">
-                  {filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : '—'}
-                </span>{' '}
-                facilities.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
-              <Factory className="mr-1 h-3 w-3" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
+              {(filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : 0).toLocaleString()} facilities
+            </Badge>
+            <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
               {[
                 filters.locations.length,
                 filters.chemistries.length,
                 filters.accreditations.length,
               ].reduce((sum, value) => sum + value, 0)} selected
             </Badge>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onClearAll} className="rounded-full border-[#d7ece8] bg-white">
               Clear all
             </Button>
