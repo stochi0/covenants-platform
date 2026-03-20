@@ -19,6 +19,8 @@ const INITIAL_CREDENTIALS: CredentialsState = {
   fullName: '',
 }
 
+const EMAIL_REDIRECT_URL = import.meta.env.VITE_PUBLIC_APP_URL || 'https://capillia.vercel.app'
+
 function App() {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [credentials, setCredentials] = useState<CredentialsState>(INITIAL_CREDENTIALS)
@@ -107,7 +109,7 @@ function App() {
         email: credentials.email.trim(),
         password: credentials.password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: EMAIL_REDIRECT_URL,
           data: {
             full_name: credentials.fullName.trim(),
           },
