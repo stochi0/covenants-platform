@@ -127,19 +127,16 @@ export default async function handler(
       text: html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
     })
 
-    const sendConfirmation = process.env.RFQ_SEND_CONFIRMATION === 'true'
-    if (sendConfirmation && body.email) {
-      await transporter.sendMail({
-        from: sender,
-        to: body.email,
-        subject: 'We received your request for quote',
-        html: `
+    await transporter.sendMail({
+      from: sender,
+      to: body.email,
+      subject: 'We received your request for quote',
+      html: `
           <p>Hi ${escapeHtml(body.name)},</p>
           <p>We have received your request for quote for ${body.products.length} product(s). Our team will get back to you shortly.</p>
           <p>- Covenants Platform</p>
         `.trim(),
-      })
-    }
+    })
 
     res.status(200).json({ success: true })
   } catch (err) {

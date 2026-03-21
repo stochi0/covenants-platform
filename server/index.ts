@@ -132,8 +132,10 @@ app.post('/api/rfq', async (req, res) => {
     const html = buildRfqEmailHtml(body)
     const subject = `RFQ from ${body.company || body.name} – ${body.products.length} product(s)`
 
+    const from = process.env.SENDER_EMAIL!
+
     await transporter.sendMail({
-      from: process.env.SENDER_EMAIL,
+      from,
       to: recipient,
       replyTo: body.email,
       subject,
@@ -141,20 +143,16 @@ app.post('/api/rfq', async (req, res) => {
       text: html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
     })
 
-    // Optional: send a short confirmation to the submitter
-    const sendConfirmation = process.env.RFQ_SEND_CONFIRMATION === 'true'
-    if (sendConfirmation && body.email) {
-      await transporter.sendMail({
-        from: process.env.SENDER_EMAIL,
-        to: body.email,
-        subject: 'We received your request for quote',
-        html: `
+    await transporter.sendMail({
+      from,
+      to: body.email,
+      subject: 'We received your request for quote',
+      html: `
           <p>Hi ${escapeHtml(body.name)},</p>
           <p>We have received your request for quote for ${body.products.length} product(s). Our team will get back to you shortly.</p>
           <p>— Covenants Platform</p>
         `.trim(),
-      })
-    }
+    })
 
     res.status(200).json({ success: true })
   } catch (err) {
