@@ -217,6 +217,8 @@ function DashboardContent({
 
               <LocationFilter
                 selectedLocations={selectedLocations}
+                selectedChemistries={selectedChemistries}
+                selectedAccreditations={selectedAccreditations}
                 onSelectionChange={setSelectedLocations}
               />
 

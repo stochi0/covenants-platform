@@ -236,13 +236,19 @@ export async function fetchFacilityCountByChemistries(
 export async function fetchFacilityCountByFilters(filters: FilterState): Promise<number> {
   if (!supabase) return 0
 
-  const { chemistries: chemistryIds, accreditations: accreditationIds, locations: locationIds } = filters
+  const {
+    chemistries: chemistryIds,
+    accreditations: accreditationIds,
+    locations: locationIds,
+  } = filters
   if (chemistryIds.length === 0 && accreditationIds.length === 0 && locationIds.length === 0) {
     return fetchTotalFacilities()
   }
 
+  const sb = supabase
+
   try {
-    const { data: facilities, error: facilitiesError } = await supabase
+    const { data: facilities, error: facilitiesError } = await sb
       .from('facilities')
       .select('id, region_id')
       .eq('is_active', true)
@@ -262,8 +268,9 @@ export async function fetchFacilityCountByFilters(filters: FilterState): Promise
       facilityIds = new Set([...facilityIds].filter((facilityId) => inSelectedRegions.has(facilityId)))
     }
 
-    if (accreditationIds.length > 0) {
-      const { data: faRows, error: faError } = await supabase
+    const matchesByAccreditation = async () => {
+      if (accreditationIds.length === 0) return null
+      const { data: faRows, error: faError } = await sb
         .from('facility_accreditations')
         .select('facility_id, accreditation_id')
         .in('accreditation_id', accreditationIds)
@@ -281,13 +288,14 @@ export async function fetchFacilityCountByFilters(filters: FilterState): Promise
         accSet.add(row.accreditation_id)
       }
 
-      facilityIds = new Set(
+      return new Set(
         [...facilityIds].filter((facilityId) => facilityToAcc.get(facilityId)?.size === accreditationIds.length)
       )
     }
 
-    if (chemistryIds.length > 0) {
-      const { data: fcRows, error: fcError } = await supabase
+    const matchesByChemistry = async () => {
+      if (chemistryIds.length === 0) return null
+      const { data: fcRows, error: fcError } = await sb
         .from('facility_chemistries')
         .select('facility_id, chemistry_id')
         .in('chemistry_id', chemistryIds)
@@ -305,9 +313,22 @@ export async function fetchFacilityCountByFilters(filters: FilterState): Promise
         chemSet.add(row.chemistry_id)
       }
 
-      facilityIds = new Set(
+      return new Set(
         [...facilityIds].filter((facilityId) => facilityToChem.get(facilityId)?.size === chemistryIds.length)
       )
+    }
+
+    const [accSet, chemSet] = await Promise.all([
+      matchesByAccreditation(),
+      matchesByChemistry(),
+    ])
+
+    if (accSet && chemSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => accSet.has(id) && chemSet.has(id)))
+    } else if (accSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => accSet.has(id)))
+    } else if (chemSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => chemSet.has(id)))
     }
 
     return facilityIds.size
@@ -327,8 +348,10 @@ export async function fetchStateFacilityCountsByFilters(
     return []
   }
 
+  const sb = supabase
+
   try {
-    const { data: facilities, error: facilitiesError } = await supabase
+    const { data: facilities, error: facilitiesError } = await sb
       .from('facilities')
       .select('id, region_id')
       .eq('is_active', true)
@@ -339,8 +362,9 @@ export async function fetchStateFacilityCountsByFilters(
 
     let facilityIds = new Set((facilities ?? []).map((facility) => facility.id))
 
-    if (accreditationIds.length > 0) {
-      const { data: faRows, error: faError } = await supabase
+    const matchesByAccreditation = async () => {
+      if (accreditationIds.length === 0) return null
+      const { data: faRows, error: faError } = await sb
         .from('facility_accreditations')
         .select('facility_id, accreditation_id')
         .in('accreditation_id', accreditationIds)
@@ -358,13 +382,12 @@ export async function fetchStateFacilityCountsByFilters(
         accSet.add(row.accreditation_id)
       }
 
-      facilityIds = new Set(
-        [...facilityIds].filter((facilityId) => facilityToAcc.get(facilityId)?.size === accreditationIds.length)
-      )
+      return new Set([...facilityIds].filter((facilityId) => facilityToAcc.get(facilityId)?.size === accreditationIds.length))
     }
 
-    if (chemistryIds.length > 0) {
-      const { data: fcRows, error: fcError } = await supabase
+    const matchesByChemistry = async () => {
+      if (chemistryIds.length === 0) return null
+      const { data: fcRows, error: fcError } = await sb
         .from('facility_chemistries')
         .select('facility_id, chemistry_id')
         .in('chemistry_id', chemistryIds)
@@ -382,9 +405,20 @@ export async function fetchStateFacilityCountsByFilters(
         chemSet.add(row.chemistry_id)
       }
 
-      facilityIds = new Set(
-        [...facilityIds].filter((facilityId) => facilityToChem.get(facilityId)?.size === chemistryIds.length)
-      )
+      return new Set([...facilityIds].filter((facilityId) => facilityToChem.get(facilityId)?.size === chemistryIds.length))
+    }
+
+    const [accSet, chemSet] = await Promise.all([
+      matchesByAccreditation(),
+      matchesByChemistry(),
+    ])
+
+    if (accSet && chemSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => accSet.has(id) && chemSet.has(id)))
+    } else if (accSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => accSet.has(id)))
+    } else if (chemSet) {
+      facilityIds = new Set([...facilityIds].filter((id) => chemSet.has(id)))
     }
 
     const countByLocation = new Map<string, number>()

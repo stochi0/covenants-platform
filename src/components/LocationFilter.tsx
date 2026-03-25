@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,19 +6,81 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { useFilterData } from '@/contexts/FilterDataContext'
+import { fetchStateFacilityCountsByFilters } from '@/lib/filterDataApi'
 import { IndiaMap } from './IndiaMap'
 
 interface LocationFilterProps {
   selectedLocations: string[]
+  selectedChemistries: string[]
+  selectedAccreditations: string[]
   onSelectionChange: (selected: string[]) => void
 }
 
 export function LocationFilter({
   selectedLocations,
+  selectedChemistries,
+  selectedAccreditations,
   onSelectionChange,
 }: LocationFilterProps) {
   const { stateLocations, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
+  const [filteredCounts, setFilteredCounts] = useState<{ key: string; byLocation: Map<string, number> } | null>(
+    null
+  )
+
+  const mapFilterKey = useMemo(
+    () => `${selectedChemistries.join('|')}::${selectedAccreditations.join('|')}::${selectedLocations.join('|')}`,
+    [selectedChemistries, selectedAccreditations, selectedLocations]
+  )
+  const hasCapabilityFilters = selectedChemistries.length > 0 || selectedAccreditations.length > 0
+
+  useEffect(() => {
+    if (!hasCapabilityFilters) {
+      setFilteredCounts(null)
+      return
+    }
+
+    let cancelled = false
+    fetchStateFacilityCountsByFilters({
+      chemistries: selectedChemistries,
+      accreditations: selectedAccreditations,
+    })
+      .then((rows) => {
+        if (cancelled) return
+        const byLocation = new Map<string, number>()
+        for (const row of rows) byLocation.set(row.locationId, row.facilityCount)
+        setFilteredCounts({ key: mapFilterKey, byLocation })
+      })
+      .catch(() => {
+        if (!cancelled) setFilteredCounts({ key: mapFilterKey, byLocation: new Map() })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [hasCapabilityFilters, mapFilterKey, selectedAccreditations, selectedChemistries])
+
+  const mapLocations = useMemo(() => {
+    // Start from capability-filtered counts if present; otherwise baseline counts.
+    const base = hasCapabilityFilters
+      ? (() => {
+          const counts = filteredCounts?.key === mapFilterKey ? filteredCounts.byLocation : null
+          if (!counts) return stateLocations.map((location) => ({ ...location, facilityCount: 0 }))
+          return stateLocations.map((location) => ({
+            ...location,
+            facilityCount: counts.get(location.id) ?? 0,
+          }))
+        })()
+      : stateLocations
+
+    // Apply the location filter (OR semantics).
+    if (selectedLocations.length === 0) return base
+    const allowed = new Set(selectedLocations)
+    return base.map((location) => ({
+      ...location,
+      facilityCount: allowed.has(location.id) ? location.facilityCount : 0,
+    }))
+  }, [filteredCounts, hasCapabilityFilters, mapFilterKey, stateLocations, selectedLocations])
 
   const selectedLocationObjects = useMemo(
     () => stateLocations.filter((location) => selectedLocations.includes(location.id)),
@@ -28,16 +90,23 @@ export function LocationFilter({
   const visibleLocations = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()
     const base = normalized
-      ? stateLocations.filter((location) => location.facilityCount > 0 && location.name.toLowerCase().includes(normalized))
-      : stateLocations.filter((location) => location.facilityCount > 0)
+      ? mapLocations.filter((location) => location.facilityCount > 0 && location.name.toLowerCase().includes(normalized))
+      : mapLocations.filter((location) => location.facilityCount > 0)
 
     return [...base].sort((a, b) => b.facilityCount - a.facilityCount || a.name.localeCompare(b.name))
-  }, [searchQuery, stateLocations])
+  }, [searchQuery, mapLocations])
 
   const selectedFacilityCount = selectedLocationObjects.reduce(
     (sum, location) => sum + location.facilityCount,
     0
   )
+
+  const matchingFacilities = useMemo(() => {
+    if (hasCapabilityFilters && filteredCounts?.key !== mapFilterKey) return 0
+    let total = 0
+    for (const location of mapLocations) total += location.facilityCount
+    return total
+  }, [filteredCounts, hasCapabilityFilters, mapFilterKey, mapLocations])
 
   const toggleLocation = (locationId: string) => {
     onSelectionChange(
@@ -85,6 +154,11 @@ export function LocationFilter({
           <Badge className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
             {totalFacilities.toLocaleString()} facilities
           </Badge>
+          {(hasCapabilityFilters || selectedLocations.length > 0) && (
+            <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
+              {matchingFacilities.toLocaleString()} matching
+            </Badge>
+          )}
           {selectedLocations.length > 0 && (
             <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
               {selectedLocations.length} states selected
@@ -98,6 +172,7 @@ export function LocationFilter({
           interactive
           selectedLocations={selectedLocations}
           onLocationChange={onSelectionChange}
+          locations={mapLocations}
         />
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
