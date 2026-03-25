@@ -24,3 +24,8 @@ export interface StateLocation {
   facilityCount: number
   isoCode?: string | null
 }
+
+export interface StateFacilityCount {
+  locationId: string
+  facilityCount: number
+}

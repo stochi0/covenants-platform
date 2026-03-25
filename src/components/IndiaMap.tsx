@@ -8,6 +8,7 @@ interface IndiaMapProps {
   selectedLocations?: string[]
   onLocationChange?: (locations: string[]) => void
   interactive?: boolean
+  locations?: Array<{ id: string; name: string; facilityCount: number }>
 }
 
 interface HoveredState {
@@ -33,26 +34,19 @@ const IndiaMapComponent = ({
   selectedLocations = [],
   onLocationChange,
   interactive = false,
+  locations,
 }: IndiaMapProps) => {
   const [hoveredState, setHoveredState] = useState<HoveredState | null>(null)
   const { stateLocations } = useFilterData()
+  const activeLocations = locations ?? stateLocations
 
   const locationLookup = useMemo(() => {
     const byName = new Map<string, { id: string; name: string; facilityCount: number }>()
-    for (const location of stateLocations) {
+    for (const location of activeLocations) {
       byName.set(location.name.trim().toLowerCase(), location)
     }
     return byName
-  }, [stateLocations])
-
-  const selectedFacilityCount = useMemo(() => {
-    if (selectedLocations.length === 0) return 0
-    return stateLocations
-      .filter((location) => selectedLocations.includes(location.id))
-      .reduce((sum, location) => sum + location.facilityCount, 0)
-  }, [selectedLocations, stateLocations])
-
-  const selectedStateCount = selectedLocations.length
+  }, [activeLocations])
 
   return (
     <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7ece8] bg-white p-3 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.28)] sm:p-4">
@@ -125,15 +119,6 @@ const IndiaMapComponent = ({
             }
           </Geographies>
         </ComposableMap>
-
-        <div className="absolute left-4 top-4 rounded-[1.35rem] bg-[#0b745c] px-5 py-4 text-white shadow-[0_18px_40px_-24px_rgba(11,116,92,0.75)]">
-          <p className="text-sm font-medium text-white/90">
-            {selectedStateCount > 0 ? 'Selected Facilities' : 'Total Facilities'}
-          </p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight">
-            {(selectedStateCount > 0 ? selectedFacilityCount : stateLocations.reduce((sum, location) => sum + location.facilityCount, 0)).toLocaleString()}
-          </p>
-        </div>
 
         <div className="absolute bottom-4 right-4 rounded-[1.4rem] border border-[#d7ece8] bg-white px-5 py-4 shadow-[0_20px_40px_-28px_rgba(15,118,110,0.28)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">

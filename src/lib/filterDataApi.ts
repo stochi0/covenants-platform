@@ -4,6 +4,7 @@ import type {
   Accreditation,
   StateLocation,
   FilterState,
+  StateFacilityCount,
 } from './filterData'
 
 export async function fetchTotalFacilities(): Promise<number> {
@@ -313,5 +314,92 @@ export async function fetchFacilityCountByFilters(filters: FilterState): Promise
   } catch (err) {
     console.error('Error fetching facility count by filters:', err)
     return 0
+  }
+}
+
+export async function fetchStateFacilityCountsByFilters(
+  filters: Pick<FilterState, 'chemistries' | 'accreditations'>
+): Promise<StateFacilityCount[]> {
+  if (!supabase) return []
+
+  const { chemistries: chemistryIds, accreditations: accreditationIds } = filters
+  if (chemistryIds.length === 0 && accreditationIds.length === 0) {
+    return []
+  }
+
+  try {
+    const { data: facilities, error: facilitiesError } = await supabase
+      .from('facilities')
+      .select('id, region_id')
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .not('region_id', 'is', null)
+
+    if (facilitiesError) throw facilitiesError
+
+    let facilityIds = new Set((facilities ?? []).map((facility) => facility.id))
+
+    if (accreditationIds.length > 0) {
+      const { data: faRows, error: faError } = await supabase
+        .from('facility_accreditations')
+        .select('facility_id, accreditation_id')
+        .in('accreditation_id', accreditationIds)
+
+      if (faError) throw faError
+
+      const facilityToAcc = new Map<string, Set<string>>()
+      for (const row of faRows ?? []) {
+        if (!facilityIds.has(row.facility_id)) continue
+        let accSet = facilityToAcc.get(row.facility_id)
+        if (!accSet) {
+          accSet = new Set()
+          facilityToAcc.set(row.facility_id, accSet)
+        }
+        accSet.add(row.accreditation_id)
+      }
+
+      facilityIds = new Set(
+        [...facilityIds].filter((facilityId) => facilityToAcc.get(facilityId)?.size === accreditationIds.length)
+      )
+    }
+
+    if (chemistryIds.length > 0) {
+      const { data: fcRows, error: fcError } = await supabase
+        .from('facility_chemistries')
+        .select('facility_id, chemistry_id')
+        .in('chemistry_id', chemistryIds)
+
+      if (fcError) throw fcError
+
+      const facilityToChem = new Map<string, Set<string>>()
+      for (const row of fcRows ?? []) {
+        if (!facilityIds.has(row.facility_id)) continue
+        let chemSet = facilityToChem.get(row.facility_id)
+        if (!chemSet) {
+          chemSet = new Set()
+          facilityToChem.set(row.facility_id, chemSet)
+        }
+        chemSet.add(row.chemistry_id)
+      }
+
+      facilityIds = new Set(
+        [...facilityIds].filter((facilityId) => facilityToChem.get(facilityId)?.size === chemistryIds.length)
+      )
+    }
+
+    const countByLocation = new Map<string, number>()
+    for (const facility of facilities ?? []) {
+      if (!facilityIds.has(facility.id)) continue
+      if (!facility.region_id) continue
+      countByLocation.set(facility.region_id, (countByLocation.get(facility.region_id) ?? 0) + 1)
+    }
+
+    return [...countByLocation.entries()].map(([locationId, facilityCount]) => ({
+      locationId,
+      facilityCount,
+    }))
+  } catch (err) {
+    console.error('Error fetching state facility counts by filters:', err)
+    return []
   }
 }
