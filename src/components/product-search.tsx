@@ -306,9 +306,6 @@ export function ProductSearch() {
                         }`}
                       >
                         {formatProductCategoryLabel(category.value)}
-                        <span className={isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}>
-                          {category.count.toLocaleString()}
-                        </span>
                       </button>
                     )
                   })
