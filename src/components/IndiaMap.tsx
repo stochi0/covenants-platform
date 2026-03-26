@@ -23,11 +23,7 @@ function getStateName(properties: Record<string, unknown>) {
 
 function getFill(facilities: number, isSelected: boolean) {
   if (isSelected) return '#0b745c'
-  if (facilities >= 12) return '#1b7c69'
-  if (facilities >= 7) return '#38a596'
-  if (facilities >= 3) return '#5fbe8c'
-  if (facilities >= 1) return '#9bd7b0'
-  return '#d9f0e0'
+  return '#ffffff'
 }
 
 const IndiaMapComponent = ({
@@ -92,16 +88,16 @@ const IndiaMapComponent = ({
                     style={{
                       default: {
                         fill: getFill(facilities, isSelected),
-                        stroke: '#ffffff',
-                        strokeWidth: isSelected ? 1.8 : 0.9,
+                        stroke: '#94a3b8',
+                        strokeWidth: isSelected ? 2 : 1.25,
                         outline: 'none',
                         transition: 'all 0.18s ease',
                         cursor: isClickable ? 'pointer' : 'default',
                       },
                       hover: {
                         fill: getFill(facilities, isSelected),
-                        stroke: isClickable ? '#0b745c' : '#ffffff',
-                        strokeWidth: isClickable ? 1.8 : 1,
+                        stroke: isClickable ? '#0b745c' : '#64748b',
+                        strokeWidth: isClickable ? 2.1 : 1.4,
                         outline: 'none',
                         filter: 'brightness(0.96)',
                         cursor: isClickable ? 'pointer' : 'default',
@@ -109,7 +105,7 @@ const IndiaMapComponent = ({
                       pressed: {
                         fill: '#0b745c',
                         stroke: '#075746',
-                        strokeWidth: 2,
+                        strokeWidth: 2.2,
                         outline: 'none',
                       },
                     }}
@@ -122,17 +118,13 @@ const IndiaMapComponent = ({
 
         <div className="absolute bottom-4 right-4 rounded-[1.4rem] border border-[#d7ece8] bg-white px-5 py-4 shadow-[0_20px_40px_-28px_rgba(15,118,110,0.28)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Facilities
+            State selection
           </p>
-          <div className="mt-2 flex items-center gap-2">
-            {['#d9f0e0', '#9bd7b0', '#5fbe8c', '#38a596', '#1b7c69'].map((color) => (
-              <span
-                key={color}
-                className="h-3 w-5 rounded-md"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-            <span className="ml-1 text-sm text-muted-foreground">High</span>
+          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="h-3 w-5 rounded-md border border-[#d7ece8] bg-white" />
+            <span>Not selected</span>
+            <span className="ml-2 h-3 w-5 rounded-md bg-[#0b745c]" />
+            <span>Selected</span>
           </div>
           {interactive && (
             <p className="mt-3 border-t border-[#e8f1ef] pt-3 text-sm text-muted-foreground">
