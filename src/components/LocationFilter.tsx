@@ -73,13 +73,8 @@ export function LocationFilter({
         })()
       : stateLocations
 
-    // Apply the location filter (OR semantics).
-    if (selectedLocations.length === 0) return base
-    const allowed = new Set(selectedLocations)
-    return base.map((location) => ({
-      ...location,
-      facilityCount: allowed.has(location.id) ? location.facilityCount : 0,
-    }))
+    // Keep all states clickable so users can build a multi-select.
+    return base
   }, [filteredCounts, hasCapabilityFilters, mapFilterKey, stateLocations, selectedLocations])
 
   const selectedLocationObjects = useMemo(
