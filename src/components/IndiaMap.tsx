@@ -21,9 +21,15 @@ function getStateName(properties: Record<string, unknown>) {
   return (properties.ST_NM || properties.NAME_1 || properties.name || properties.NAME || 'Unknown') as string
 }
 
-function getFill(facilities: number, isSelected: boolean) {
+function getFill(facilities: number, isSelected: boolean, maxFacilities: number) {
   if (isSelected) return '#0b745c'
-  return '#ffffff'
+  if (facilities <= 0 || maxFacilities <= 0) return '#ffffff'
+
+  const ratio = Math.min(1, facilities / maxFacilities)
+  const minAlpha = 0.18
+  const maxAlpha = 0.88
+  const alpha = minAlpha + ratio * (maxAlpha - minAlpha)
+  return `rgba(11, 116, 92, ${alpha.toFixed(3)})`
 }
 
 const IndiaMapComponent = ({
@@ -43,6 +49,11 @@ const IndiaMapComponent = ({
     }
     return byName
   }, [activeLocations])
+
+  const maxFacilities = useMemo(
+    () => activeLocations.reduce((max, location) => Math.max(max, location.facilityCount), 0),
+    [activeLocations]
+  )
 
   return (
     <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7ece8] bg-white p-3 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.28)] sm:p-4">
@@ -87,7 +98,7 @@ const IndiaMapComponent = ({
                     }}
                     style={{
                       default: {
-                        fill: getFill(facilities, isSelected),
+                        fill: getFill(facilities, isSelected, maxFacilities),
                         stroke: '#94a3b8',
                         strokeWidth: isSelected ? 2 : 1.25,
                         outline: 'none',
@@ -95,7 +106,7 @@ const IndiaMapComponent = ({
                         cursor: isClickable ? 'pointer' : 'default',
                       },
                       hover: {
-                        fill: getFill(facilities, isSelected),
+                        fill: getFill(facilities, isSelected, maxFacilities),
                         stroke: isClickable ? '#0b745c' : '#64748b',
                         strokeWidth: isClickable ? 2.1 : 1.4,
                         outline: 'none',
