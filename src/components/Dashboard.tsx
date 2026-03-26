@@ -190,7 +190,7 @@ function DashboardContent({
 
                 <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Chemistries
+                    Available chemistries
                   </p>
                   <p className="text-3xl font-semibold tracking-tight text-foreground">
                     {isLoading ? '—' : platformStats.chemistries.toLocaleString()}

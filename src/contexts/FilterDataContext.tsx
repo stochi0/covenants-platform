@@ -52,11 +52,16 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
       fetchTotalFacilities(),
       fetchPlatformStats(),
     ])
+    const availableChemistries = chems.filter((chemistry) => chemistry.facilityCount > 0).length
     setChemistries(chems)
     setAccreditations(accs)
     setStateLocations(locs)
     setTotalFacilities(total)
-    setPlatformStats(stats)
+    setPlatformStats({
+      ...stats,
+      // Keep the overview stat aligned with ChemistryFilter's "Available chemistries".
+      chemistries: availableChemistries,
+    })
   }, [])
 
   useEffect(() => {

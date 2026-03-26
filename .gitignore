@@ -29,3 +29,4 @@ scripts/
 platform-data/
 docs/
 docs/db-schema.md
+.opencode/
