@@ -1,73 +1,69 @@
-# React + TypeScript + Vite
+# Covenants Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite marketplace for searching products, reviewing matched supplier facilities, and submitting RFQs.
 
-Currently, two official plugins are available:
+## App Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Create `.env` in this directory:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+SENDER_EMAIL=...
+SENDER_PASSWORD=...
+SMTP_SERVER=...
+SMTP_PORT=587
+RECIPIENT_EMAIL=...
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Run the frontend and local RFQ API together:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm run dev:all
 ```
+
+For Vercel, `/api/rfq` is served from `api/rfq.ts`. For local development, Vite proxies `/api` to the Express server in `server/index.ts`.
+
+## Data Source
+
+The authoritative schema, workbook, and migration/import workflow live in:
+
+```bash
+/Users/ayushb/home/workspaces/covenants/scripts
+```
+
+From this platform directory, run:
+
+```bash
+pnpm run data:dry-run
+pnpm run data:apply
+```
+
+`data:dry-run` parses the workbook and writes validation reports without touching Supabase. `data:apply` applies the SQL migration, truncates the target tables, imports workbook data, and validates counts, duplicate keys, ID formats, and orphaned relationships.
+
+The current app expects these connected tables:
+
+- `products`
+- `companies`
+- `facilities`
+- `regions`
+- `chemistries`
+- `accreditations`
+- `facility_products`
+- `facility_chemistries`
+- `facility_accreditations`
+
+## Verification
+
+```bash
+pnpm lint
+pnpm build
+```
+
+Manual checks:
+
+- Search products by name and CAS number.
+- Filter by product category without a query.
+- Select overview filters, then open Marketplace Search and confirm products show matched suppliers/facilities.
+- Submit an RFQ and confirm the internal email includes matched supplier rows.

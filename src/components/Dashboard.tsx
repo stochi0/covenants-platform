@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Beaker,
   Building2,
@@ -52,11 +52,11 @@ function DashboardContent() {
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
 
-  const filters: FilterState = {
+  const filters: FilterState = useMemo(() => ({
     chemistries: selectedChemistries,
     accreditations: selectedAccreditations,
     locations: selectedLocations,
-  }
+  }), [selectedAccreditations, selectedChemistries, selectedLocations])
 
   const clearAllFilters = () => {
     setSelectedChemistries([])
@@ -215,7 +215,7 @@ function DashboardContent() {
               </div>
             </div>
           ) : (
-            <ProductSearch />
+            <ProductSearch filters={filters} />
           )}
         </main>
       </div>

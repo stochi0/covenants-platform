@@ -29,16 +29,13 @@ export function LocationFilter({
   )
 
   const mapFilterKey = useMemo(
-    () => `${selectedChemistries.join('|')}::${selectedAccreditations.join('|')}::${selectedLocations.join('|')}`,
-    [selectedChemistries, selectedAccreditations, selectedLocations]
+    () => `${selectedChemistries.join('|')}::${selectedAccreditations.join('|')}`,
+    [selectedChemistries, selectedAccreditations]
   )
   const hasCapabilityFilters = selectedChemistries.length > 0 || selectedAccreditations.length > 0
 
   useEffect(() => {
-    if (!hasCapabilityFilters) {
-      setFilteredCounts(null)
-      return
-    }
+    if (!hasCapabilityFilters) return
 
     let cancelled = false
     fetchStateFacilityCountsByFilters({
@@ -75,7 +72,7 @@ export function LocationFilter({
 
     // Keep all states clickable so users can build a multi-select.
     return base
-  }, [filteredCounts, hasCapabilityFilters, mapFilterKey, stateLocations, selectedLocations])
+  }, [filteredCounts, hasCapabilityFilters, mapFilterKey, stateLocations])
 
   const selectedLocationObjects = useMemo(
     () => stateLocations.filter((location) => selectedLocations.includes(location.id)),

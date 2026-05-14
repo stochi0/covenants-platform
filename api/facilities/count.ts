@@ -1,0 +1,36 @@
+import { getFacilityCountByFilters } from '../../server/data.ts'
+import type { FilterState } from '../../src/lib/filterData.ts'
+
+function parseFilters(value: unknown): FilterState {
+  const raw = value && typeof value === 'object' ? (value as { filters?: unknown }).filters : null
+  const filters = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
+  const parseArray = (items: unknown) => Array.isArray(items)
+    ? items.filter((item): item is string => typeof item === 'string')
+    : []
+
+  return {
+    chemistries: parseArray(filters.chemistries),
+    accreditations: parseArray(filters.accreditations),
+    locations: parseArray(filters.locations),
+  }
+}
+
+export default async function handler(
+  req: { method?: string; body?: unknown },
+  res: { setHeader: (name: string, value: string) => void; status: (code: number) => { json: (body: unknown) => void } }
+) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST')
+    res.status(405).json({ error: 'Method not allowed' })
+    return
+  }
+
+  try {
+    res.status(200).json({ count: await getFacilityCountByFilters(parseFilters(req.body)) })
+  } catch (error) {
+    res.status(500).json({
+      error: 'Database request failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    })
+  }
+}

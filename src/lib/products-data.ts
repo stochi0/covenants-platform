@@ -1,50 +1,44 @@
-import { supabase } from './supabase'
+import type {
+  PaginatedResponse,
+  Product,
+  ProductCategoryFacet,
+  SearchParams,
+} from './api-types'
 
-export interface Product {
-  id: string
-  name: string
-  casNumber: string
-  category: string | null
-}
+export type {
+  Company,
+  Facility,
+  PaginatedResponse,
+  Product,
+  ProductCategoryFacet,
+  ProductSupplierMatch,
+  Region,
+  SearchParams,
+  SearchType,
+} from './api-types'
 
-export interface ProductCategoryFacet {
-  value: string
-  count: number
-}
-
-export type SearchType = 'name' | 'cas'
-
-export interface PaginatedResponse {
-  products: Product[]
-  total: number
-  page: number
-  pageSize: number
-  hasMore: boolean
-}
-
-export interface SearchParams {
-  query: string
-  searchType: SearchType
-  categories: string[]
-  page: number
-  pageSize: number
-}
-
-const PRODUCT_CATEGORY_ORDER = ['api', 'intermediate', 'chemical', 'impurity'] as const
 let productCategoryFacetCache: ProductCategoryFacet[] | null = null
 
-function mapRow(row: {
-  id: string
-  product_name: string | null
-  cas_number: string | null
-  category: string | null
-}): Product {
-  return {
-    id: row.id,
-    name: row.product_name ?? 'Unnamed product',
-    casNumber: row.cas_number ?? 'N/A',
-    category: row.category,
+async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...init?.headers,
+    },
+  })
+  const data = await response.json().catch(() => null) as unknown
+
+  if (!response.ok) {
+    const message = data && typeof data === 'object' && 'details' in data
+      ? String((data as { details: unknown }).details)
+      : data && typeof data === 'object' && 'error' in data
+        ? String((data as { error: unknown }).error)
+        : `Request failed: ${response.status}`
+    throw new Error(message)
   }
+
+  return data as T
 }
 
 export function formatProductCategoryLabel(category: string | null | undefined) {
@@ -58,28 +52,10 @@ export function formatProductCategoryLabel(category: string | null | undefined) 
 }
 
 export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> {
-  if (!supabase) return []
   if (productCategoryFacetCache) return productCategoryFacetCache
-  const client = supabase
 
   try {
-    const categoryCounts = await Promise.all(
-      PRODUCT_CATEGORY_ORDER.map(async (category) => {
-        const { count, error } = await client
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('category', category)
-
-        if (error) throw error
-
-        return {
-          value: category,
-          count: count ?? 0,
-        }
-      })
-    )
-
-    productCategoryFacetCache = categoryCounts.filter((category) => category.count > 0)
+    productCategoryFacetCache = await apiJson<ProductCategoryFacet[]>('/api/product-categories')
     return productCategoryFacetCache
   } catch (err) {
     console.error('Error fetching product categories:', err)
@@ -88,74 +64,16 @@ export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> 
 }
 
 export async function searchProductsPaginated(params: SearchParams): Promise<PaginatedResponse> {
-  const { query, searchType, categories, page, pageSize } = params
-
-  if (!supabase) {
-    return {
-      products: [],
-      total: 0,
-      page,
-      pageSize,
-      hasMore: false,
-    }
-  }
-
   try {
-    let q = supabase.from('products').select('*', { count: 'exact' })
+    const searchParams = new URLSearchParams()
+    searchParams.set('query', params.query)
+    searchParams.set('searchType', params.searchType)
+    searchParams.set('page', String(params.page))
+    searchParams.set('pageSize', String(params.pageSize))
+    if (params.categories.length > 0) searchParams.set('categories', params.categories.join(','))
+    searchParams.set('filters', JSON.stringify(params.filters))
 
-    if (categories.length > 0) {
-      q = q.in('category', categories)
-    }
-
-    if (query.trim()) {
-      q = searchType === 'cas'
-        ? q.ilike('cas_number', `%${query.trim()}%`)
-        : q.ilike('product_name', `%${query.trim()}%`)
-    }
-
-    q = searchType === 'cas'
-      ? q.order('cas_number', { ascending: true })
-      : q.order('product_name', { ascending: true })
-
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    q = q.range(from, to)
-
-    const { data, error, count } = await q
-
-    if (error) {
-      console.error('Supabase error:', error)
-      throw new Error(error.message || 'Failed to fetch products')
-    }
-
-    const products = (data ?? []).map(mapRow)
-    const searchTerm = query.toLowerCase().trim()
-
-    const sortedProducts = searchTerm
-      ? [...products].sort((a, b) => {
-          const aSource = searchType === 'cas' ? a.casNumber : a.name
-          const bSource = searchType === 'cas' ? b.casNumber : b.name
-          const aLower = aSource.toLowerCase()
-          const bLower = bSource.toLowerCase()
-          const aExact = aLower === searchTerm
-          const bExact = bLower === searchTerm
-          if (aExact !== bExact) return aExact ? -1 : 1
-          const aStarts = aLower.startsWith(searchTerm)
-          const bStarts = bLower.startsWith(searchTerm)
-          if (aStarts !== bStarts) return aStarts ? -1 : 1
-          return a.name.localeCompare(b.name)
-        })
-      : products
-
-    const total = count ?? 0
-
-    return {
-      products: sortedProducts,
-      total,
-      page,
-      pageSize,
-      hasMore: to < total - 1,
-    }
+    return await apiJson<PaginatedResponse>(`/api/products?${searchParams.toString()}`)
   } catch (err) {
     console.error('Product search error:', err)
     throw err instanceof Error ? err : new Error('Failed to fetch products')
@@ -163,21 +81,8 @@ export async function searchProductsPaginated(params: SearchParams): Promise<Pag
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
-  if (!supabase) return undefined
-
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (error) {
-      if (error.code === 'PGRST116') return undefined
-      throw new Error(error.message)
-    }
-
-    return data ? mapRow(data) : undefined
+    return await apiJson<Product>(`/api/products/${encodeURIComponent(id)}`)
   } catch (error) {
     console.error('Error fetching product:', error)
     return undefined
@@ -185,16 +90,14 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 }
 
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
-  if (ids.length === 0 || !supabase) return []
+  if (ids.length === 0) return []
 
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .in('id', ids)
-
-    if (error) throw new Error(error.message)
-    return (data ?? []).map(mapRow)
+    const response = await apiJson<{ products: Product[] }>('/api/products/by-ids', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    })
+    return response.products
   } catch (error) {
     console.error('Error fetching products:', error)
     return []

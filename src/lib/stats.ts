@@ -1,34 +1,26 @@
-import { supabase } from './supabase'
+import type { PlatformStats } from './api-types'
 
-export interface PlatformStats {
-  products: number
-  manufacturers: number
-  chemistries: number
+export type { PlatformStats } from './api-types'
+
+const defaultStats: PlatformStats = {
+  products: 0,
+  manufacturers: 0,
+  chemistries: 0,
 }
 
 export async function fetchPlatformStats(): Promise<PlatformStats> {
-  const defaultStats: PlatformStats = {
-    products: 0,
-    manufacturers: 0,
-    chemistries: 0,
-  }
-
-  if (!supabase) {
-    return defaultStats
-  }
-
   try {
-    const [productsRes, companiesRes, chemistriesRes] = await Promise.all([
-      supabase.from('products').select('*', { count: 'exact', head: true }),
-      supabase.from('companies').select('*', { count: 'exact', head: true }),
-      supabase.from('chemistries').select('*', { count: 'exact', head: true }),
-    ])
+    const response = await fetch('/api/stats')
+    const data = await response.json().catch(() => null) as unknown
 
-    return {
-      products: productsRes.count ?? 0,
-      manufacturers: companiesRes.count ?? 0,
-      chemistries: chemistriesRes.count ?? 0,
+    if (!response.ok) {
+      const message = data && typeof data === 'object' && 'details' in data
+        ? String((data as { details: unknown }).details)
+        : `Request failed: ${response.status}`
+      throw new Error(message)
     }
+
+    return data as PlatformStats
   } catch (err) {
     console.error('Error fetching platform stats:', err)
     return defaultStats

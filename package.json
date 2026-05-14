@@ -10,15 +10,8 @@
     "preview": "vite preview",
     "dev:all": "concurrently \"pnpm run server\" \"pnpm run dev\"",
     "server": "tsx server/index.ts",
-    "seed": "tsx scripts/seed-dummy-data.ts",
-    "seed:csv": "tsx scripts/seed-from-csv.ts",
-    "clear": "tsx scripts/clear-data.ts",
-    "load:platform": "tsx scripts/load-platform-data.ts",
-    "load:data": "tsx scripts/load-data.ts",
-    "load:data:ipv4": "NODE_OPTIONS='--dns-result-order=ipv4first' tsx scripts/load-data.ts",
-    "load:facilities": "tsx scripts/g.ts",
-    "load:empty-tables": "tsx scripts/upsert-platform-empty-tables.ts",
-    "clean:data": "tsx scripts/clean-db-data.ts"
+    "data:dry-run": "cd ../scripts && uv run python migrate_excel_to_supabase.py --dry-run",
+    "data:apply": "cd ../scripts && uv run python migrate_excel_to_supabase.py --apply"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

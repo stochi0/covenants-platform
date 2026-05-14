@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowRight,
+  Building2,
   Check,
   FileText,
   Hash,
   Loader2,
+  MapPin,
   Package,
   Search,
   Type,
@@ -23,6 +25,7 @@ import {
   type SearchType,
 } from '@/lib/products-data'
 import { useFilterData } from '@/contexts/FilterDataContext'
+import type { FilterState } from '@/lib/filterData'
 
 const PAGE_SIZE = 24
 
@@ -56,8 +59,12 @@ function ProductCategoryBadge({ category }: { category: string | null }) {
   )
 }
 
-export function ProductSearch() {
-  const { platformStats } = useFilterData()
+interface ProductSearchProps {
+  filters: FilterState
+}
+
+export function ProductSearch({ filters }: ProductSearchProps) {
+  const { platformStats, chemistries, accreditations, stateLocations } = useFilterData()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -77,6 +84,14 @@ export function ProductSearch() {
 
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   const [rfqOpen, setRfqOpen] = useState(false)
+  const hasActiveMarketplaceFilters = filters.chemistries.length > 0
+    || filters.accreditations.length > 0
+    || filters.locations.length > 0
+  const marketplaceFilterKey = [
+    filters.chemistries.join('|'),
+    filters.accreditations.join('|'),
+    filters.locations.join('|'),
+  ].join('::')
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -109,10 +124,15 @@ export function ProductSearch() {
       query: string,
       type: SearchType,
       categories: string[],
+      marketplaceFilters: FilterState,
       page: number,
       append = false
     ) => {
-      if (!query.trim() && categories.length === 0) {
+      const hasFilters = marketplaceFilters.chemistries.length > 0
+        || marketplaceFilters.accreditations.length > 0
+        || marketplaceFilters.locations.length > 0
+
+      if (!query.trim() && categories.length === 0 && !hasFilters) {
         setProducts([])
         setTotalCount(0)
         setHasMore(false)
@@ -131,6 +151,7 @@ export function ProductSearch() {
           query,
           searchType: type,
           categories,
+          filters: marketplaceFilters,
           page,
           pageSize: PAGE_SIZE,
         })
@@ -154,19 +175,19 @@ export function ProductSearch() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
     debounceRef.current = setTimeout(() => {
-      performSearch(searchQuery, searchType, selectedCategories, 1, false)
+      performSearch(searchQuery, searchType, selectedCategories, filters, 1, false)
     }, 220)
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [performSearch, searchQuery, searchType, selectedCategories])
+  }, [filters, marketplaceFilterKey, performSearch, searchQuery, searchType, selectedCategories])
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoadingMore) {
-      performSearch(searchQuery, searchType, selectedCategories, currentPage + 1, true)
+      performSearch(searchQuery, searchType, selectedCategories, filters, currentPage + 1, true)
     }
-  }, [currentPage, hasMore, isLoadingMore, performSearch, searchQuery, searchType, selectedCategories])
+  }, [currentPage, filters, hasMore, isLoadingMore, performSearch, searchQuery, searchType, selectedCategories])
 
   const toggleCategory = useCallback((category: string) => {
     setSelectedCategories((prev) =>
@@ -208,11 +229,29 @@ export function ProductSearch() {
     && products.every((product) => selectedProducts.some((item) => item.id === product.id))
 
   const resultSummary = useMemo(() => {
-    if (!hasSearched) return `${platformStats.products.toLocaleString()} products`
+    if (!hasSearched) {
+      return hasActiveMarketplaceFilters
+        ? 'Products matching selected filters'
+        : `${platformStats.products.toLocaleString()} products`
+    }
     if (isLoading) return 'Searching...'
     if (totalCount === 0) return 'No results'
     return `${totalCount.toLocaleString()} results`
-  }, [hasSearched, isLoading, platformStats.products, totalCount])
+  }, [hasActiveMarketplaceFilters, hasSearched, isLoading, platformStats.products, totalCount])
+
+  const activeFilterLabels = useMemo(() => {
+    const locationLabels = filters.locations
+      .map((id) => stateLocations.find((location) => location.id === id)?.name)
+      .filter(Boolean)
+    const chemistryLabels = filters.chemistries
+      .map((id) => chemistries.find((chemistry) => chemistry.id === id)?.name)
+      .filter(Boolean)
+    const accreditationLabels = filters.accreditations
+      .map((id) => accreditations.find((accreditation) => accreditation.id === id)?.shortName)
+      .filter(Boolean)
+
+    return [...locationLabels, ...chemistryLabels, ...accreditationLabels]
+  }, [accreditations, chemistries, filters, stateLocations])
 
   return (
     <>
@@ -224,17 +263,27 @@ export function ProductSearch() {
                 Product search
               </p>
               <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-                Search products
+                Marketplace search
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Search by name or CAS number and build a shortlist for RFQ.
+                Search products by name or CAS number, review matched suppliers, and build a shortlist for RFQ.
               </p>
             </div>
 
             <Badge className="w-fit border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
-              {platformStats.products.toLocaleString()} products
+              {hasActiveMarketplaceFilters ? 'Filtered by overview selections' : `${platformStats.products.toLocaleString()} products`}
             </Badge>
           </div>
+
+          {activeFilterLabels.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {activeFilterLabels.map((label) => (
+                <Badge key={label} className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
+                  {label}
+                </Badge>
+              ))}
+            </div>
+          )}
 
           <div className="mt-6 grid gap-4 xl:grid-cols-[190px_minmax(0,1fr)]">
             <div className="rounded-[1.2rem] border border-[#d7ece8] bg-white p-1">
@@ -371,7 +420,9 @@ export function ProductSearch() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Search className="h-5 w-5" />
                   </div>
-                  <p className="mt-4 text-base font-medium text-foreground">Search by name or CAS</p>
+                  <p className="mt-4 text-base font-medium text-foreground">
+                    {hasActiveMarketplaceFilters ? 'Products are filtered by your overview selections' : 'Search by name or CAS'}
+                  </p>
                 </div>
               )}
 
@@ -457,6 +508,9 @@ export function ProductSearch() {
                             <p className="mt-1 font-mono text-xs text-muted-foreground">
                               {product.casNumber}
                             </p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              {product.supplierCount.toLocaleString()} supplier{product.supplierCount === 1 ? '' : 's'} · {product.facilityCount.toLocaleString()} facilit{product.facilityCount === 1 ? 'y' : 'ies'}
+                            </p>
                           </div>
                           <button
                             type="button"
@@ -534,6 +588,9 @@ function ProductCard({
   searchQuery,
   searchType,
 }: ProductCardProps) {
+  const visibleMatches = product.supplierMatches.slice(0, 3)
+  const remainingMatches = Math.max(product.supplierMatches.length - visibleMatches.length, 0)
+
   return (
     <button
       type="button"
@@ -568,7 +625,68 @@ function ProductCard({
               </p>
             </div>
 
-            <ProductCategoryBadge category={product.category} />
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <Badge className="border-primary/10 bg-primary/10 px-3 py-1 text-primary">
+                {product.supplierCount.toLocaleString()} supplier{product.supplierCount === 1 ? '' : 's'}
+              </Badge>
+              <ProductCategoryBadge category={product.category} />
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[1rem] border border-[#d7ece8] bg-[#f8fcfb] p-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Building2 className="h-3.5 w-3.5" />
+              <span>
+                {product.facilityCount.toLocaleString()} matched facilit{product.facilityCount === 1 ? 'y' : 'ies'}
+              </span>
+            </div>
+
+            {visibleMatches.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                {visibleMatches.map((match) => (
+                  <div
+                    key={match.facilityProductId}
+                    className="rounded-[0.85rem] border border-[#d7ece8] bg-white px-3 py-2"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {match.facility.company?.name ?? 'Unknown company'}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {match.facility.name}
+                        </p>
+                      </div>
+                      {match.isPrimary && (
+                        <Badge className="w-fit border-primary/10 bg-primary/10 text-primary">
+                          Primary
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {match.facility.region && (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {match.facility.region.name}
+                        </span>
+                      )}
+                      {match.facility.capacityKl !== null && (
+                        <span>{match.facility.capacityKl.toLocaleString()} KL capacity</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {remainingMatches > 0 && (
+                  <p className="px-1 text-xs font-medium text-muted-foreground">
+                    +{remainingMatches.toLocaleString()} more matched facilit{remainingMatches === 1 ? 'y' : 'ies'}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">
+                No active supplier facility is connected to this product yet.
+              </p>
+            )}
           </div>
         </div>
       </div>
