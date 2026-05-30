@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
+import { UserButton } from '@clerk/react'
 import {
   Beaker,
   Building2,
@@ -99,6 +100,9 @@ function DashboardContent() {
                   icon={<Search className="h-4 w-4" />}
                   onClick={() => setActiveTab('search')}
                 />
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/88 shadow-sm">
+                <UserButton />
               </div>
             </div>
           </div>

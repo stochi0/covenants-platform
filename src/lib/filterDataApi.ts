@@ -6,30 +6,9 @@ import type {
   StateFacilityCount,
 } from './filterData'
 import type { FilterDataResponse, StateFacilityCountResponse } from './api-types'
+import { apiJson } from './api'
 
 let filterDataCache: FilterDataResponse | null = null
-
-async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  })
-  const data = await response.json().catch(() => null) as unknown
-
-  if (!response.ok) {
-    const message = data && typeof data === 'object' && 'details' in data
-      ? String((data as { details: unknown }).details)
-      : data && typeof data === 'object' && 'error' in data
-        ? String((data as { error: unknown }).error)
-        : `Request failed: ${response.status}`
-    throw new Error(message)
-  }
-
-  return data as T
-}
 
 async function fetchFilterData(): Promise<FilterDataResponse> {
   if (filterDataCache) return filterDataCache

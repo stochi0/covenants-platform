@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
+import type { AuthenticatedUser } from './auth.ts'
+import { getLocalUserProfile } from './users.ts'
 
 export interface RFQProduct {
   id: string
@@ -153,7 +155,19 @@ export function buildRfqEmailHtml(body: RFQBody): string {
 `.trim()
 }
 
-export async function submitRfq(body: RFQBody): Promise<void> {
+export async function submitRfq(body: RFQBody, auth?: AuthenticatedUser): Promise<void> {
+  if (auth) {
+    const user = await getLocalUserProfile(auth.internalUserId)
+    if (!user) {
+      throw new Error('Authenticated user was not found')
+    }
+    body = {
+      ...body,
+      name: user.name,
+      email: user.email,
+    }
+  }
+
   const validationError = validateRfqBody(body)
   if (validationError) {
     throw new Error(validationError)

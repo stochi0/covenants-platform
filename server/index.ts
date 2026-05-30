@@ -1,16 +1,34 @@
 import 'dotenv/config'
 import express from 'express'
+import { requireAuth, type AuthenticatedRequest } from './auth.ts'
+import { handleClerkWebhook } from './clerk-webhook.ts'
 import { handleDataRequest } from './data.ts'
 import { submitRfq, type RFQBody } from './rfq.ts'
 
 const app = express()
+
+app.post('/api/clerk/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : ''
+    await handleClerkWebhook(rawBody, req.headers)
+    res.status(200).json({ success: true })
+  } catch (err) {
+    console.error('Clerk webhook error:', err)
+    res.status(400).json({
+      error: 'Webhook verification failed',
+      details: err instanceof Error ? err.message : 'Unknown error',
+    })
+  }
+})
+
 app.use(express.json({ limit: '2mb' }))
+app.use('/api', requireAuth)
 
 const PORT = Number(process.env.PORT) || 3001
 
 app.post('/api/rfq', async (req, res) => {
   try {
-    await submitRfq(req.body as RFQBody)
+    await submitRfq(req.body as RFQBody, (req as AuthenticatedRequest).auth)
     res.status(200).json({ success: true })
   } catch (err) {
     const details = err instanceof Error ? err.message : 'Unknown error'

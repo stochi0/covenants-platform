@@ -1,4 +1,5 @@
 import { submitRfq, type RFQBody } from '../server/rfq.ts'
+import { requireVercelAuth } from '../server/api-auth.ts'
 
 interface VercelRequest {
   method?: string
@@ -16,9 +17,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: 'Method not allowed' })
     return
   }
+  const auth = await requireVercelAuth(req, res)
+  if (!auth) return
 
   try {
-    await submitRfq(req.body as RFQBody)
+    await submitRfq(req.body as RFQBody, auth)
     res.status(200).json({ success: true })
   } catch (err) {
     const details = err instanceof Error ? err.message : 'Unknown error'

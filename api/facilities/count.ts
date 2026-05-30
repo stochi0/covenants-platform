@@ -1,4 +1,5 @@
 import { getFacilityCountByFilters } from '../../server/data.ts'
+import { requireVercelAuth } from '../../server/api-auth.ts'
 import type { FilterState } from '../../src/lib/filterData.ts'
 
 function parseFilters(value: unknown): FilterState {
@@ -24,6 +25,7 @@ export default async function handler(
     res.status(405).json({ error: 'Method not allowed' })
     return
   }
+  if (!await requireVercelAuth(req, res)) return
 
   try {
     res.status(200).json({ count: await getFacilityCountByFilters(parseFilters(req.body)) })

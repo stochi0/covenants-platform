@@ -1,4 +1,5 @@
 import { getProductsByIds } from '../../server/data.ts'
+import { requireVercelAuth } from '../../server/api-auth.ts'
 
 function parseIds(value: unknown): string[] {
   if (!value || typeof value !== 'object') return []
@@ -15,6 +16,7 @@ export default async function handler(
     res.status(405).json({ error: 'Method not allowed' })
     return
   }
+  if (!await requireVercelAuth(req, res)) return
 
   try {
     res.status(200).json({ products: await getProductsByIds(parseIds(req.body)) })

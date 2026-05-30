@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useUser } from '@clerk/react'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react'
 import type { Product } from '@/lib/products-data'
 import { formatProductCategoryLabel } from '@/lib/products-data'
+import { apiJson } from '@/lib/api'
 
 interface RFQModalProps {
   open: boolean
@@ -45,6 +47,7 @@ interface ProductQuantity {
 }
 
 export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRemoveProduct, onBack }: RFQModalProps) {
+  const { user } = useUser()
   const [step, setStep] = useState<'products' | 'contact' | 'success'>('products')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [quantities, setQuantities] = useState<ProductQuantity[]>(
@@ -59,10 +62,23 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
     message: '',
   })
 
-  // Update quantities when products change
-  if (quantities.length !== selectedProducts.length) {
-    setQuantities(selectedProducts.map((p) => ({ productId: p.id, quantity: '', unit: 'kg' })))
-  }
+  useEffect(() => {
+    setQuantities((prev) => selectedProducts.map((product) => {
+      const existing = prev.find((quantity) => quantity.productId === product.id)
+      return existing ?? { productId: product.id, quantity: '', unit: 'kg' }
+    }))
+  }, [selectedProducts])
+
+  useEffect(() => {
+    const email = user?.primaryEmailAddress?.emailAddress ?? ''
+    const name = user?.fullName ?? [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+
+    setFormData((prev) => ({
+      ...prev,
+      name: prev.name || name || '',
+      email,
+    }))
+  }, [user])
 
   const updateQuantity = (productId: string, field: 'quantity' | 'unit', value: string) => {
     setQuantities((prev) =>
@@ -89,23 +105,13 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
         }
       })
 
-      // Call RFQ API
-      const response = await fetch('/api/rfq', {
+      await apiJson<{ success: boolean }>('/api/rfq', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ...formData,
           products: productsWithQuantities,
         }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to submit RFQ')
-      }
 
       // Success
       setStep('success')
@@ -317,10 +323,10 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                       name="email"
                       type="email"
                       value={formData.email}
-                      onChange={handleFormChange}
+                      readOnly
                       placeholder="you@company.com"
                       required
-                      className="h-10 sm:h-9"
+                      className="h-10 bg-muted sm:h-9"
                     />
                   </div>
                 </div>
