@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
-import { UserButton } from '@clerk/react'
+import { SignOutButton, useUser } from '@clerk/react'
 import {
   Beaker,
   Building2,
+  LogOut,
   LayoutDashboard,
   Package,
   Search,
+  UserCircle,
 } from 'lucide-react'
 import { FilterDataProvider } from '@/contexts/FilterDataContext'
 import { useFilterData } from '@/contexts/FilterDataContext'
@@ -43,6 +45,45 @@ function NavButton({
       {icon}
       {label}
     </button>
+  )
+}
+
+function AccountMenu() {
+  const { user } = useUser()
+  const [isOpen, setIsOpen] = useState(false)
+  const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || 'Account'
+  const email = user?.primaryEmailAddress?.emailAddress
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/88 text-foreground shadow-sm transition-colors hover:bg-white"
+        aria-label="Open account menu"
+        aria-expanded={isOpen}
+      >
+        <UserCircle className="h-5 w-5" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-12 z-40 w-64 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg">
+          <div className="border-b border-border px-4 py-3">
+            <p className="truncate text-sm font-medium">{displayName}</p>
+            {email && <p className="truncate text-xs text-muted-foreground">{email}</p>}
+          </div>
+          <SignOutButton>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm transition-colors hover:bg-muted"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+          </SignOutButton>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -101,9 +142,7 @@ function DashboardContent() {
                   onClick={() => setActiveTab('search')}
                 />
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/88 shadow-sm">
-                <UserButton />
-              </div>
+              <AccountMenu />
             </div>
           </div>
         </header>

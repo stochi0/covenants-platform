@@ -7,8 +7,10 @@ React/Vite marketplace for searching products, reviewing matched supplier facili
 Create `.env` in this directory:
 
 ```bash
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
+DATABASE_URL=...
+VITE_CLERK_PUBLISHABLE_KEY=...
+CLERK_WEBHOOK_SECRET=...
+AUTHORIZED_PARTIES=http://localhost:5173,https://capillia.vercel.app,https://covenantspc.com
 SENDER_EMAIL=...
 SENDER_PASSWORD=...
 SMTP_SERVER=...
@@ -20,10 +22,25 @@ Run the frontend and local RFQ API together:
 
 ```bash
 pnpm install
-pnpm run dev:all
+pnpm run dev
 ```
 
-For Vercel, `/api/rfq` is served from `api/rfq.ts`. For local development, Vite proxies `/api` to the Express server in `server/index.ts`.
+For Vercel, `/api/*` is served from the files under `api/`. For local development, `pnpm run dev` starts both Vite and the Express API server, and Vite proxies `/api` to `server/index.ts`.
+
+In production, set the same auth variables in Vercel with:
+
+```bash
+AUTHORIZED_PARTIES=https://capillia.vercel.app,https://covenantspc.com
+```
+
+Configure Clerk for email-only authentication and add a webhook endpoint at:
+
+```bash
+https://capillia.vercel.app/api/clerk/webhook
+```
+
+Subscribe the webhook to `user.created`, `user.updated`, and `user.deleted`.
+Authenticated API requests read user profile data from `public.users`; they do not fetch Clerk user data during normal app usage.
 
 ## Data Source
 

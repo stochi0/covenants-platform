@@ -1,6 +1,6 @@
 import { createPublicKey, createVerify } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
-import { upsertUserFromClerkId } from './users.ts'
+import { touchUserByClerkId } from './users.ts'
 
 interface JwtHeader {
   alg?: string
@@ -159,7 +159,7 @@ export async function authenticateHeaders(headers: HeaderMap): Promise<Authentic
   }
 
   const claims = await verifyClerkToken(token)
-  const internalUserId = await upsertUserFromClerkId(claims.sub!)
+  const internalUserId = await touchUserByClerkId(claims.sub!)
 
   return {
     clerkUserId: claims.sub!,

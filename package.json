@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"pnpm run server\" \"pnpm run dev:vite\"",
+    "dev:vite": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:all": "concurrently \"pnpm run server\" \"pnpm run dev\"",
+    "dev:all": "pnpm run dev",
     "server": "tsx server/index.ts",
     "data:dry-run": "cd ../scripts && uv run python migrate_excel_to_supabase.py --dry-run",
     "data:apply": "cd ../scripts && uv run python migrate_excel_to_supabase.py --apply"

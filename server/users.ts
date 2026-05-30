@@ -1,23 +1,6 @@
 import type { QueryResultRow } from 'pg'
 import { dbOne, dbQuery } from './db.ts'
 
-interface ClerkEmailAddress {
-  id: string
-  email_address: string
-  verification: {
-    status?: string
-  } | null
-}
-
-interface ClerkUser {
-  id: string
-  primary_email_address_id: string | null
-  email_addresses: ClerkEmailAddress[]
-  first_name: string | null
-  last_name: string | null
-  image_url: string | null
-}
-
 interface UserRow extends QueryResultRow {
   id: string
 }
@@ -37,48 +20,6 @@ export interface UserProfile {
   lastName: string | null
   imageUrl: string | null
   emailVerified: boolean
-}
-
-function fullName(firstName: string | null, lastName: string | null): string | null {
-  return [firstName, lastName].filter(Boolean).join(' ') || null
-}
-
-function profileFromClerkUser(user: ClerkUser): UserProfile {
-  const primaryEmail = user.email_addresses.find((email) => email.id === user.primary_email_address_id)
-    ?? user.email_addresses[0]
-
-  if (!primaryEmail?.email_address) {
-    throw new Error('Clerk user does not have an email address')
-  }
-
-  return {
-    clerkUserId: user.id,
-    email: primaryEmail.email_address,
-    fullName: fullName(user.first_name, user.last_name),
-    firstName: user.first_name,
-    lastName: user.last_name,
-    imageUrl: user.image_url,
-    emailVerified: primaryEmail.verification?.status === 'verified',
-  }
-}
-
-async function fetchClerkUser(clerkUserId: string): Promise<ClerkUser> {
-  const secretKey = process.env.CLERK_SECRET_KEY
-  if (!secretKey) {
-    throw new Error('CLERK_SECRET_KEY must be set')
-  }
-
-  const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(clerkUserId)}`, {
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Clerk user: ${response.status}`)
-  }
-
-  return response.json() as Promise<ClerkUser>
 }
 
 export async function upsertUserProfile(profile: UserProfile): Promise<string> {
@@ -122,8 +63,19 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
   return row.id
 }
 
-export async function upsertUserFromClerkId(clerkUserId: string): Promise<string> {
-  return upsertUserProfile(profileFromClerkUser(await fetchClerkUser(clerkUserId)))
+export async function touchUserByClerkId(clerkUserId: string): Promise<string> {
+  const row = await dbOne<UserRow>(`
+    update public.users
+    set last_seen_at = now()
+    where clerk_user_id = $1 and deleted_at is null
+    returning id
+  `, [clerkUserId])
+
+  if (!row?.id) {
+    throw new Error('User profile is not synced yet')
+  }
+
+  return row.id
 }
 
 export async function softDeleteUserByClerkId(clerkUserId: string): Promise<void> {
