@@ -1,5 +1,6 @@
 import { Show, SignInButton, SignUpButton } from '@clerk/react'
 import { Dashboard } from '@/components/Dashboard'
+import { ForgotPasswordDialog } from '@/components/forgot-password-dialog'
 import { Button } from '@/components/ui/button'
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
               <SignUpButton mode="modal">
                 <Button type="button" variant="outline" className="w-full">Create account</Button>
               </SignUpButton>
+              <div className="flex justify-center">
+                <ForgotPasswordDialog />
+              </div>
             </div>
           </div>
         </div>
