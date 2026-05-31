@@ -51,7 +51,9 @@ function NavButton({
 function AccountMenu() {
   const { user } = useUser()
   const [isOpen, setIsOpen] = useState(false)
-  const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || 'Account'
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    || user?.primaryEmailAddress?.emailAddress
+    || 'Account'
   const email = user?.primaryEmailAddress?.emailAddress
 
   return (

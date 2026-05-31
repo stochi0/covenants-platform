@@ -7,7 +7,6 @@ interface UserRow extends QueryResultRow {
 
 interface LocalUserRow extends QueryResultRow {
   email: string
-  full_name: string | null
   first_name: string | null
   last_name: string | null
 }
@@ -15,7 +14,6 @@ interface LocalUserRow extends QueryResultRow {
 export interface UserProfile {
   clerkUserId: string
   email: string
-  fullName: string | null
   firstName: string | null
   lastName: string | null
   imageUrl: string | null
@@ -27,7 +25,6 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
     insert into public.users (
       clerk_user_id,
       email,
-      full_name,
       first_name,
       last_name,
       image_url,
@@ -35,10 +32,9 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       last_seen_at,
       deleted_at
     )
-    values ($1, $2, $3, $4, $5, $6, $7, now(), null)
+    values ($1, $2, $3, $4, $5, $6, now(), null)
     on conflict (clerk_user_id) do update set
       email = excluded.email,
-      full_name = excluded.full_name,
       first_name = excluded.first_name,
       last_name = excluded.last_name,
       image_url = excluded.image_url,
@@ -49,7 +45,6 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
   `, [
     profile.clerkUserId,
     profile.email,
-    profile.fullName,
     profile.firstName,
     profile.lastName,
     profile.imageUrl,
@@ -88,7 +83,7 @@ export async function softDeleteUserByClerkId(clerkUserId: string): Promise<void
 
 export async function getLocalUserProfile(userId: string): Promise<{ email: string; name: string } | null> {
   const row = await dbOne<LocalUserRow>(`
-    select email, full_name, first_name, last_name
+    select email, first_name, last_name
     from public.users
     where id = $1 and deleted_at is null
   `, [userId])
@@ -97,6 +92,6 @@ export async function getLocalUserProfile(userId: string): Promise<{ email: stri
 
   return {
     email: row.email,
-    name: row.full_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.email,
+    name: [row.first_name, row.last_name].filter(Boolean).join(' ') || row.email,
   }
 }

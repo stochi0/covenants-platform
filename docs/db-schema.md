@@ -101,7 +101,8 @@ CREATE TABLE public.spatial_ref_sys (
 CREATE TABLE public.users (
   id uuid NOT NULL,
   email text,
-  full_name text,
+  first_name text,
+  last_name text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT users_pkey PRIMARY KEY (id),

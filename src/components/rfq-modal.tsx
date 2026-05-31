@@ -71,7 +71,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
 
   useEffect(() => {
     const email = user?.primaryEmailAddress?.emailAddress ?? ''
-    const name = user?.fullName ?? [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
 
     setFormData((prev) => ({
       ...prev,

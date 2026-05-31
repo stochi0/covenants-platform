@@ -42,10 +42,6 @@ function toSvixHeaders(headers: WebhookHeaders): Record<string, string> {
   }
 }
 
-function fullName(firstName: string | null, lastName: string | null): string | null {
-  return [firstName, lastName].filter(Boolean).join(' ') || null
-}
-
 function profileFromEvent(data: ClerkUserEventData): UserProfile {
   const primaryEmail = data.email_addresses.find((email) => email.id === data.primary_email_address_id)
     ?? data.email_addresses[0]
@@ -57,7 +53,6 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
   return {
     clerkUserId: data.id,
     email: primaryEmail.email_address,
-    fullName: fullName(data.first_name, data.last_name),
     firstName: data.first_name,
     lastName: data.last_name,
     imageUrl: data.image_url,

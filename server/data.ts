@@ -137,7 +137,7 @@ function productWhereSql(params: SearchParams): { joins: string; where: string[]
 
   if (params.categories.length > 0) {
     values.push(params.categories)
-    where.push(`p.category = any($${values.length}::text[])`)
+    where.push(`p.category::text = any($${values.length}::text[])`)
   }
 
   const trimmedQuery = params.query.trim()
