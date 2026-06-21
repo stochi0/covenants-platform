@@ -1,5 +1,18 @@
 {
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "capillia.vercel.app"
+        }
+      ],
+      "destination": "https://capillia.covenantspc.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
