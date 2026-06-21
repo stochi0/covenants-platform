@@ -6,19 +6,19 @@ import type {
   StateFacilityCount,
 } from './filterData'
 import type { FilterDataResponse, StateFacilityCountResponse } from './api-types'
-import { apiJson } from './api'
+import { apiJson, type AuthTokenGetter } from './api'
 
 let filterDataCache: FilterDataResponse | null = null
 
-async function fetchFilterData(): Promise<FilterDataResponse> {
+async function fetchFilterData(getToken: AuthTokenGetter): Promise<FilterDataResponse> {
   if (filterDataCache) return filterDataCache
-  filterDataCache = await apiJson<FilterDataResponse>('/api/filters')
+  filterDataCache = await apiJson<FilterDataResponse>(getToken, '/api/filters')
   return filterDataCache
 }
 
-export async function fetchTotalFacilities(): Promise<number> {
+export async function fetchTotalFacilities(getToken: AuthTokenGetter): Promise<number> {
   try {
-    const data = await fetchFilterData()
+    const data = await fetchFilterData(getToken)
     return data.totalFacilities
   } catch (err) {
     console.error('Error fetching total facilities:', err)
@@ -26,9 +26,9 @@ export async function fetchTotalFacilities(): Promise<number> {
   }
 }
 
-export async function fetchChemistries(): Promise<Chemistry[]> {
+export async function fetchChemistries(getToken: AuthTokenGetter): Promise<Chemistry[]> {
   try {
-    const data = await fetchFilterData()
+    const data = await fetchFilterData(getToken)
     return data.chemistries
   } catch (err) {
     console.error('Error fetching chemistries:', err)
@@ -36,9 +36,9 @@ export async function fetchChemistries(): Promise<Chemistry[]> {
   }
 }
 
-export async function fetchAccreditations(): Promise<Accreditation[]> {
+export async function fetchAccreditations(getToken: AuthTokenGetter): Promise<Accreditation[]> {
   try {
-    const data = await fetchFilterData()
+    const data = await fetchFilterData(getToken)
     return data.accreditations
   } catch (err) {
     console.error('Error fetching accreditations:', err)
@@ -46,9 +46,9 @@ export async function fetchAccreditations(): Promise<Accreditation[]> {
   }
 }
 
-export async function fetchStateLocations(): Promise<StateLocation[]> {
+export async function fetchStateLocations(getToken: AuthTokenGetter): Promise<StateLocation[]> {
   try {
-    const data = await fetchFilterData()
+    const data = await fetchFilterData(getToken)
     return data.stateLocations
   } catch (err) {
     console.error('Error fetching state locations:', err)
@@ -57,9 +57,10 @@ export async function fetchStateLocations(): Promise<StateLocation[]> {
 }
 
 export async function fetchFacilityCountByAccreditations(
+  getToken: AuthTokenGetter,
   accreditationIds: string[]
 ): Promise<number> {
-  return fetchFacilityCountByFilters({
+  return fetchFacilityCountByFilters(getToken, {
     chemistries: [],
     accreditations: accreditationIds,
     locations: [],
@@ -67,18 +68,19 @@ export async function fetchFacilityCountByAccreditations(
 }
 
 export async function fetchFacilityCountByChemistries(
+  getToken: AuthTokenGetter,
   chemistryIds: string[]
 ): Promise<number> {
-  return fetchFacilityCountByFilters({
+  return fetchFacilityCountByFilters(getToken, {
     chemistries: chemistryIds,
     accreditations: [],
     locations: [],
   })
 }
 
-export async function fetchFacilityCountByFilters(filters: FilterState): Promise<number> {
+export async function fetchFacilityCountByFilters(getToken: AuthTokenGetter, filters: FilterState): Promise<number> {
   try {
-    const data = await apiJson<{ count: number }>('/api/facilities/count', {
+    const data = await apiJson<{ count: number }>(getToken, '/api/facilities/count', {
       method: 'POST',
       body: JSON.stringify({ filters }),
     })
@@ -90,6 +92,7 @@ export async function fetchFacilityCountByFilters(filters: FilterState): Promise
 }
 
 export async function fetchStateFacilityCountsByFilters(
+  getToken: AuthTokenGetter,
   filters: Pick<FilterState, 'chemistries' | 'accreditations'>
 ): Promise<StateFacilityCount[]> {
   if (filters.chemistries.length === 0 && filters.accreditations.length === 0) {
@@ -97,7 +100,7 @@ export async function fetchStateFacilityCountsByFilters(
   }
 
   try {
-    const data = await apiJson<StateFacilityCountResponse>('/api/facilities/state-counts', {
+    const data = await apiJson<StateFacilityCountResponse>(getToken, '/api/facilities/state-counts', {
       method: 'POST',
       body: JSON.stringify({ filters }),
     })

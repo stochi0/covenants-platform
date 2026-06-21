@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useUser } from '@clerk/react'
+import { useAuth, useUser } from '@clerk/react'
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ interface ProductQuantity {
 }
 
 export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRemoveProduct, onBack }: RFQModalProps) {
+  const { getToken } = useAuth()
   const { user } = useUser()
   const [step, setStep] = useState<'products' | 'contact' | 'success'>('products')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -105,7 +106,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
         }
       })
 
-      await apiJson<{ success: boolean }>('/api/rfq', {
+      await apiJson<{ success: boolean }>(getToken, '/api/rfq', {
         method: 'POST',
         body: JSON.stringify({
           ...formData,

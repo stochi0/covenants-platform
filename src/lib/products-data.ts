@@ -4,7 +4,7 @@ import type {
   ProductCategoryFacet,
   SearchParams,
 } from './api-types'
-import { apiJson } from './api'
+import { apiJson, type AuthTokenGetter } from './api'
 
 export type {
   Company,
@@ -30,11 +30,11 @@ export function formatProductCategoryLabel(category: string | null | undefined) 
     .join(' ')
 }
 
-export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> {
+export async function fetchProductCategories(getToken: AuthTokenGetter): Promise<ProductCategoryFacet[]> {
   if (productCategoryFacetCache) return productCategoryFacetCache
 
   try {
-    productCategoryFacetCache = await apiJson<ProductCategoryFacet[]>('/api/product-categories')
+    productCategoryFacetCache = await apiJson<ProductCategoryFacet[]>(getToken, '/api/product-categories')
     return productCategoryFacetCache
   } catch (err) {
     console.error('Error fetching product categories:', err)
@@ -42,7 +42,7 @@ export async function fetchProductCategories(): Promise<ProductCategoryFacet[]> 
   }
 }
 
-export async function searchProductsPaginated(params: SearchParams): Promise<PaginatedResponse> {
+export async function searchProductsPaginated(getToken: AuthTokenGetter, params: SearchParams): Promise<PaginatedResponse> {
   try {
     const searchParams = new URLSearchParams()
     searchParams.set('query', params.query)
@@ -52,27 +52,27 @@ export async function searchProductsPaginated(params: SearchParams): Promise<Pag
     if (params.categories.length > 0) searchParams.set('categories', params.categories.join(','))
     searchParams.set('filters', JSON.stringify(params.filters))
 
-    return await apiJson<PaginatedResponse>(`/api/products?${searchParams.toString()}`)
+    return await apiJson<PaginatedResponse>(getToken, `/api/products?${searchParams.toString()}`)
   } catch (err) {
     console.error('Product search error:', err)
     throw err instanceof Error ? err : new Error('Failed to fetch products')
   }
 }
 
-export async function getProductById(id: string): Promise<Product | undefined> {
+export async function getProductById(getToken: AuthTokenGetter, id: string): Promise<Product | undefined> {
   try {
-    return await apiJson<Product>(`/api/products/${encodeURIComponent(id)}`)
+    return await apiJson<Product>(getToken, `/api/products/${encodeURIComponent(id)}`)
   } catch (error) {
     console.error('Error fetching product:', error)
     return undefined
   }
 }
 
-export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+export async function getProductsByIds(getToken: AuthTokenGetter, ids: string[]): Promise<Product[]> {
   if (ids.length === 0) return []
 
   try {
-    const response = await apiJson<{ products: Product[] }>('/api/products/by-ids', {
+    const response = await apiJson<{ products: Product[] }>(getToken, '/api/products/by-ids', {
       method: 'POST',
       body: JSON.stringify({ ids }),
     })

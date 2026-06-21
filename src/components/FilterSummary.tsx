@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Beaker, MapPin, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ export function FilterSummary({
   onLocationRemove,
   onClearAll,
 }: FilterSummaryProps) {
+  const { getToken } = useAuth()
   const { chemistries, accreditations, stateLocations } = useFilterData()
   const [filteredFacilityCount, setFilteredFacilityCount] = useState<{ key: string; value: number } | null>(null)
 
@@ -39,7 +41,7 @@ export function FilterSummary({
     if (!hasFilters) return
 
     let cancelled = false
-    fetchFacilityCountByFilters(filters)
+    fetchFacilityCountByFilters(getToken, filters)
       .then((count) => {
         if (!cancelled) setFilteredFacilityCount({ key: filterKey, value: count })
       })
@@ -50,7 +52,7 @@ export function FilterSummary({
     return () => {
       cancelled = true
     }
-  }, [filterKey, filters, hasFilters])
+  }, [filterKey, filters, getToken, hasFilters])
 
   const selectedChemistries = filters.chemistries
     .map((id) => chemistries.find((chemistry) => chemistry.id === id))

@@ -1,25 +1,16 @@
-type ClerkSession = {
-  getToken: () => Promise<string | null>
-}
+export type AuthTokenGetter = () => Promise<string | null>
 
-declare global {
-  interface Window {
-    Clerk?: {
-      session?: ClerkSession | null
-    }
-  }
-}
-
-async function getSessionToken(): Promise<string> {
-  const token = await window.Clerk?.session?.getToken()
+async function getSessionToken(getToken: AuthTokenGetter): Promise<string> {
+  const token = await getToken()
   if (!token) {
     throw new Error('You must be signed in to continue.')
   }
+
   return token
 }
 
-export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = await getSessionToken()
+export async function apiJson<T>(getToken: AuthTokenGetter, path: string, init?: RequestInit): Promise<T> {
+  const token = await getSessionToken(getToken)
   const response = await fetch(path, {
     ...init,
     headers: {

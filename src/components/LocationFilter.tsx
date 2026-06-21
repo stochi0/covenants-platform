@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Check, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +23,7 @@ export function LocationFilter({
   selectedAccreditations,
   onSelectionChange,
 }: LocationFilterProps) {
+  const { getToken } = useAuth()
   const { stateLocations, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCounts, setFilteredCounts] = useState<{ key: string; byLocation: Map<string, number> } | null>(
@@ -38,7 +40,7 @@ export function LocationFilter({
     if (!hasCapabilityFilters) return
 
     let cancelled = false
-    fetchStateFacilityCountsByFilters({
+    fetchStateFacilityCountsByFilters(getToken, {
       chemistries: selectedChemistries,
       accreditations: selectedAccreditations,
     })
@@ -55,7 +57,7 @@ export function LocationFilter({
     return () => {
       cancelled = true
     }
-  }, [hasCapabilityFilters, mapFilterKey, selectedAccreditations, selectedChemistries])
+  }, [getToken, hasCapabilityFilters, mapFilterKey, selectedAccreditations, selectedChemistries])
 
   const mapLocations = useMemo(() => {
     // Start from capability-filtered counts if present; otherwise baseline counts.

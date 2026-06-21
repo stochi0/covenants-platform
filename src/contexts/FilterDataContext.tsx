@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
+import { useAuth } from '@clerk/react'
 import type { Chemistry, Accreditation, StateLocation } from '@/lib/filterData'
 import {
   fetchChemistries,
@@ -37,6 +38,7 @@ interface FilterDataContextValue {
 const FilterDataContext = createContext<FilterDataContextValue | null>(null)
 
 export function FilterDataProvider({ children }: { children: ReactNode }) {
+  const { getToken, isLoaded } = useAuth()
   const [chemistries, setChemistries] = useState<Chemistry[]>([])
   const [accreditations, setAccreditations] = useState<Accreditation[]>([])
   const [stateLocations, setStateLocations] = useState<StateLocation[]>([])
@@ -46,12 +48,20 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
 
   const load = useCallback(async () => {
     const [chems, accs, locs, total, stats] = await Promise.all([
-      fetchChemistries(),
-      fetchAccreditations(),
-      fetchStateLocations(),
-      fetchTotalFacilities(),
-      fetchPlatformStats(),
+      fetchChemistries(getToken),
+      fetchAccreditations(getToken),
+      fetchStateLocations(getToken),
+      fetchTotalFacilities(getToken),
+      fetchPlatformStats(getToken),
     ])
+
+    return { chems, accs, locs, total, stats }
+  }, [getToken])
+
+  const applyData = useCallback((data: Awaited<ReturnType<typeof load>>) => {
+    if (!data) return
+
+    const { chems, accs, locs, total, stats } = data
     const availableChemistries = chems.filter((chemistry) => chemistry.facilityCount > 0).length
     setChemistries(chems)
     setAccreditations(accs)
@@ -66,19 +76,24 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!isLoaded) return
+
     load()
+      .then((data) => {
+        if (!cancelled) applyData(data)
+      })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
       })
     return () => { cancelled = true }
-  }, [load])
+  }, [applyData, isLoaded, load])
 
   const refresh = useCallback(async () => {
     setIsLoading(true)
-    await load()
+    const data = await load()
+    applyData(data)
     setIsLoading(false)
-  }, [load])
+  }, [applyData, load])
 
   const value: FilterDataContextValue = {
     chemistries,

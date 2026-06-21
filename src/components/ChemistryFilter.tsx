@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Beaker, Check, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ export function ChemistryFilter({
   selectedChemistries,
   onSelectionChange,
 }: ChemistryFilterProps) {
+  const { getToken } = useAuth()
   const { chemistries, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
@@ -27,7 +29,7 @@ export function ChemistryFilter({
     if (!selectedKey) return
 
     let cancelled = false
-    fetchFacilityCountByChemistries(selectedChemistries)
+    fetchFacilityCountByChemistries(getToken, selectedChemistries)
       .then((count) => {
         if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: count })
       })
@@ -38,7 +40,7 @@ export function ChemistryFilter({
     return () => {
       cancelled = true
     }
-  }, [selectedChemistries, selectedKey])
+  }, [getToken, selectedChemistries, selectedKey])
 
   const visibleChemistries = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()

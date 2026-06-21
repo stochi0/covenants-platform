@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import { Check, Search, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ export function AccreditationFilter({
   selectedAccreditations,
   onSelectionChange,
 }: AccreditationFilterProps) {
+  const { getToken } = useAuth()
   const { accreditations, totalFacilities, isLoading } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
@@ -27,7 +29,7 @@ export function AccreditationFilter({
     if (!selectedKey) return
 
     let cancelled = false
-    fetchFacilityCountByAccreditations(selectedAccreditations)
+    fetchFacilityCountByAccreditations(getToken, selectedAccreditations)
       .then((count) => {
         if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: count })
       })
@@ -38,7 +40,7 @@ export function AccreditationFilter({
     return () => {
       cancelled = true
     }
-  }, [selectedAccreditations, selectedKey])
+  }, [getToken, selectedAccreditations, selectedKey])
 
   const visibleAccreditations = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase()

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAuth } from '@clerk/react'
 import {
   ArrowRight,
   Check,
@@ -62,6 +63,7 @@ interface ProductSearchProps {
 }
 
 export function ProductSearch({ filters }: ProductSearchProps) {
+  const { getToken } = useAuth()
   const { platformStats, chemistries, accreditations, stateLocations } = useFilterData()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -104,7 +106,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
   useEffect(() => {
     let cancelled = false
 
-    fetchProductCategories()
+    fetchProductCategories(getToken)
       .then((facets) => {
         if (!cancelled) setCategoryFacets(facets)
       })
@@ -115,7 +117,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [getToken])
 
   const performSearch = useCallback(
     async (
@@ -145,7 +147,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
       }
 
       try {
-        const response = await searchProductsPaginated({
+        const response = await searchProductsPaginated(getToken, {
           query,
           searchType: type,
           categories,
@@ -166,7 +168,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
         setIsLoadingMore(false)
       }
     },
-    []
+    [getToken]
   )
 
   useEffect(() => {
