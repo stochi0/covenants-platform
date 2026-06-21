@@ -10,7 +10,7 @@ Create `.env` in this directory:
 DATABASE_URL=...
 VITE_CLERK_PUBLISHABLE_KEY=...
 CLERK_WEBHOOK_SECRET=...
-AUTHORIZED_PARTIES=http://localhost:5173,https://capillia.vercel.app,https://covenantspc.com
+AUTHORIZED_PARTIES=http://localhost:5173,https://capillia.covenantspc.com,https://capillia.vercel.app
 SENDER_EMAIL=...
 SENDER_PASSWORD=...
 SMTP_SERVER=...
@@ -30,13 +30,13 @@ For Vercel, `/api/*` is served from the files under `api/`. For local developmen
 In production, set the same auth variables in Vercel with:
 
 ```bash
-AUTHORIZED_PARTIES=https://capillia.vercel.app,https://covenantspc.com
+AUTHORIZED_PARTIES=https://capillia.covenantspc.com,https://capillia.vercel.app
 ```
 
 Configure Clerk for email-only authentication and add a webhook endpoint at:
 
 ```bash
-https://capillia.vercel.app/api/clerk/webhook
+https://capillia.covenantspc.com/api/clerk/webhook
 ```
 
 Subscribe the webhook to `user.created`, `user.updated`, and `user.deleted`.
