@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@clerk/react'
 import { Check, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,20 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { useFilterData } from '@/contexts/FilterDataContext'
 import { fetchStateFacilityCountsByFilters } from '@/lib/filterDataApi'
-import { IndiaMap } from './IndiaMap'
+
+const IndiaMap = lazy(() =>
+  import('./IndiaMap').then((module) => ({ default: module.IndiaMap }))
+)
+
+function IndiaMapFallback() {
+  return (
+    <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7ece8] bg-white p-3 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.28)] sm:p-4">
+      <div className="flex min-h-[520px] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
+      </div>
+    </div>
+  )
+}
 
 interface LocationFilterProps {
   selectedLocations: string[]
@@ -184,12 +197,14 @@ export function LocationFilter({
       </CardHeader>
 
       <CardContent className="space-y-5 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
-        <IndiaMap
-          interactive
-          selectedLocations={selectedLocations}
-          onLocationChange={onSelectionChange}
-          locations={mapLocations}
-        />
+        <Suspense fallback={<IndiaMapFallback />}>
+          <IndiaMap
+            interactive
+            selectedLocations={selectedLocations}
+            onLocationChange={onSelectionChange}
+            locations={mapLocations}
+          />
+        </Suspense>
 
         {currentFilteredCountError && (
           <div className="rounded-[1rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">

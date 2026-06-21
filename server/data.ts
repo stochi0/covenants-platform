@@ -5,6 +5,7 @@ import type {
   PlatformStats,
   Product,
   ProductCategoryFacet,
+  ProductSearchResult,
   ProductSupplierMatch,
   SearchParams,
   StateFacilityCountResponse,
@@ -64,6 +65,12 @@ interface ProductMatchRow {
   country: string | null
 }
 
+interface ProductCountRow {
+  product_id: string
+  supplier_count: string
+  facility_count: string
+}
+
 function toNumber(value: string | number | null): number | null {
   if (value === null) return null
   const parsed = Number(value)
@@ -120,6 +127,17 @@ function mapProduct(row: ProductRow, matches: ProductSupplierMatch[] = []): Prod
     supplierMatches: matches,
     supplierCount: supplierIds.size,
     facilityCount: matches.length,
+  }
+}
+
+function mapProductSearchResult(row: ProductRow, counts: ProductCountRow | undefined): ProductSearchResult {
+  return {
+    id: row.id,
+    name: row.product_name ?? 'Unnamed product',
+    casNumber: row.cas_number ?? 'N/A',
+    category: row.category,
+    supplierCount: Number(counts?.supplier_count ?? 0),
+    facilityCount: Number(counts?.facility_count ?? 0),
   }
 }
 
@@ -309,6 +327,60 @@ async function fetchSupplierMatches(productIds: string[], filters: FilterState |
   return matchesByProduct
 }
 
+async function fetchSupplierCounts(productIds: string[], filters: FilterState | null): Promise<Map<string, ProductCountRow>> {
+  if (productIds.length === 0) return new Map()
+
+  const values: unknown[] = [productIds]
+  const where = [
+    'fp.product_id = any($1::text[])',
+    'f.is_active = true',
+    'f.deleted_at is null',
+  ]
+
+  if (filters && filters.locations.length > 0) {
+    values.push(filters.locations)
+    where.push(`f.region_id = any($${values.length}::text[])`)
+  }
+
+  for (const chemistryId of filters?.chemistries ?? []) {
+    values.push(chemistryId)
+    where.push(`
+      exists (
+        select 1
+        from facility_chemistries fc_match
+        where fc_match.facility_id = f.id
+          and fc_match.chemistry_id = $${values.length}
+      )
+    `)
+  }
+
+  for (const accreditationId of filters?.accreditations ?? []) {
+    values.push(accreditationId)
+    where.push(`
+      exists (
+        select 1
+        from facility_accreditations fa_match
+        where fa_match.facility_id = f.id
+          and fa_match.accreditation_id = $${values.length}
+      )
+    `)
+  }
+
+  const rows = await dbQuery<ProductCountRow>(`
+    select
+      fp.product_id,
+      count(distinct c.id)::text as supplier_count,
+      count(distinct f.id)::text as facility_count
+    from facility_products fp
+    join facilities f on f.id = fp.facility_id
+    left join companies c on c.id = f.company_id
+    where ${where.join(' and ')}
+    group by fp.product_id
+  `, values)
+
+  return new Map(rows.map((row) => [row.product_id, row]))
+}
+
 export async function getPlatformStats(): Promise<PlatformStats> {
   return cachedResponse('platform-stats', PLATFORM_STATS_TTL_MS, async () => {
     const [products, companies, chemistries] = await Promise.all([
@@ -432,11 +504,19 @@ export async function searchProducts(params: SearchParams): Promise<PaginatedRes
   const hasFilters = normalizedParams.filters.chemistries.length > 0
     || normalizedParams.filters.accreditations.length > 0
     || normalizedParams.filters.locations.length > 0
-  const matchesByProduct = await fetchSupplierMatches(productIds, hasFilters ? normalizedParams.filters : null)
+  const productContextFilters = hasFilters ? normalizedParams.filters : null
   const searchTerm = normalizedParams.query.toLowerCase().trim()
-  const products = productRows.map((row) => mapProduct(row, matchesByProduct.get(row.id) ?? []))
+  const mappedProducts = await (async () => {
+    if (normalizedParams.includeMatches) {
+      const matchesByProduct = await fetchSupplierMatches(productIds, productContextFilters)
+      return productRows.map((row) => mapProduct(row, matchesByProduct.get(row.id) ?? []))
+    }
+
+    const countsByProduct = await fetchSupplierCounts(productIds, productContextFilters)
+    return productRows.map((row) => mapProductSearchResult(row, countsByProduct.get(row.id)))
+  })()
   const sortedProducts = searchTerm
-    ? [...products].sort((a, b) => {
+    ? [...mappedProducts].sort((a, b) => {
         const aSource = normalizedParams.searchType === 'cas' ? a.casNumber : a.name
         const bSource = normalizedParams.searchType === 'cas' ? b.casNumber : b.name
         const aLower = aSource.toLowerCase()
@@ -449,7 +529,7 @@ export async function searchProducts(params: SearchParams): Promise<PaginatedRes
         if (aStarts !== bStarts) return aStarts ? -1 : 1
         return a.name.localeCompare(b.name)
       })
-    : products
+    : mappedProducts
   const total = Number(countRow?.value ?? 0)
 
   return {
@@ -573,6 +653,7 @@ export function parseSearchParams(body: unknown): SearchParams {
     filters: parseFilters(raw.filters),
     page: parsePositiveInt(raw.page, 1),
     pageSize: parsePositiveInt(raw.pageSize, 24),
+    includeMatches: raw.includeMatches === true,
   }
 }
 
@@ -585,6 +666,11 @@ function queryStringArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
   if (typeof value !== 'string' || !value) return []
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function queryStringBoolean(value: unknown): boolean {
+  const text = queryStringValue(value)
+  return text === 'true' || text === '1'
 }
 
 export function parseSearchQuery(query: Record<string, unknown>): SearchParams {
@@ -605,6 +691,7 @@ export function parseSearchQuery(query: Record<string, unknown>): SearchParams {
     filters: parseFilters(parsedFilters),
     page: parsePositiveInt(queryStringValue(query.page), 1),
     pageSize: parsePositiveInt(queryStringValue(query.pageSize), 24),
+    includeMatches: queryStringBoolean(query.includeMatches),
   }
 }
 

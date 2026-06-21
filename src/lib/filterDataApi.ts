@@ -10,6 +10,27 @@ import { apiJson, type AuthTokenGetter } from './api'
 
 let filterDataCache: FilterDataResponse | null = null
 let filterDataPromise: Promise<FilterDataResponse> | null = null
+const facilityCountPromiseCache = new Map<string, Promise<number>>()
+const stateFacilityCountPromiseCache = new Map<string, Promise<StateFacilityCount[]>>()
+
+function normalizeIds(ids: string[]): string {
+  return [...ids].sort().join('|')
+}
+
+function filterCacheKey(filters: FilterState): string {
+  return [
+    normalizeIds(filters.chemistries),
+    normalizeIds(filters.accreditations),
+    normalizeIds(filters.locations),
+  ].join('::')
+}
+
+function stateCountCacheKey(filters: Pick<FilterState, 'chemistries' | 'accreditations'>): string {
+  return [
+    normalizeIds(filters.chemistries),
+    normalizeIds(filters.accreditations),
+  ].join('::')
+}
 
 export async function fetchFilterData(getToken: AuthTokenGetter): Promise<FilterDataResponse> {
   if (filterDataCache) return filterDataCache
@@ -71,11 +92,22 @@ export async function fetchFacilityCountByChemistries(
 }
 
 export async function fetchFacilityCountByFilters(getToken: AuthTokenGetter, filters: FilterState): Promise<number> {
-  const data = await apiJson<{ count: number }>(getToken, '/api/facilities/count', {
+  const key = filterCacheKey(filters)
+  const cached = facilityCountPromiseCache.get(key)
+  if (cached) return cached
+
+  const promise = apiJson<{ count: number }>(getToken, '/api/facilities/count', {
     method: 'POST',
     body: JSON.stringify({ filters }),
   })
-  return data.count
+    .then((data) => data.count)
+    .catch((error) => {
+      facilityCountPromiseCache.delete(key)
+      throw error
+    })
+
+  facilityCountPromiseCache.set(key, promise)
+  return promise
 }
 
 export async function fetchStateFacilityCountsByFilters(
@@ -86,9 +118,20 @@ export async function fetchStateFacilityCountsByFilters(
     return []
   }
 
-  const data = await apiJson<StateFacilityCountResponse>(getToken, '/api/facilities/state-counts', {
+  const key = stateCountCacheKey(filters)
+  const cached = stateFacilityCountPromiseCache.get(key)
+  if (cached) return cached
+
+  const promise = apiJson<StateFacilityCountResponse>(getToken, '/api/facilities/state-counts', {
     method: 'POST',
     body: JSON.stringify({ filters }),
   })
-  return data.locations
+    .then((data) => data.locations)
+    .catch((error) => {
+      stateFacilityCountPromiseCache.delete(key)
+      throw error
+    })
+
+  stateFacilityCountPromiseCache.set(key, promise)
+  return promise
 }

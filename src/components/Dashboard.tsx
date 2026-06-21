@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { SignOutButton, useUser } from '@clerk/react'
 import {
   Beaker,
@@ -19,9 +19,23 @@ import { LocationFilter } from './LocationFilter'
 import { ChemistryFilter } from './ChemistryFilter'
 import { AccreditationFilter } from './AccreditationFilter'
 import { FilterSummary } from './FilterSummary'
-import { ProductSearch } from './product-search'
 
 type DashboardTab = 'overview' | 'search'
+
+const ProductSearch = lazy(() =>
+  import('./product-search').then((module) => ({ default: module.ProductSearch }))
+)
+
+function TabLoadingFallback({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-[520px] items-center justify-center rounded-[1.75rem] border border-[#d7ece8] bg-white/88">
+      <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
+        <span>{label}</span>
+      </div>
+    </div>
+  )
+}
 
 function NavButton({
   active,
@@ -287,7 +301,9 @@ function DashboardContent() {
               </div>
             </div>
           ) : (
-            <ProductSearch filters={filters} />
+            <Suspense fallback={<TabLoadingFallback label="Loading product search" />}>
+              <ProductSearch filters={filters} />
+            </Suspense>
           )}
         </main>
       </div>

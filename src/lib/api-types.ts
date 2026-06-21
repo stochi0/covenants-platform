@@ -41,6 +41,15 @@ export interface Product {
   facilityCount: number
 }
 
+export interface ProductSearchResult {
+  id: string
+  name: string
+  casNumber: string
+  category: string | null
+  supplierCount: number
+  facilityCount: number
+}
+
 export interface ProductCategoryFacet {
   value: string
   count: number
@@ -49,7 +58,7 @@ export interface ProductCategoryFacet {
 export type SearchType = 'name' | 'cas'
 
 export interface PaginatedResponse {
-  products: Product[]
+  products: ProductSearchResult[]
   total: number
   page: number
   pageSize: number
@@ -63,6 +72,7 @@ export interface SearchParams {
   filters: FilterState
   page: number
   pageSize: number
+  includeMatches?: boolean
 }
 
 export interface PlatformStats {

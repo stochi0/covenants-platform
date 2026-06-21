@@ -18,8 +18,10 @@ import { RFQModal } from './rfq-modal'
 import {
   fetchProductCategories,
   formatProductCategoryLabel,
+  getProductsByIds,
   searchProductsPaginated,
   type Product,
+  type ProductSearchResult,
   type ProductCategoryFacet,
   type SearchType,
 } from '@/lib/products-data'
@@ -74,7 +76,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [categoryFacets, setCategoryFacets] = useState<ProductCategoryFacet[]>([])
 
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductSearchResult[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -83,8 +85,10 @@ export function ProductSearch({ filters }: ProductSearchProps) {
   const [isFacetLoading, setIsFacetLoading] = useState(true)
   const [hasSearched, setHasSearched] = useState(false)
 
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+  const [selectedProducts, setSelectedProducts] = useState<ProductSearchResult[]>([])
+  const [rfqProducts, setRfqProducts] = useState<Product[]>([])
   const [rfqOpen, setRfqOpen] = useState(false)
+  const [isPreparingRfq, setIsPreparingRfq] = useState(false)
   const hasActiveMarketplaceFilters = filters.chemistries.length > 0
     || filters.accreditations.length > 0
     || filters.locations.length > 0
@@ -156,6 +160,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
           filters: marketplaceFilters,
           page,
           pageSize: PAGE_SIZE,
+          includeMatches: false,
         })
 
         if (requestSeq !== requestSeqRef.current) return
@@ -203,31 +208,51 @@ export function ProductSearch({ filters }: ProductSearchProps) {
     )
   }, [])
 
-  const toggleProductSelection = useCallback((product: Product) => {
-    setSelectedProducts((prev) =>
-      prev.some((item) => item.id === product.id)
-        ? prev.filter((item) => item.id !== product.id)
-        : [...prev, product]
-    )
+  const toggleProductSelection = useCallback((product: ProductSearchResult) => {
+    setSelectedProducts((prev) => {
+      const isSelected = prev.some((item) => item.id === product.id)
+      if (isSelected) {
+        setRfqProducts((current) => current.filter((item) => item.id !== product.id))
+        return prev.filter((item) => item.id !== product.id)
+      }
+
+      return [...prev, product]
+    })
   }, [])
 
   const clearSelections = useCallback(() => {
     setSelectedProducts([])
+    setRfqProducts([])
   }, [])
 
-  const handleRequestQuote = useCallback(() => {
-    if (selectedProducts.length > 0) {
+  const handleRequestQuote = useCallback(async () => {
+    if (selectedProducts.length === 0 || isPreparingRfq) return
+
+    setIsPreparingRfq(true)
+    try {
+      const selectedIds = selectedProducts.map((product) => product.id)
+      const fullProducts = await getProductsByIds(getToken, selectedIds)
+      const fullProductById = new Map(fullProducts.map((product) => [product.id, product]))
+      setRfqProducts(
+        selectedProducts.map((product) => fullProductById.get(product.id) ?? {
+          ...product,
+          supplierMatches: [],
+        })
+      )
       setRfqOpen(true)
+    } finally {
+      setIsPreparingRfq(false)
     }
-  }, [selectedProducts.length])
+  }, [getToken, isPreparingRfq, selectedProducts])
 
   const handleRfqSuccess = useCallback(() => {
     setSelectedProducts([])
+    setRfqProducts([])
     setRfqOpen(false)
   }, [])
 
   const isProductSelected = useCallback(
-    (product: Product) => selectedProducts.some((item) => item.id === product.id),
+    (product: ProductSearchResult) => selectedProducts.some((item) => item.id === product.id),
     [selectedProducts]
   )
 
@@ -545,10 +570,10 @@ export function ProductSearch({ filters }: ProductSearchProps) {
                 <Button
                   type="button"
                   onClick={handleRequestQuote}
-                  disabled={selectedProducts.length === 0}
+                  disabled={selectedProducts.length === 0 || isPreparingRfq}
                   className="h-11 w-full rounded-[1rem]"
                 >
-                  Request quote
+                  {isPreparingRfq ? 'Preparing quote' : 'Request quote'}
                   {selectedProducts.length > 0 && (
                     <span className="ml-2 opacity-80">({selectedProducts.length})</span>
                   )}
@@ -563,10 +588,11 @@ export function ProductSearch({ filters }: ProductSearchProps) {
       <RFQModal
         open={rfqOpen}
         onOpenChange={setRfqOpen}
-        selectedProducts={selectedProducts}
+        selectedProducts={rfqProducts}
         onSuccess={handleRfqSuccess}
         onRemoveProduct={(productId) => {
           setSelectedProducts((prev) => prev.filter((product) => product.id !== productId))
+          setRfqProducts((prev) => prev.filter((product) => product.id !== productId))
         }}
         onBack={() => {
           setRfqOpen(false)
@@ -577,7 +603,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
 }
 
 interface ProductCardProps {
-  product: Product
+  product: ProductSearchResult
   isSelected: boolean
   onToggle: () => void
   searchType: SearchType

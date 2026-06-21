@@ -12,6 +12,7 @@ export type {
   PaginatedResponse,
   Product,
   ProductCategoryFacet,
+  ProductSearchResult,
   ProductSupplierMatch,
   Region,
   SearchParams,
@@ -56,6 +57,7 @@ export async function searchProductsPaginated(getToken: AuthTokenGetter, params:
     searchParams.set('searchType', params.searchType)
     searchParams.set('page', String(params.page))
     searchParams.set('pageSize', String(params.pageSize))
+    searchParams.set('includeMatches', params.includeMatches ? 'true' : 'false')
     if (params.categories.length > 0) searchParams.set('categories', params.categories.join(','))
     searchParams.set('filters', JSON.stringify(params.filters))
 
