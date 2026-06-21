@@ -19,9 +19,10 @@ export function ChemistryFilter({
   onSelectionChange,
 }: ChemistryFilterProps) {
   const { getToken } = useAuth()
-  const { chemistries, totalFacilities, isLoading } = useFilterData()
+  const { chemistries, totalFacilities, isLoading, error, hasLoadedData } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFacilityCount, setSelectedFacilityCount] = useState<{ key: string; value: number } | null>(null)
+  const [countError, setCountError] = useState<{ key: string; message: string } | null>(null)
 
   const selectedKey = selectedChemistries.join('|')
 
@@ -33,8 +34,14 @@ export function ChemistryFilter({
       .then((count) => {
         if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: count })
       })
-      .catch(() => {
-        if (!cancelled) setSelectedFacilityCount({ key: selectedKey, value: 0 })
+      .catch((err) => {
+        console.error('Error fetching chemistry facility count:', err)
+        if (!cancelled) {
+          setCountError({
+            key: selectedKey,
+            message: err instanceof Error ? err.message : 'Failed to load matching facilities.',
+          })
+        }
       })
 
     return () => {
@@ -58,7 +65,9 @@ export function ChemistryFilter({
 
   const displayFacilityCount = selectedChemistries.length === 0
     ? totalFacilities
-    : (selectedFacilityCount?.key === selectedKey ? selectedFacilityCount.value : '—')
+    : countError?.key === selectedKey
+      ? 'Unavailable'
+      : (selectedFacilityCount?.key === selectedKey ? selectedFacilityCount.value : '—')
 
   const toggleChemistry = (chemistryId: string) => {
     onSelectionChange(
@@ -68,11 +77,21 @@ export function ChemistryFilter({
     )
   }
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedData) {
     return (
       <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
         <CardContent className="flex min-h-[320px] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error && !hasLoadedData) {
+    return (
+      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+        <CardContent className="flex min-h-[260px] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+          Chemistry data is unavailable right now.
         </CardContent>
       </Card>
     )

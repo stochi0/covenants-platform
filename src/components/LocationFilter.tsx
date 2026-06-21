@@ -24,11 +24,12 @@ export function LocationFilter({
   onSelectionChange,
 }: LocationFilterProps) {
   const { getToken } = useAuth()
-  const { stateLocations, totalFacilities, isLoading } = useFilterData()
+  const { stateLocations, totalFacilities, isLoading, error, hasLoadedData } = useFilterData()
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCounts, setFilteredCounts] = useState<{ key: string; byLocation: Map<string, number> } | null>(
     null
   )
+  const [filteredCountError, setFilteredCountError] = useState<{ key: string; message: string } | null>(null)
 
   const mapFilterKey = useMemo(
     () => `${selectedChemistries.join('|')}::${selectedAccreditations.join('|')}`,
@@ -50,8 +51,14 @@ export function LocationFilter({
         for (const row of rows) byLocation.set(row.locationId, row.facilityCount)
         setFilteredCounts({ key: mapFilterKey, byLocation })
       })
-      .catch(() => {
-        if (!cancelled) setFilteredCounts({ key: mapFilterKey, byLocation: new Map() })
+      .catch((err) => {
+        console.error('Error fetching filtered state counts:', err)
+        if (!cancelled) {
+          setFilteredCountError({
+            key: mapFilterKey,
+            message: err instanceof Error ? err.message : 'Failed to load matching facilities.',
+          })
+        }
       })
 
     return () => {
@@ -64,7 +71,7 @@ export function LocationFilter({
     const base = hasCapabilityFilters
       ? (() => {
           const counts = filteredCounts?.key === mapFilterKey ? filteredCounts.byLocation : null
-          if (!counts) return stateLocations.map((location) => ({ ...location, facilityCount: 0 }))
+          if (!counts) return stateLocations
           return stateLocations.map((location) => ({
             ...location,
             facilityCount: counts.get(location.id) ?? 0,
@@ -96,11 +103,12 @@ export function LocationFilter({
   )
 
   const matchingFacilities = useMemo(() => {
-    if (hasCapabilityFilters && filteredCounts?.key !== mapFilterKey) return 0
+    if (hasCapabilityFilters && filteredCounts?.key !== mapFilterKey) return null
     let total = 0
     for (const location of mapLocations) total += location.facilityCount
     return total
   }, [filteredCounts, hasCapabilityFilters, mapFilterKey, mapLocations])
+  const currentFilteredCountError = filteredCountError?.key === mapFilterKey ? filteredCountError : null
 
   const toggleLocation = (locationId: string) => {
     onSelectionChange(
@@ -110,11 +118,21 @@ export function LocationFilter({
     )
   }
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedData) {
     return (
       <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
         <CardContent className="flex min-h-[420px] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error && !hasLoadedData) {
+    return (
+      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+        <CardContent className="flex min-h-[260px] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+          Location data is unavailable right now.
         </CardContent>
       </Card>
     )
@@ -150,7 +168,11 @@ export function LocationFilter({
           </Badge>
           {(hasCapabilityFilters || selectedLocations.length > 0) && (
             <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
-              {matchingFacilities.toLocaleString()} matching
+              {currentFilteredCountError
+                ? 'Matching unavailable'
+                : matchingFacilities === null
+                ? 'Loading matching'
+                : `${matchingFacilities.toLocaleString()} matching`}
             </Badge>
           )}
           {selectedLocations.length > 0 && (
@@ -168,6 +190,12 @@ export function LocationFilter({
           onLocationChange={onSelectionChange}
           locations={mapLocations}
         />
+
+        {currentFilteredCountError && (
+          <div className="rounded-[1rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            Matching location counts are unavailable. Showing the last loaded map data.
+          </div>
+        )}
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <div className="space-y-3">

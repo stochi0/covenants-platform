@@ -7,12 +7,14 @@ import {
   LogOut,
   LayoutDashboard,
   Package,
+  RefreshCw,
   Search,
   UserCircle,
 } from 'lucide-react'
 import { FilterDataProvider } from '@/contexts/FilterDataContext'
 import { useFilterData } from '@/contexts/FilterDataContext'
 import type { FilterState } from '@/lib/filterData'
+import { Button } from '@/components/ui/button'
 import { LocationFilter } from './LocationFilter'
 import { ChemistryFilter } from './ChemistryFilter'
 import { AccreditationFilter } from './AccreditationFilter'
@@ -90,7 +92,7 @@ function AccountMenu() {
 }
 
 function DashboardContent() {
-  const { isLoading, platformStats, totalFacilities } = useFilterData()
+  const { isLoading, error, hasLoadedData, platformStats, totalFacilities, refresh } = useFilterData()
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
   const [selectedChemistries, setSelectedChemistries] = useState<string[]>([])
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
@@ -106,6 +108,13 @@ function DashboardContent() {
     setSelectedChemistries([])
     setSelectedAccreditations([])
     setSelectedLocations([])
+  }
+
+  const dataUnavailable = Boolean(error && !hasLoadedData)
+  const formatOverviewValue = (value: number) => {
+    if (isLoading && !hasLoadedData) return '—'
+    if (dataUnavailable) return 'Data unavailable'
+    return value.toLocaleString()
   }
 
   return (
@@ -150,6 +159,24 @@ function DashboardContent() {
         </header>
 
         <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
+          {error && (
+            <div className="mb-6 flex flex-col gap-3 rounded-[1.2rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {hasLoadedData ? 'Using the last loaded data. Refresh failed.' : 'Data unavailable.'} {error}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void refresh()}
+                className="w-fit rounded-full border-amber-300 bg-white text-amber-950 hover:bg-amber-100"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
+            </div>
+          )}
+
           {activeTab === 'overview' ? (
             <div className="space-y-6">
               <section className="rounded-[2rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-5 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:p-6">
@@ -210,7 +237,7 @@ function DashboardContent() {
                     Products
                   </p>
                   <p className="text-3xl font-semibold tracking-tight text-foreground">
-                    {isLoading ? '—' : platformStats.products.toLocaleString()}
+                    {formatOverviewValue(platformStats.products)}
                   </p>
                 </div>
 
@@ -219,7 +246,7 @@ function DashboardContent() {
                     Available chemistries
                   </p>
                   <p className="text-3xl font-semibold tracking-tight text-foreground">
-                    {isLoading ? '—' : platformStats.chemistries.toLocaleString()}
+                    {formatOverviewValue(platformStats.chemistries)}
                   </p>
                 </div>
 
@@ -228,7 +255,7 @@ function DashboardContent() {
                     Facilities
                   </p>
                   <p className="text-3xl font-semibold tracking-tight text-foreground">
-                    {isLoading ? '—' : totalFacilities.toLocaleString()}
+                    {formatOverviewValue(totalFacilities)}
                   </p>
                 </div>
               </div>

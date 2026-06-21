@@ -67,6 +67,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
   const { platformStats, chemistries, accreditations, stateLocations } = useFilterData()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const requestSeqRef = useRef(0)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchType, setSearchType] = useState<SearchType>('name')
@@ -128,6 +129,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
       page: number,
       append = false
     ) => {
+      const requestSeq = ++requestSeqRef.current
       const hasFilters = marketplaceFilters.chemistries.length > 0
         || marketplaceFilters.accreditations.length > 0
         || marketplaceFilters.locations.length > 0
@@ -156,16 +158,20 @@ export function ProductSearch({ filters }: ProductSearchProps) {
           pageSize: PAGE_SIZE,
         })
 
+        if (requestSeq !== requestSeqRef.current) return
         setProducts((prev) => (append ? [...prev, ...response.products] : response.products))
         setTotalCount(response.total)
         setHasMore(response.hasMore)
         setCurrentPage(page)
         setHasSearched(true)
       } catch (error) {
+        if (requestSeq !== requestSeqRef.current) return
         console.error('Search failed:', error)
       } finally {
-        setIsLoading(false)
-        setIsLoadingMore(false)
+        if (requestSeq === requestSeqRef.current) {
+          setIsLoading(false)
+          setIsLoadingMore(false)
+        }
       }
     },
     [getToken]

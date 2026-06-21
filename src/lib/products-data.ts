@@ -19,6 +19,7 @@ export type {
 } from './api-types'
 
 let productCategoryFacetCache: ProductCategoryFacet[] | null = null
+let productCategoryFacetPromise: Promise<ProductCategoryFacet[]> | null = null
 
 export function formatProductCategoryLabel(category: string | null | undefined) {
   if (!category) return 'Uncategorized'
@@ -32,14 +33,20 @@ export function formatProductCategoryLabel(category: string | null | undefined) 
 
 export async function fetchProductCategories(getToken: AuthTokenGetter): Promise<ProductCategoryFacet[]> {
   if (productCategoryFacetCache) return productCategoryFacetCache
-
-  try {
-    productCategoryFacetCache = await apiJson<ProductCategoryFacet[]>(getToken, '/api/product-categories')
-    return productCategoryFacetCache
-  } catch (err) {
-    console.error('Error fetching product categories:', err)
-    return []
+  if (!productCategoryFacetPromise) {
+    productCategoryFacetPromise = apiJson<ProductCategoryFacet[]>(getToken, '/api/product-categories')
+      .then((facets) => {
+        productCategoryFacetCache = facets
+        return facets
+      })
+      .catch((err) => {
+        productCategoryFacetPromise = null
+        console.error('Error fetching product categories:', err)
+        return []
+      })
   }
+
+  return productCategoryFacetPromise
 }
 
 export async function searchProductsPaginated(getToken: AuthTokenGetter, params: SearchParams): Promise<PaginatedResponse> {

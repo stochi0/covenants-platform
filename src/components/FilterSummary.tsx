@@ -26,6 +26,7 @@ export function FilterSummary({
   const { getToken } = useAuth()
   const { chemistries, accreditations, stateLocations } = useFilterData()
   const [filteredFacilityCount, setFilteredFacilityCount] = useState<{ key: string; value: number } | null>(null)
+  const [countError, setCountError] = useState<{ key: string; message: string } | null>(null)
 
   const hasFilters = filters.chemistries.length > 0
     || filters.accreditations.length > 0
@@ -45,8 +46,14 @@ export function FilterSummary({
       .then((count) => {
         if (!cancelled) setFilteredFacilityCount({ key: filterKey, value: count })
       })
-      .catch(() => {
-        if (!cancelled) setFilteredFacilityCount({ key: filterKey, value: 0 })
+      .catch((err) => {
+        console.error('Error fetching filtered facility count:', err)
+        if (!cancelled) {
+          setCountError({
+            key: filterKey,
+            message: err instanceof Error ? err.message : 'Failed to load filtered facility count.',
+          })
+        }
       })
 
     return () => {
@@ -78,7 +85,12 @@ export function FilterSummary({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-primary/10 bg-primary/10 px-3 py-1.5 text-primary">
-              {(filteredFacilityCount?.key === filterKey ? filteredFacilityCount.value : 0).toLocaleString()} facilities
+              {countError
+                && countError.key === filterKey
+                ? 'Facilities unavailable'
+                : filteredFacilityCount?.key === filterKey
+                  ? `${filteredFacilityCount.value.toLocaleString()} facilities`
+                  : 'Loading facilities'}
             </Badge>
             <Badge className="border-[#d7ece8] bg-white px-3 py-1.5 text-foreground">
               {[

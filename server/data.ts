@@ -23,6 +23,16 @@ interface DataRequest {
 }
 
 const PRODUCT_CATEGORY_ORDER = ['api', 'intermediate', 'chemical', 'impurity'] as const
+const FILTER_DATA_TTL_MS = 1000 * 60 * 3
+const PLATFORM_STATS_TTL_MS = 1000 * 60 * 3
+const PRODUCT_CATEGORIES_TTL_MS = 1000 * 60 * 10
+
+interface CacheEntry<T> {
+  expiresAt: number
+  promise: Promise<T>
+}
+
+const responseCache = new Map<string, CacheEntry<unknown>>()
 
 interface CountRow {
   value: string
@@ -58,6 +68,19 @@ function toNumber(value: string | number | null): number | null {
   if (value === null) return null
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
+}
+
+function cachedResponse<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+  const now = Date.now()
+  const cached = responseCache.get(key) as CacheEntry<T> | undefined
+  if (cached && cached.expiresAt > now) return cached.promise
+
+  const promise = load().catch((error) => {
+    responseCache.delete(key)
+    throw error
+  })
+  responseCache.set(key, { expiresAt: now + ttlMs, promise })
+  return promise
 }
 
 function parseArray(value: unknown): string[] {
@@ -287,87 +310,93 @@ async function fetchSupplierMatches(productIds: string[], filters: FilterState |
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {
-  const [products, companies, chemistries] = await Promise.all([
-    dbOne<CountRow>('select count(*)::text as value from products'),
-    dbOne<CountRow>('select count(*)::text as value from companies'),
-    dbOne<CountRow>('select count(*)::text as value from chemistries'),
-  ])
+  return cachedResponse('platform-stats', PLATFORM_STATS_TTL_MS, async () => {
+    const [products, companies, chemistries] = await Promise.all([
+      dbOne<CountRow>('select count(*)::text as value from products'),
+      dbOne<CountRow>('select count(*)::text as value from companies'),
+      dbOne<CountRow>('select count(*)::text as value from chemistries'),
+    ])
 
-  return {
-    products: Number(products?.value ?? 0),
-    manufacturers: Number(companies?.value ?? 0),
-    chemistries: Number(chemistries?.value ?? 0),
-  }
+    return {
+      products: Number(products?.value ?? 0),
+      manufacturers: Number(companies?.value ?? 0),
+      chemistries: Number(chemistries?.value ?? 0),
+    }
+  })
 }
 
 export async function getFilterData(): Promise<FilterDataResponse> {
-  const [totalFacilities, chemistries, accreditations, stateLocations] = await Promise.all([
-    dbOne<CountRow>(`
-      select count(*)::text as value
-      from facilities
-      where is_active = true and deleted_at is null
-    `),
-    dbQuery<{ id: string; name: string; slug: string | null; facility_count: string }>(`
-      select c.id, c.label as name, c.slug, count(distinct f.id)::text as facility_count
-      from chemistries c
-      left join facility_chemistries fc on fc.chemistry_id = c.id
-      left join facilities f on f.id = fc.facility_id and f.is_active = true and f.deleted_at is null
-      group by c.id, c.label, c.slug
-      order by c.label
-    `),
-    dbQuery<{ id: string; name: string; short_name: string; facility_count: string }>(`
-      select a.id, a.label as name, a.code as short_name, count(distinct f.id)::text as facility_count
-      from accreditations a
-      left join facility_accreditations fa on fa.accreditation_id = a.id
-      left join facilities f on f.id = fa.facility_id and f.is_active = true and f.deleted_at is null
-      group by a.id, a.label, a.code
-      order by a.label
-    `),
-    dbQuery<{ id: string; name: string; iso_code: string | null; facility_count: string }>(`
-      select r.id, r.name, r.iso_code, count(distinct f.id)::text as facility_count
-      from regions r
-      left join facilities f on f.region_id = r.id and f.is_active = true and f.deleted_at is null
-      where r.country = 'IN'
-      group by r.id, r.name, r.iso_code
-      order by r.name
-    `),
-  ])
+  return cachedResponse('filter-data', FILTER_DATA_TTL_MS, async () => {
+    const [totalFacilities, chemistries, accreditations, stateLocations] = await Promise.all([
+      dbOne<CountRow>(`
+        select count(*)::text as value
+        from facilities
+        where is_active = true and deleted_at is null
+      `),
+      dbQuery<{ id: string; name: string; slug: string | null; facility_count: string }>(`
+        select c.id, c.label as name, c.slug, count(distinct f.id)::text as facility_count
+        from chemistries c
+        left join facility_chemistries fc on fc.chemistry_id = c.id
+        left join facilities f on f.id = fc.facility_id and f.is_active = true and f.deleted_at is null
+        group by c.id, c.label, c.slug
+        order by c.label
+      `),
+      dbQuery<{ id: string; name: string; short_name: string; facility_count: string }>(`
+        select a.id, a.label as name, a.code as short_name, count(distinct f.id)::text as facility_count
+        from accreditations a
+        left join facility_accreditations fa on fa.accreditation_id = a.id
+        left join facilities f on f.id = fa.facility_id and f.is_active = true and f.deleted_at is null
+        group by a.id, a.label, a.code
+        order by a.label
+      `),
+      dbQuery<{ id: string; name: string; iso_code: string | null; facility_count: string }>(`
+        select r.id, r.name, r.iso_code, count(distinct f.id)::text as facility_count
+        from regions r
+        left join facilities f on f.region_id = r.id and f.is_active = true and f.deleted_at is null
+        where r.country = 'IN'
+        group by r.id, r.name, r.iso_code
+        order by r.name
+      `),
+    ])
 
-  return {
-    totalFacilities: Number(totalFacilities?.value ?? 0),
-    chemistries: chemistries.map((row) => ({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      facilityCount: Number(row.facility_count),
-    })),
-    accreditations: accreditations.map((row) => ({
-      id: row.id,
-      name: row.name,
-      shortName: row.short_name,
-      facilityCount: Number(row.facility_count),
-    })),
-    stateLocations: stateLocations.map((row) => ({
-      id: row.id,
-      name: row.name,
-      isoCode: row.iso_code,
-      facilityCount: Number(row.facility_count),
-    })),
-  }
+    return {
+      totalFacilities: Number(totalFacilities?.value ?? 0),
+      chemistries: chemistries.map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        facilityCount: Number(row.facility_count),
+      })),
+      accreditations: accreditations.map((row) => ({
+        id: row.id,
+        name: row.name,
+        shortName: row.short_name,
+        facilityCount: Number(row.facility_count),
+      })),
+      stateLocations: stateLocations.map((row) => ({
+        id: row.id,
+        name: row.name,
+        isoCode: row.iso_code,
+        facilityCount: Number(row.facility_count),
+      })),
+    }
+  })
 }
 
 export async function getProductCategories(): Promise<ProductCategoryFacet[]> {
-  const rows = await dbQuery<{ category: string; count: string }>(`
-    select category, count(*)::text as count
-    from products
-    where category is not null
-    group by category
-  `)
-  const countByCategory = new Map(rows.map((row) => [row.category, Number(row.count)]))
+  return cachedResponse('product-categories', PRODUCT_CATEGORIES_TTL_MS, async () => {
+    const rows = await dbQuery<{ category: string; count: string }>(`
+      select category, count(*)::text as count
+      from products
+      where category is not null
+      group by category
+    `)
+    const countByCategory = new Map(rows.map((row) => [row.category, Number(row.count)]))
 
-  return PRODUCT_CATEGORY_ORDER
-    .map((category) => ({ value: category, count: countByCategory.get(category) ?? 0 }))
-    .filter((category) => category.count > 0)
+    return PRODUCT_CATEGORY_ORDER
+      .map((category) => ({ value: category, count: countByCategory.get(category) ?? 0 }))
+      .filter((category) => category.count > 0)
+  })
 }
 
 export async function searchProducts(params: SearchParams): Promise<PaginatedResponse> {

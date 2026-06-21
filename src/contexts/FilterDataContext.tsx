@@ -9,10 +9,7 @@ import {
 import { useAuth } from '@clerk/react'
 import type { Chemistry, Accreditation, StateLocation } from '@/lib/filterData'
 import {
-  fetchChemistries,
-  fetchAccreditations,
-  fetchStateLocations,
-  fetchTotalFacilities,
+  fetchFilterData,
 } from '@/lib/filterDataApi'
 import {
   fetchPlatformStats,
@@ -32,6 +29,8 @@ interface FilterDataContextValue {
   totalFacilities: number
   platformStats: PlatformStats
   isLoading: boolean
+  error: string | null
+  hasLoadedData: boolean
   refresh: () => Promise<void>
 }
 
@@ -45,23 +44,23 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
   const [totalFacilities, setTotalFacilities] = useState(0)
   const [platformStats, setPlatformStats] = useState<PlatformStats>(DEFAULT_PLATFORM_STATS)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [hasLoadedData, setHasLoadedData] = useState(false)
 
   const load = useCallback(async () => {
-    const [chems, accs, locs, total, stats] = await Promise.all([
-      fetchChemistries(getToken),
-      fetchAccreditations(getToken),
-      fetchStateLocations(getToken),
-      fetchTotalFacilities(getToken),
+    const [filterData, stats] = await Promise.all([
+      fetchFilterData(getToken),
       fetchPlatformStats(getToken),
     ])
 
-    return { chems, accs, locs, total, stats }
+    return { filterData, stats }
   }, [getToken])
 
   const applyData = useCallback((data: Awaited<ReturnType<typeof load>>) => {
     if (!data) return
 
-    const { chems, accs, locs, total, stats } = data
+    const { filterData, stats } = data
+    const { chemistries: chems, accreditations: accs, stateLocations: locs, totalFacilities: total } = filterData
     const availableChemistries = chems.filter((chemistry) => chemistry.facilityCount > 0).length
     setChemistries(chems)
     setAccreditations(accs)
@@ -72,6 +71,8 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
       // Keep the overview stat aligned with ChemistryFilter's "Available chemistries".
       chemistries: availableChemistries,
     })
+    setError(null)
+    setHasLoadedData(true)
   }, [])
 
   useEffect(() => {
@@ -82,6 +83,12 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         if (!cancelled) applyData(data)
       })
+      .catch((err) => {
+        console.error('Error loading filter data:', err)
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load platform data.')
+        }
+      })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
       })
@@ -90,9 +97,15 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     setIsLoading(true)
-    const data = await load()
-    applyData(data)
-    setIsLoading(false)
+    try {
+      const data = await load()
+      applyData(data)
+    } catch (err) {
+      console.error('Error refreshing filter data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to refresh platform data.')
+    } finally {
+      setIsLoading(false)
+    }
   }, [applyData, load])
 
   const value: FilterDataContextValue = {
@@ -102,6 +115,8 @@ export function FilterDataProvider({ children }: { children: ReactNode }) {
     totalFacilities,
     platformStats,
     isLoading,
+    error,
+    hasLoadedData,
     refresh,
   }
 

@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:all": "pnpm run dev",
+    "data:diagnose": "node server/diagnose-data.mjs",
     "server": "tsx server/index.ts",
     "data:dry-run": "cd ../scripts && uv run python migrate_excel_to_supabase.py --dry-run",
     "data:apply": "cd ../scripts && uv run python migrate_excel_to_supabase.py --apply"
