@@ -20,11 +20,14 @@ export interface UserProfile {
   emailVerified: boolean
 }
 
+const DEFAULT_USER_ROLE = 'viewer'
+
 export async function upsertUserProfile(profile: UserProfile): Promise<string> {
   const row = await dbOne<UserRow>(`
     insert into public.users (
       clerk_user_id,
       email,
+      role,
       first_name,
       last_name,
       image_url,
@@ -32,7 +35,7 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       last_seen_at,
       deleted_at
     )
-    values ($1, $2, $3, $4, $5, $6, now(), null)
+    values ($1, $2, $3, $4, $5, $6, $7, now(), null)
     on conflict (clerk_user_id) do update set
       email = excluded.email,
       first_name = excluded.first_name,
@@ -45,6 +48,7 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
   `, [
     profile.clerkUserId,
     profile.email,
+    DEFAULT_USER_ROLE,
     profile.firstName,
     profile.lastName,
     profile.imageUrl,

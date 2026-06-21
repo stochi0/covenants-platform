@@ -157,14 +157,18 @@ async function verifyClerkToken(token: string): Promise<ClerkSessionClaims> {
   return claims
 }
 
-export async function authenticateHeaders(headers: HeaderMap): Promise<AuthenticatedUser> {
+export async function verifyClerkHeaders(headers: HeaderMap): Promise<ClerkSessionClaims> {
   const authorization = getHeader(headers, 'authorization')
   const token = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : null
   if (!token) {
     throw new Error('Missing authorization token')
   }
 
-  const claims = await verifyClerkToken(token)
+  return verifyClerkToken(token)
+}
+
+export async function authenticateHeaders(headers: HeaderMap): Promise<AuthenticatedUser> {
+  const claims = await verifyClerkHeaders(headers)
   const internalUserId = await touchUserByClerkId(claims.sub!)
 
   return {
