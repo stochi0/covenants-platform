@@ -1,6 +1,6 @@
-import { getFacilityCountByFilters } from '../../server/data.ts'
-import { requireVercelAuth } from '../../server/api-auth.ts'
-import type { FilterState } from '../../src/lib/filterData.ts'
+import { getFacilityCountByFilters } from '../../server/data'
+import { requireVercelAuth } from '../../server/api-auth'
+import type { FilterState } from '../../src/lib/filterData'
 
 function parseFilters(value: unknown): FilterState {
   const raw = value && typeof value === 'object' ? (value as { filters?: unknown }).filters : null

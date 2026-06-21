@@ -1,6 +1,9 @@
-import { authenticateHeaders, type AuthenticatedUser } from './auth.ts'
+import { authenticateHeaders, type AuthenticatedUser } from './auth'
 
 export interface VercelRequest {
+  method?: string
+  body?: unknown
+  query?: Record<string, unknown>
   headers?: Record<string, string | string[] | undefined>
 }
 

@@ -1,5 +1,5 @@
-import { getProductById } from '../../server/data.ts'
-import { requireVercelAuth } from '../../server/api-auth.ts'
+import { getProductById } from '../../server/data'
+import { requireVercelAuth } from '../../server/api-auth'
 
 export default async function handler(
   req: { method?: string; query?: { id?: string | string[] } },

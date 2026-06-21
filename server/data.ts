@@ -1,5 +1,4 @@
-import type { Request, Response } from 'express'
-import { dbOne, dbQuery } from './db.ts'
+import { dbOne, dbQuery } from './db'
 import type {
   FilterDataResponse,
   PaginatedResponse,
@@ -9,8 +8,19 @@ import type {
   ProductSupplierMatch,
   SearchParams,
   StateFacilityCountResponse,
-} from '../src/lib/api-types.ts'
-import type { FilterState } from '../src/lib/filterData.ts'
+} from '../src/lib/api-types'
+import type { FilterState } from '../src/lib/filterData'
+
+interface JsonResponse {
+  status: (code: number) => { json: (body: unknown) => void }
+}
+
+interface DataRequest {
+  method?: string
+  path: string
+  body?: unknown
+  query?: Record<string, unknown>
+}
 
 const PRODUCT_CATEGORY_ORDER = ['api', 'intermediate', 'chemical', 'impurity'] as const
 
@@ -569,16 +579,16 @@ export function parseSearchQuery(query: Record<string, unknown>): SearchParams {
   }
 }
 
-export function sendJson(res: Response, status: number, body: unknown) {
+export function sendJson(res: JsonResponse, status: number, body: unknown) {
   res.status(status).json(body)
 }
 
-export function sendError(res: Response, error: unknown) {
+export function sendError(res: JsonResponse, error: unknown) {
   const details = error instanceof Error ? error.message : 'Unknown error'
   res.status(500).json({ error: 'Database request failed', details })
 }
 
-export async function handleDataRequest(req: Request, res: Response) {
+export async function handleDataRequest(req: DataRequest, res: JsonResponse) {
   try {
     if (req.method === 'GET' && req.path === '/api/stats') {
       sendJson(res, 200, await getPlatformStats())
@@ -601,7 +611,7 @@ export async function handleDataRequest(req: Request, res: Response) {
     }
 
     if (req.method === 'GET' && req.path === '/api/products') {
-      sendJson(res, 200, await searchProducts(parseSearchQuery(req.query)))
+      sendJson(res, 200, await searchProducts(parseSearchQuery(req.query ?? {})))
       return
     }
 

@@ -1,5 +1,5 @@
 import { Webhook } from 'svix'
-import { softDeleteUserByClerkId, upsertUserProfile, type UserProfile } from './users.ts'
+import { softDeleteUserByClerkId, upsertUserProfile, type UserProfile } from './users'
 
 interface ClerkEmailAddress {
   id: string
@@ -60,6 +60,14 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
   }
 }
 
+function isUserEvent(event: ClerkWebhookEvent): event is Extract<ClerkWebhookEvent, { type: 'user.created' | 'user.updated' }> {
+  return event.type === 'user.created' || event.type === 'user.updated'
+}
+
+function isDeletedUserEvent(event: ClerkWebhookEvent): event is Extract<ClerkWebhookEvent, { type: 'user.deleted' }> {
+  return event.type === 'user.deleted'
+}
+
 export async function handleClerkWebhook(rawBody: string, headers: WebhookHeaders): Promise<void> {
   const secret = process.env.CLERK_WEBHOOK_SECRET
   if (!secret) {
@@ -68,12 +76,12 @@ export async function handleClerkWebhook(rawBody: string, headers: WebhookHeader
 
   const event = new Webhook(secret).verify(rawBody, toSvixHeaders(headers)) as ClerkWebhookEvent
 
-  if (event.type === 'user.created' || event.type === 'user.updated') {
+  if (isUserEvent(event)) {
     await upsertUserProfile(profileFromEvent(event.data))
     return
   }
 
-  if (event.type === 'user.deleted' && event.data.id) {
+  if (isDeletedUserEvent(event) && event.data.id) {
     await softDeleteUserByClerkId(event.data.id)
   }
 }

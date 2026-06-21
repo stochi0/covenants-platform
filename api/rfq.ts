@@ -1,5 +1,5 @@
-import { submitRfq, type RFQBody } from '../server/rfq.ts'
-import { requireVercelAuth } from '../server/api-auth.ts'
+import { submitRfq, type RFQBody } from '../server/rfq'
+import { requireVercelAuth } from '../server/api-auth'
 
 interface VercelRequest {
   method?: string

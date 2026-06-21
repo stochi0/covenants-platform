@@ -1,6 +1,5 @@
 import { createPublicKey, createVerify } from 'node:crypto'
-import type { NextFunction, Request, Response } from 'express'
-import { touchUserByClerkId } from './users.ts'
+import { touchUserByClerkId } from './users'
 
 interface JwtHeader {
   alg?: string
@@ -34,7 +33,14 @@ export interface AuthenticatedUser {
   internalUserId: string
 }
 
-export interface AuthenticatedRequest extends Request {
+interface JsonResponse {
+  status: (code: number) => { json: (body: unknown) => void }
+}
+
+type NextFunction = () => void
+
+export interface AuthenticatedRequest {
+  headers: Record<string, string | string[] | undefined>
   auth?: AuthenticatedUser
 }
 
@@ -168,7 +174,7 @@ export async function authenticateHeaders(headers: HeaderMap): Promise<Authentic
   }
 }
 
-export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function requireAuth(req: AuthenticatedRequest, res: JsonResponse, next: NextFunction) {
   try {
     req.auth = await authenticateHeaders(req.headers)
     next()
