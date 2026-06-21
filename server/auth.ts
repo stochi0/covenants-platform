@@ -1,5 +1,5 @@
 import { createPublicKey, createVerify } from 'node:crypto'
-import { touchUserByClerkId } from './users'
+import { touchUserByClerkId } from './users.js'
 
 interface JwtHeader {
   alg?: string

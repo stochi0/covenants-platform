@@ -1,4 +1,4 @@
-import { authenticateHeaders, type AuthenticatedUser } from './auth'
+import { authenticateHeaders, type AuthenticatedUser } from './auth.js'
 
 export interface VercelRequest {
   method?: string

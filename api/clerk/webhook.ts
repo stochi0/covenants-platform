@@ -1,5 +1,5 @@
 import type { IncomingMessage } from 'node:http'
-import { handleClerkWebhook } from '../../server/clerk-webhook'
+import { handleClerkWebhook } from '../../server/clerk-webhook.js'
 
 export const config = {
   api: {

@@ -1,9 +1,9 @@
 import 'dotenv/config'
 import express from 'express'
-import { requireAuth, type AuthenticatedRequest } from './auth'
-import { handleClerkWebhook } from './clerk-webhook'
-import { handleDataRequest } from './data'
-import { submitRfq, type RFQBody } from './rfq'
+import { requireAuth, type AuthenticatedRequest } from './auth.js'
+import { handleClerkWebhook } from './clerk-webhook.js'
+import { handleDataRequest } from './data.js'
+import { submitRfq, type RFQBody } from './rfq.js'
 
 const app = express()
 

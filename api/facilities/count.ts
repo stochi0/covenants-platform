@@ -1,5 +1,5 @@
-import { getFacilityCountByFilters } from '../../server/data'
-import { requireVercelAuth } from '../../server/api-auth'
+import { getFacilityCountByFilters } from '../../server/data.js'
+import { requireVercelAuth } from '../../server/api-auth.js'
 import type { FilterState } from '../../src/lib/filterData'
 
 function parseFilters(value: unknown): FilterState {

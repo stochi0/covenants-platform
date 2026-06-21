@@ -1,5 +1,5 @@
-import { getProductById } from '../../server/data'
-import { requireVercelAuth } from '../../server/api-auth'
+import { getProductById } from '../../server/data.js'
+import { requireVercelAuth } from '../../server/api-auth.js'
 
 export default async function handler(
   req: { method?: string; query?: { id?: string | string[] } },

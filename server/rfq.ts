@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
-import type { AuthenticatedUser } from './auth'
-import { getLocalUserProfile } from './users'
+import type { AuthenticatedUser } from './auth.js'
+import { getLocalUserProfile } from './users.js'
 
 export interface RFQProduct {
   id: string

@@ -1,5 +1,5 @@
-import { getStateFacilityCountsByFilters } from '../../server/data'
-import { requireVercelAuth } from '../../server/api-auth'
+import { getStateFacilityCountsByFilters } from '../../server/data.js'
+import { requireVercelAuth } from '../../server/api-auth.js'
 import type { FilterState } from '../../src/lib/filterData'
 
 function parseFilters(value: unknown): Pick<FilterState, 'chemistries' | 'accreditations'> {

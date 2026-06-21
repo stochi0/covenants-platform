@@ -1,5 +1,5 @@
 import type { QueryResultRow } from 'pg'
-import { dbOne, dbQuery } from './db'
+import { dbOne, dbQuery } from './db.js'
 
 interface UserRow extends QueryResultRow {
   id: string

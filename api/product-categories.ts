@@ -1,5 +1,5 @@
-import { getProductCategories } from '../server/data'
-import { requireVercelAuth } from '../server/api-auth'
+import { getProductCategories } from '../server/data.js'
+import { requireVercelAuth } from '../server/api-auth.js'
 
 export default async function handler(
   req: { method?: string },

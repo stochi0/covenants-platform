@@ -1,5 +1,5 @@
-import { getProductsByIds } from '../../server/data'
-import { requireVercelAuth } from '../../server/api-auth'
+import { getProductsByIds } from '../../server/data.js'
+import { requireVercelAuth } from '../../server/api-auth.js'
 
 function parseIds(value: unknown): string[] {
   if (!value || typeof value !== 'object') return []

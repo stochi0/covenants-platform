@@ -1,5 +1,5 @@
 import { Webhook } from 'svix'
-import { softDeleteUserByClerkId, upsertUserProfile, type UserProfile } from './users'
+import { softDeleteUserByClerkId, upsertUserProfile, type UserProfile } from './users.js'
 
 interface ClerkEmailAddress {
   id: string

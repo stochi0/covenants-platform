@@ -9,6 +9,8 @@ function SignedInApp() {
   const { getToken } = useAuth()
   const { user, isLoaded } = useUser()
   const [syncState, setSyncState] = useState<'syncing' | 'ready' | 'error'>('syncing')
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncAttempt, setSyncAttempt] = useState(0)
 
   useEffect(() => {
     if (!isLoaded || !user) return
@@ -30,13 +32,16 @@ function SignedInApp() {
       })
       .catch((error) => {
         console.error('User sync failed:', error)
-        if (!cancelled) setSyncState('error')
+        if (!cancelled) {
+          setSyncError(error instanceof Error ? error.message : 'Unknown error')
+          setSyncState('error')
+        }
       })
 
     return () => {
       cancelled = true
     }
-  }, [getToken, isLoaded, user])
+  }, [getToken, isLoaded, syncAttempt, user])
 
   if (syncState === 'ready') return <Dashboard />
 
@@ -46,6 +51,25 @@ function SignedInApp() {
         <p className="text-sm font-medium">
           {syncState === 'error' ? 'Unable to sync account.' : 'Preparing account...'}
         </p>
+        {syncError && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {syncError}
+          </p>
+        )}
+        {syncState === 'error' && (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 w-full"
+            onClick={() => {
+              setSyncState('syncing')
+              setSyncError(null)
+              setSyncAttempt((attempt) => attempt + 1)
+            }}
+          >
+            Retry
+          </Button>
+        )}
       </div>
     </div>
   )

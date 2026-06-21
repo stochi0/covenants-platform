@@ -1,4 +1,4 @@
-import { dbOne, dbQuery } from './db'
+import { dbOne, dbQuery } from './db.js'
 import type {
   FilterDataResponse,
   PaginatedResponse,

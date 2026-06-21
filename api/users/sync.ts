@@ -1,5 +1,5 @@
-import { verifyClerkHeaders } from '../../server/auth'
-import { upsertUserProfile } from '../../server/users'
+import { verifyClerkHeaders } from '../../server/auth.js'
+import { upsertUserProfile } from '../../server/users.js'
 
 interface SyncUserRequest {
   method?: string
