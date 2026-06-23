@@ -18,6 +18,12 @@ export interface UserProfile {
   lastName: string | null
   imageUrl: string | null
   emailVerified: boolean
+  phoneNumber: string | null
+  companyName: string | null
+  companyCountry: string | null
+  designation: string | null
+  department: string | null
+  companyType: string | null
 }
 
 const DEFAULT_USER_ROLE = 'viewer'
@@ -32,16 +38,28 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       last_name,
       image_url,
       email_verified,
+      phone_number,
+      company_name,
+      company_country,
+      designation,
+      department,
+      company_type,
       last_seen_at,
       deleted_at
     )
-    values ($1, $2, $3, $4, $5, $6, $7, now(), null)
+    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now(), null)
     on conflict (clerk_user_id) do update set
       email = excluded.email,
       first_name = excluded.first_name,
       last_name = excluded.last_name,
       image_url = excluded.image_url,
       email_verified = excluded.email_verified,
+      phone_number = excluded.phone_number,
+      company_name = excluded.company_name,
+      company_country = excluded.company_country,
+      designation = excluded.designation,
+      department = excluded.department,
+      company_type = excluded.company_type,
       last_seen_at = now(),
       deleted_at = null
     returning id
@@ -53,6 +71,12 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
     profile.lastName,
     profile.imageUrl,
     profile.emailVerified,
+    profile.phoneNumber,
+    profile.companyName,
+    profile.companyCountry,
+    profile.designation,
+    profile.department,
+    profile.companyType,
   ])
 
   if (!row?.id) {

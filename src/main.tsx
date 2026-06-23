@@ -2,11 +2,12 @@ import { StrictMode } from 'react'
 import type { ComponentType, PropsWithChildren } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider as ClerkProviderBase } from '@clerk/react'
+import type { ClerkProviderProps } from '@clerk/react'
 import './index.css'
 import App from './App.tsx'
 
 const ClerkProvider = ClerkProviderBase as unknown as ComponentType<
-  PropsWithChildren<{ afterSignOutUrl: string; publishableKey: string }>
+  PropsWithChildren<ClerkProviderProps>
 >
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -27,7 +28,12 @@ if (!clerkPublishableKey) {
 } else {
   root.render(
     <StrictMode>
-      <ClerkProvider afterSignOutUrl="/" publishableKey={clerkPublishableKey}>
+      <ClerkProvider
+        afterSignOutUrl="/"
+        publishableKey={clerkPublishableKey}
+        signInFallbackRedirectUrl="/"
+        signUpFallbackRedirectUrl="/"
+      >
         <App />
       </ClerkProvider>
     </StrictMode>,

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Show, SignInButton, SignUpButton, useAuth, useUser } from '@clerk/react'
+import { Show, SignInButton, useAuth, useUser } from '@clerk/react'
 import { Dashboard } from '@/components/Dashboard'
 import { ForgotPasswordDialog } from '@/components/forgot-password-dialog'
+import { SignUpDialog } from '@/components/sign-up-dialog'
 import { Button } from '@/components/ui/button'
 import { apiJson } from '@/lib/api'
 
@@ -25,6 +26,7 @@ function SignedInApp() {
         lastName: user.lastName,
         imageUrl: user.imageUrl,
         emailVerified: user.primaryEmailAddress?.verification?.status === 'verified',
+        unsafeMetadata: user.unsafeMetadata,
       }),
     })
       .then(() => {
@@ -76,6 +78,8 @@ function SignedInApp() {
 }
 
 function App() {
+  const authRedirectUrl = '/'
+
   return (
     <>
       <Show when="signed-out">
@@ -88,12 +92,14 @@ function App() {
               </p>
             </div>
             <div className="mt-6 grid gap-3">
-              <SignInButton mode="modal">
+              <SignInButton
+                mode="modal"
+                fallbackRedirectUrl={authRedirectUrl}
+                signUpFallbackRedirectUrl={authRedirectUrl}
+              >
                 <Button type="button" className="w-full">Sign in</Button>
               </SignInButton>
-              <SignUpButton mode="modal">
-                <Button type="button" variant="outline" className="w-full">Create account</Button>
-              </SignUpButton>
+              <SignUpDialog />
               <div className="flex justify-center">
                 <ForgotPasswordDialog />
               </div>

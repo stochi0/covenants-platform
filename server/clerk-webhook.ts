@@ -16,6 +16,7 @@ interface ClerkUserEventData {
   first_name: string | null
   last_name: string | null
   image_url: string | null
+  unsafe_metadata?: Record<string, unknown> | null
 }
 
 interface ClerkDeletedUserEventData {
@@ -45,6 +46,7 @@ function toSvixHeaders(headers: WebhookHeaders): Record<string, string> {
 function profileFromEvent(data: ClerkUserEventData): UserProfile {
   const primaryEmail = data.email_addresses.find((email) => email.id === data.primary_email_address_id)
     ?? data.email_addresses[0]
+  const unsafeMetadata = data.unsafe_metadata ?? {}
 
   if (!primaryEmail?.email_address) {
     throw new Error('Clerk webhook user does not have an email address')
@@ -57,7 +59,17 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
     lastName: data.last_name,
     imageUrl: data.image_url,
     emailVerified: primaryEmail.verification?.status === 'verified',
+    phoneNumber: readMetadataString(unsafeMetadata.phoneNumber),
+    companyName: readMetadataString(unsafeMetadata.companyName),
+    companyCountry: readMetadataString(unsafeMetadata.companyCountry),
+    designation: readMetadataString(unsafeMetadata.designation),
+    department: readMetadataString(unsafeMetadata.department),
+    companyType: readMetadataString(unsafeMetadata.companyType),
   }
+}
+
+function readMetadataString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 function isUserEvent(event: ClerkWebhookEvent): event is Extract<ClerkWebhookEvent, { type: 'user.created' | 'user.updated' }> {

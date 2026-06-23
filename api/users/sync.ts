@@ -16,6 +16,12 @@ function readString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
+function readMetadata(body: Record<string, unknown>): Record<string, unknown> {
+  return body.unsafeMetadata && typeof body.unsafeMetadata === 'object' && !Array.isArray(body.unsafeMetadata)
+    ? body.unsafeMetadata as Record<string, unknown>
+    : {}
+}
+
 export default async function handler(req: SyncUserRequest, res: SyncUserResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
@@ -38,6 +44,7 @@ export default async function handler(req: SyncUserRequest, res: SyncUserRespons
     ? req.body as Record<string, unknown>
     : {}
   const email = readString(body.email)
+  const unsafeMetadata = readMetadata(body)
 
   if (!email) {
     res.status(400).json({ error: 'Email is required' })
@@ -52,6 +59,12 @@ export default async function handler(req: SyncUserRequest, res: SyncUserRespons
       lastName: readString(body.lastName),
       imageUrl: readString(body.imageUrl),
       emailVerified: body.emailVerified === true,
+      phoneNumber: readString(unsafeMetadata.phoneNumber),
+      companyName: readString(unsafeMetadata.companyName),
+      companyCountry: readString(unsafeMetadata.companyCountry),
+      designation: readString(unsafeMetadata.designation),
+      department: readString(unsafeMetadata.department),
+      companyType: readString(unsafeMetadata.companyType),
     })
 
     res.status(200).json({ id })
