@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Show, useAuth, useUser } from '@clerk/react'
 import { Dashboard } from '@/components/Dashboard'
-import { ForgotPasswordDialog } from '@/components/forgot-password-dialog'
 import { SignInDialog } from '@/components/sign-in-dialog'
 import { SignUpDialog } from '@/components/sign-up-dialog'
 import { Button } from '@/components/ui/button'
@@ -25,6 +24,7 @@ function SignedInApp() {
         email: user.primaryEmailAddress?.emailAddress,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: user.username,
         imageUrl: user.imageUrl,
         emailVerified: user.primaryEmailAddress?.verification?.status === 'verified',
         unsafeMetadata: user.unsafeMetadata,
@@ -93,9 +93,6 @@ function App() {
             <div className="mt-6 grid gap-3">
               <SignInDialog />
               <SignUpDialog />
-              <div className="flex justify-center">
-                <ForgotPasswordDialog />
-              </div>
             </div>
           </div>
         </div>

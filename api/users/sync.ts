@@ -57,6 +57,7 @@ export default async function handler(req: SyncUserRequest, res: SyncUserRespons
       email,
       firstName: readString(body.firstName),
       lastName: readString(body.lastName),
+      username: readString(body.username),
       imageUrl: readString(body.imageUrl),
       emailVerified: body.emailVerified === true,
       phoneNumber: readString(unsafeMetadata.phoneNumber),

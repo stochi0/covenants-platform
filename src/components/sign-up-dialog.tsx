@@ -14,6 +14,9 @@ import {
 import { Input } from '@/components/ui/input'
 
 interface SignUpFormData {
+  firstName: string
+  lastName: string
+  username: string
   email: string
   password: string
   phoneNumber: string
@@ -25,6 +28,9 @@ interface SignUpFormData {
 }
 
 const initialFormData: SignUpFormData = {
+  firstName: '',
+  lastName: '',
+  username: '',
   email: '',
   password: '',
   phoneNumber: '',
@@ -96,6 +102,7 @@ export function SignUpDialog() {
 
   const validateDetails = (): string | null => {
     if (!formData.email.trim()) return 'Email is required.'
+    if (!formData.username.trim()) return 'Username is required.'
     if (!formData.password) return 'Password is required.'
     if (!e164PhonePattern.test(formData.phoneNumber.trim())) {
       return 'Phone number must use strict country code format, for example +14155552671.'
@@ -121,7 +128,10 @@ export function SignUpDialog() {
     try {
       const result = await signUp.create({
         emailAddress: formData.email.trim(),
+        firstName: formData.firstName.trim() || undefined,
+        lastName: formData.lastName.trim() || undefined,
         password: formData.password,
+        username: formData.username.trim(),
         unsafeMetadata: {
           phoneNumber: formData.phoneNumber.trim(),
           companyName: formData.companyName.trim(),
@@ -198,6 +208,38 @@ export function SignUpDialog() {
         {step === 'details' ? (
           <form className="grid gap-4" onSubmit={handleDetailsSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
+              {fieldLabel(
+                <Input
+                  autoComplete="given-name"
+                  onChange={(event) => updateField('firstName', event.target.value)}
+                  placeholder="First name"
+                  value={formData.firstName}
+                />,
+                'First name',
+              )}
+              {fieldLabel(
+                <Input
+                  autoComplete="family-name"
+                  onChange={(event) => updateField('lastName', event.target.value)}
+                  placeholder="Last name"
+                  value={formData.lastName}
+                />,
+                'Last name',
+              )}
+              {fieldLabel(
+                <div className="relative">
+                  <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="username"
+                    className="pl-9"
+                    onChange={(event) => updateField('username', event.target.value)}
+                    placeholder="Choose a username"
+                    required
+                    value={formData.username}
+                  />
+                </div>,
+                'Username*',
+              )}
               {fieldLabel(
                 <Input
                   autoComplete="email"
