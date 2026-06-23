@@ -58,42 +58,37 @@ const initialFormData: SignUpFormData = {
 
 const countryCodePattern = /^\+[1-9]\d{0,3}$/
 const nationalPhonePattern = /^\d{4,14}$/
-type SignUpStep = 'personal' | 'access' | 'company' | 'verification'
+type SignUpStep = 'profile' | 'access' | 'company' | 'verification'
 
 const signUpSteps: Array<{
   id: SignUpStep
   label: string
-  eyebrow: string
   title: string
   description: string
 }> = [
   {
-    id: 'personal',
+    id: 'profile',
     label: 'Profile',
-    eyebrow: 'Start with you',
-    title: 'Tell us who is joining.',
-    description: 'A few identity details help your workspace feel personal from the first visit.',
+    title: 'Create your profile',
+    description: 'Tell us who will manage this Capillia workspace.',
   },
   {
     id: 'access',
     label: 'Access',
-    eyebrow: 'Secure access',
-    title: 'Set up your sign-in.',
-    description: 'Use your work email and a phone number with country code so your account is easy to verify.',
+    title: 'Set up secure access',
+    description: 'Use your work email, password, and phone number.',
   },
   {
     id: 'company',
     label: 'Company',
-    eyebrow: 'Business context',
-    title: 'Shape your company profile.',
-    description: 'This helps Capillia route requests and show the right manufacturing context.',
+    title: 'Add company details',
+    description: 'This helps Capillia tailor your workspace context.',
   },
   {
     id: 'verification',
     label: 'Verify',
-    eyebrow: 'Final check',
-    title: 'Enter the code we emailed you.',
-    description: 'Once verified, we will launch your Capillia workspace.',
+    title: 'Verify your email',
+    description: 'Enter the code we emailed to activate your account.',
   },
 ]
 
@@ -113,15 +108,33 @@ function getClerkErrorMessage(error: unknown): string {
 
 type SetActiveFn = (params: { session: string }) => Promise<unknown>
 
-function fieldLabel(value: ReactNode, label: string, hint?: string) {
+function Field({
+  children,
+  hint,
+  label,
+}: {
+  children: ReactNode
+  hint?: string
+  label: string
+}) {
   return (
     <label className="grid gap-2 text-sm font-medium text-foreground">
       <span className="flex items-center justify-between gap-3">
         <span>{label}</span>
         {hint && <span className="text-xs font-normal text-muted-foreground">{hint}</span>}
       </span>
-      {value}
+      {children}
     </label>
+  )
+}
+
+function StatusMessage({ message }: { message: string | null }) {
+  if (!message) return null
+
+  return (
+    <div className="rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm leading-6 text-destructive">
+      {message}
+    </div>
   )
 }
 
@@ -139,7 +152,7 @@ function ProgressHeader({ currentStep }: { currentStep: SignUpStep }) {
   const currentIndex = signUpSteps.findIndex((item) => item.id === currentStep)
 
   return (
-    <div className="rounded-xl border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(237,248,246,0.86))] p-3 shadow-[0_20px_60px_-44px_rgba(15,118,110,0.55)]">
+    <div className="rounded-xl border border-primary/15 bg-background/70 p-3">
       <div className="grid grid-cols-4 gap-2">
         {signUpSteps.map((item, index) => {
           const isComplete = index < currentIndex
@@ -183,7 +196,7 @@ function ProgressHeader({ currentStep }: { currentStep: SignUpStep }) {
 export function SignUpDialog() {
   const { isLoaded, signUp, setActive } = useSignUp()
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<SignUpStep>('personal')
+  const [step, setStep] = useState<SignUpStep>('profile')
   const [formData, setFormData] = useState<SignUpFormData>(initialFormData)
   const [verificationCode, setVerificationCode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -198,7 +211,7 @@ export function SignUpDialog() {
   }
 
   const reset = () => {
-    setStep('personal')
+    setStep('profile')
     setFormData(initialFormData)
     setVerificationCode('')
     setError(null)
@@ -211,7 +224,7 @@ export function SignUpDialog() {
   }
 
   const validateCurrentStep = (): string | null => {
-    if (step === 'personal') {
+    if (step === 'profile') {
       if (!formData.firstName.trim()) return 'First name is required.'
       if (!formData.lastName.trim()) return 'Last name is required.'
       if (!formData.username.trim()) return 'Choose a username to continue.'
@@ -371,16 +384,14 @@ export function SignUpDialog() {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" className="w-full">Create account</Button>
       </DialogTrigger>
-      <DialogContent className="auth-signup-dialog-content auth-flow-content overflow-y-auto p-0">
+      <DialogContent className="auth-signup-dialog-content auth-flow-content overflow-hidden p-0">
         <DialogHeader className="auth-flow-header gap-4 text-left">
           <div className="flex items-start gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
               {step === 'verification' ? <ShieldCheck className="size-5" /> : <Building2 className="size-5" />}
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                {currentStep.eyebrow}
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Capillia account</p>
               <DialogTitle className="text-2xl leading-8 tracking-tight">{currentStep.title}</DialogTitle>
               <DialogDescription className="text-base leading-7">{currentStep.description}</DialogDescription>
             </div>
@@ -389,201 +400,190 @@ export function SignUpDialog() {
         </DialogHeader>
 
         {step !== 'verification' ? (
-          <form className="auth-flow-body grid gap-5" onSubmit={handleWizardSubmit}>
-            {step === 'personal' && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {fieldLabel(
-                  <Input
-                    autoComplete="given-name"
-                    className="h-11 sm:h-10"
-                    onChange={(event) => updateField('firstName', event.target.value)}
-                    placeholder="First name"
-                    required
-                    value={formData.firstName}
-                  />,
-                  'First name',
-                )}
-                {fieldLabel(
-                  <Input
-                    autoComplete="family-name"
-                    className="h-11 sm:h-10"
-                    onChange={(event) => updateField('lastName', event.target.value)}
-                    placeholder="Last name"
-                    required
-                    value={formData.lastName}
-                  />,
-                  'Last name',
-                )}
-                <div className="sm:col-span-2">
-                  {fieldLabel(
-                    <div className="relative">
-                      <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        autoComplete="username"
-                        className="h-11 pl-9 sm:h-10"
-                        onChange={(event) => updateField('username', event.target.value)}
-                        placeholder="Choose a username"
-                        required
-                        value={formData.username}
-                      />
-                    </div>,
-                    'Username*',
-                  )}
+          <form className="auth-form-shell" onSubmit={handleWizardSubmit}>
+            <div className="auth-flow-body grid gap-5 overflow-y-auto">
+              {step === 'profile' && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="First name">
+                    <Input
+                      autoComplete="given-name"
+                      className="h-11 sm:h-10"
+                      onChange={(event) => updateField('firstName', event.target.value)}
+                      placeholder="First name"
+                      required
+                      value={formData.firstName}
+                    />
+                  </Field>
+                  <Field label="Last name">
+                    <Input
+                      autoComplete="family-name"
+                      className="h-11 sm:h-10"
+                      onChange={(event) => updateField('lastName', event.target.value)}
+                      placeholder="Last name"
+                      required
+                      value={formData.lastName}
+                    />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="Username">
+                      <div className="relative">
+                        <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoComplete="username"
+                          className="h-11 pl-9 sm:h-10"
+                          onChange={(event) => updateField('username', event.target.value)}
+                          placeholder="Choose a username"
+                          required
+                          value={formData.username}
+                        />
+                      </div>
+                    </Field>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {step === 'access' && (
-              <div className="grid gap-3">
-                {fieldLabel(
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="email"
-                      className="h-11 pl-9 sm:h-10"
-                      inputMode="email"
-                      onChange={(event) => updateField('email', event.target.value)}
-                      placeholder="you@company.com"
-                      required
-                      type="email"
-                      value={formData.email}
-                    />
-                  </div>,
-                  'Work email*',
-                )}
-                {fieldLabel(
-                  <div className="relative">
-                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="new-password"
-                      className="h-11 pl-9 sm:h-10"
-                      minLength={8}
-                      onChange={(event) => updateField('password', event.target.value)}
-                      placeholder="At least 8 characters"
-                      required
-                      type="password"
-                      value={formData.password}
-                    />
-                  </div>,
-                  'Password*',
-                )}
-                <div className="grid gap-2 text-sm font-medium text-foreground">
-                  <span>Phone number*</span>
-                  <div className="grid grid-cols-[minmax(5.5rem,0.35fr)_1fr] gap-2">
+              {step === 'access' && (
+                <div className="grid gap-3">
+                  <Field label="Work email">
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        autoComplete="email"
+                        className="h-11 pl-9 sm:h-10"
+                        inputMode="email"
+                        onChange={(event) => updateField('email', event.target.value)}
+                        placeholder="you@company.com"
+                        required
+                        type="email"
+                        value={formData.email}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Password">
+                    <div className="relative">
+                      <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        autoComplete="new-password"
+                        className="h-11 pl-9 sm:h-10"
+                        minLength={8}
+                        onChange={(event) => updateField('password', event.target.value)}
+                        placeholder="At least 8 characters"
+                        required
+                        type="password"
+                        value={formData.password}
+                      />
+                    </div>
+                  </Field>
+                  <div className="grid gap-2 text-sm font-medium text-foreground">
+                    <span>Phone number</span>
+                    <div className="grid grid-cols-[minmax(5.5rem,0.35fr)_1fr] gap-2">
+                      <div className="relative">
+                        <Globe2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoComplete="tel-country-code"
+                          className="h-11 pl-9 sm:h-10"
+                          inputMode="tel"
+                          onChange={(event) => updateField('phoneCountryCode', event.target.value)}
+                          pattern="^\+[1-9]\d{0,3}$"
+                          placeholder="+91"
+                          required
+                          title="Enter only the country code, for example +91."
+                          type="tel"
+                          value={formData.phoneCountryCode}
+                        />
+                      </div>
+                      <div className="relative">
+                        <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoComplete="tel-national"
+                          className="h-11 pl-9 sm:h-10"
+                          inputMode="numeric"
+                          onChange={(event) => updateField('phoneNationalNumber', event.target.value)}
+                          pattern="^\d{4,14}$"
+                          placeholder="9876543210"
+                          required
+                          title="Enter the phone number without country code, spaces, or dashes."
+                          type="tel"
+                          value={formData.phoneNationalNumber}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs font-normal text-muted-foreground">
+                      Saved as {getPhoneDisplayValue(formData)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {step === 'company' && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Company name">
+                    <div className="relative">
+                      <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        autoComplete="organization"
+                        className="h-11 pl-9 sm:h-10"
+                        onChange={(event) => updateField('companyName', event.target.value)}
+                        placeholder="Company name"
+                        required
+                        value={formData.companyName}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Location">
                     <div className="relative">
                       <Globe2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        autoComplete="tel-country-code"
+                        autoComplete="country-name"
                         className="h-11 pl-9 sm:h-10"
-                        inputMode="tel"
-                        onChange={(event) => updateField('phoneCountryCode', event.target.value)}
-                        pattern="^\+[1-9]\d{0,3}$"
-                        placeholder="+91"
+                        onChange={(event) => updateField('companyCountry', event.target.value)}
+                        placeholder="Company country/location"
                         required
-                        title="Enter only the country code, for example +91."
-                        type="tel"
-                        value={formData.phoneCountryCode}
+                        value={formData.companyCountry}
                       />
                     </div>
+                  </Field>
+                  <Field label="Designation" hint="Optional">
                     <div className="relative">
-                      <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        autoComplete="tel-national"
+                        autoComplete="organization-title"
                         className="h-11 pl-9 sm:h-10"
-                        inputMode="numeric"
-                        onChange={(event) => updateField('phoneNationalNumber', event.target.value)}
-                        pattern="^\d{4,14}$"
-                        placeholder="9876543210"
-                        required
-                        title="Enter the phone number without country code, spaces, or dashes."
-                        type="tel"
-                        value={formData.phoneNationalNumber}
+                        onChange={(event) => updateField('designation', event.target.value)}
+                        placeholder="Designation"
+                        value={formData.designation}
                       />
                     </div>
-                  </div>
-                  <p className="text-xs font-normal text-muted-foreground">
-                    Saved clearly as {getPhoneDisplayValue(formData)}
-                  </p>
+                  </Field>
+                  <Field label="Department" hint="Optional">
+                    <div className="relative">
+                      <BriefcaseBusiness className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        className="h-11 pl-9 sm:h-10"
+                        onChange={(event) => updateField('department', event.target.value)}
+                        placeholder="Department"
+                        value={formData.department}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Company type" hint="Optional">
+                    <div className="relative">
+                      <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        className="h-11 pl-9 sm:h-10"
+                        onChange={(event) => updateField('companyType', event.target.value)}
+                        placeholder="Manufacturer, distributor, lab..."
+                        value={formData.companyType}
+                      />
+                    </div>
+                  </Field>
                 </div>
-              </div>
-            )}
+              )}
 
-            {step === 'company' && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {fieldLabel(
-                  <div className="relative">
-                    <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="organization"
-                      className="h-11 pl-9 sm:h-10"
-                      onChange={(event) => updateField('companyName', event.target.value)}
-                      placeholder="Company name"
-                      required
-                      value={formData.companyName}
-                    />
-                  </div>,
-                  'Company name*',
-                )}
-                {fieldLabel(
-                  <div className="relative">
-                    <Globe2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="country-name"
-                      className="h-11 pl-9 sm:h-10"
-                      onChange={(event) => updateField('companyCountry', event.target.value)}
-                      placeholder="Company country/location"
-                      required
-                      value={formData.companyCountry}
-                    />
-                  </div>,
-                  'Company country/location*',
-                )}
-                {fieldLabel(
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="organization-title"
-                      className="h-11 pl-9 sm:h-10"
-                      onChange={(event) => updateField('designation', event.target.value)}
-                      placeholder="Designation"
-                      value={formData.designation}
-                    />
-                  </div>,
-                  'Designation',
-                  'Optional',
-                )}
-                {fieldLabel(
-                  <div className="relative">
-                    <BriefcaseBusiness className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      className="h-11 pl-9 sm:h-10"
-                      onChange={(event) => updateField('department', event.target.value)}
-                      placeholder="Department"
-                      value={formData.department}
-                    />
-                  </div>,
-                  'Department',
-                  'Optional',
-                )}
-                {fieldLabel(
-                  <div className="relative">
-                    <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      className="h-11 pl-9 sm:h-10"
-                      onChange={(event) => updateField('companyType', event.target.value)}
-                      placeholder="Manufacturer, distributor, lab..."
-                      value={formData.companyType}
-                    />
-                  </div>,
-                  'Type of company',
-                  'Optional',
-                )}
-              </div>
-            )}
+              <StatusMessage message={error} />
+            </div>
 
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-
-            <div className="grid gap-2 sm:grid-cols-[auto_1fr]">
+            <div className="auth-flow-actions grid gap-2 sm:grid-cols-[auto_1fr]">
               <Button
                 type="button"
                 variant="outline"
@@ -612,34 +612,33 @@ export function SignUpDialog() {
             </div>
           </form>
         ) : (
-          <form className="auth-flow-body grid gap-5" onSubmit={handleVerificationSubmit}>
-            <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-3">
-              <div className="flex items-start gap-3">
+          <form className="auth-form-shell" onSubmit={handleVerificationSubmit}>
+            <div className="auth-flow-body grid gap-5 overflow-y-auto">
+              <div className="flex items-start gap-3 rounded-lg border border-primary/15 bg-primary/5 px-4 py-3">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Verification was sent to {formData.email.trim() || 'your email'}. Keep this window open and paste the code here.
+                  Verification was sent to {formData.email.trim() || 'your email'}. Keep this dialog open and paste the code here.
                 </p>
               </div>
+              <Field label="Email verification code">
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="one-time-code"
+                    className="h-11 pl-9 text-center tracking-[0.3em] sm:h-10"
+                    inputMode="numeric"
+                    onChange={(event) => setVerificationCode(event.target.value)}
+                    placeholder="Verification code"
+                    required
+                    value={verificationCode}
+                  />
+                </div>
+              </Field>
+
+              <StatusMessage message={error} />
             </div>
-            {fieldLabel(
-              <div className="relative">
-                <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  autoComplete="one-time-code"
-                  className="h-11 pl-9 text-center tracking-[0.3em] sm:h-10"
-                  inputMode="numeric"
-                  onChange={(event) => setVerificationCode(event.target.value)}
-                  placeholder="Verification code"
-                  required
-                  value={verificationCode}
-                />
-              </div>,
-              'Email verification code*',
-            )}
 
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-
-            <div className="grid gap-2 sm:grid-cols-[auto_1fr]">
+            <div className="auth-flow-actions grid gap-2 sm:grid-cols-[auto_1fr]">
               <Button
                 type="button"
                 variant="outline"
