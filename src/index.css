@@ -143,6 +143,28 @@
   }
 }
 
+@layer components {
+  .auth-dialog-content {
+    left: max(0.5rem, calc((100vw - 28rem) / 2)) !important;
+    right: max(0.5rem, calc((100vw - 28rem) / 2)) !important;
+    top: max(0.5rem, calc((100dvh - 26rem) / 2)) !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    translate: none !important;
+  }
+
+  .auth-signup-dialog-content {
+    left: max(0.5rem, calc((100vw - 42rem) / 2)) !important;
+    right: max(0.5rem, calc((100vw - 42rem) / 2)) !important;
+    top: max(0.5rem, calc((100dvh - 48rem) / 2)) !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    translate: none !important;
+  }
+}
+
 /* Custom scrollbar */
 @layer utilities {
   .scrollbar-thin::-webkit-scrollbar {

@@ -176,7 +176,7 @@ export function SignInDialog() {
       <DialogTrigger asChild>
         <Button type="button" className="w-full">Sign in</Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:max-w-md sm:p-6">
+      <DialogContent className="auth-dialog-content max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

@@ -195,7 +195,7 @@ export function SignUpDialog() {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" className="w-full">Create account</Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:max-w-2xl sm:p-6">
+      <DialogContent className="auth-signup-dialog-content max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Create account</DialogTitle>
           <DialogDescription>
