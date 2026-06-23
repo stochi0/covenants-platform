@@ -287,13 +287,13 @@ export function ProductSearch({ filters }: ProductSearchProps) {
   return (
     <>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-5 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:p-6">
+        <section className="rounded-[1.25rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-4 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:rounded-[2rem] sm:p-6">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:tracking-[0.24em]">
                 Product search
               </p>
-              <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 Marketplace search
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -322,26 +322,26 @@ export function ProductSearch({ filters }: ProductSearchProps) {
                 <button
                   type="button"
                   onClick={() => setSearchType('name')}
-                  className={`flex items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`flex min-w-0 items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                     searchType === 'name'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
                   }`}
                 >
-                  <Type className="h-4 w-4" />
-                  Name
+                  <Type className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Name</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSearchType('cas')}
-                  className={`flex items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`flex min-w-0 items-center justify-center gap-2 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-colors ${
                     searchType === 'cas'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
                   }`}
                 >
-                  <Hash className="h-4 w-4" />
-                  CAS
+                  <Hash className="h-4 w-4 shrink-0" />
+                  <span className="truncate">CAS</span>
                 </button>
               </div>
             </div>
@@ -379,13 +379,13 @@ export function ProductSearch({ filters }: ProductSearchProps) {
                         key={category.value}
                         type="button"
                         onClick={() => toggleCategory(category.value)}
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                        className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
                           isActive
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-[#d7ece8] bg-white text-foreground hover:border-primary/20'
                         }`}
                       >
-                        {formatProductCategoryLabel(category.value)}
+                        <span className="truncate">{formatProductCategoryLabel(category.value)}</span>
                       </button>
                     )
                   })
@@ -405,8 +405,8 @@ export function ProductSearch({ filters }: ProductSearchProps) {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_340px] lg:items-start">
-          <section className="min-w-0 rounded-[1.75rem] border border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#d7ece8] px-4 py-4 sm:px-5">
+          <section className="min-w-0 rounded-[1.25rem] border border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)] sm:rounded-[1.75rem]">
+            <div className="flex flex-col items-stretch gap-3 border-b border-[#d7ece8] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <p className="text-sm font-medium text-foreground">{resultSummary}</p>
               {products.length > 0 && (
                 <Button
@@ -429,14 +429,14 @@ export function ProductSearch({ filters }: ProductSearchProps) {
                       return next
                     })
                   }}
-                  className="rounded-full border-[#d7ece8] bg-white"
+                  className="w-full rounded-full border-[#d7ece8] bg-white sm:w-auto"
                 >
                   {allVisibleSelected ? 'Clear visible' : `Select visible (${products.length})`}
                 </Button>
               )}
             </div>
 
-            <div className="min-h-[560px] px-3 py-3 sm:px-4">
+            <div className="min-h-[360px] px-3 py-3 sm:min-h-[560px] sm:px-4">
               {isLoading && (
                 <div className="flex min-h-[440px] flex-col items-center justify-center text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -508,7 +508,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
           </section>
 
           <aside className="lg:sticky lg:top-24">
-            <div className="rounded-[1.75rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,249,247,0.94))] shadow-[0_30px_80px_-56px_rgba(15,118,110,0.4)]">
+            <div className="rounded-[1.25rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,249,247,0.94))] shadow-[0_30px_80px_-56px_rgba(15,118,110,0.4)] sm:rounded-[1.75rem]">
               <div className="flex items-center justify-between gap-3 border-b border-[#d7ece8] px-4 py-4 sm:px-5">
                 <p className="text-sm font-semibold text-foreground">Shortlist</p>
                 <Badge className="border-primary/10 bg-primary/10 text-primary">
@@ -525,7 +525,7 @@ export function ProductSearch({ filters }: ProductSearchProps) {
                     <p className="mt-4 text-sm font-medium text-foreground">No products selected</p>
                   </div>
                 ) : (
-                  <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                  <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1 sm:max-h-[360px]">
                     {selectedProducts.map((product) => (
                       <div
                         key={product.id}
@@ -621,13 +621,13 @@ function ProductCard({
     <button
       type="button"
       onClick={onToggle}
-      className={`w-full rounded-[1.1rem] border px-4 py-4 text-left transition-colors ${
+      className={`w-full rounded-[1rem] border px-3 py-3 text-left transition-colors sm:rounded-[1.1rem] sm:px-4 sm:py-4 ${
         isSelected
           ? 'border-primary/25 bg-primary/[0.06]'
           : 'border-[#d7ece8] bg-white hover:border-primary/20'
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <div
           className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
             isSelected
@@ -641,10 +641,10 @@ function ProductCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-semibold leading-6 text-foreground sm:text-base">
+              <p className="break-words text-sm font-semibold leading-6 text-foreground sm:text-base">
                 {searchType === 'name' ? highlightText(product.name, searchQuery) : product.name}
               </p>
-              <p className="mt-2 font-mono text-xs text-muted-foreground">
+              <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
                 {searchType === 'cas'
                   ? highlightText(product.casNumber, searchQuery)
                   : product.casNumber}

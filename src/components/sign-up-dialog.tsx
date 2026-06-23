@@ -185,7 +185,7 @@ export function SignUpDialog() {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" className="w-full">Create account</Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:max-w-2xl sm:p-6">
         <DialogHeader>
           <DialogTitle>Create account</DialogTitle>
           <DialogDescription>
@@ -309,7 +309,7 @@ export function SignUpDialog() {
 
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
-            <Button type="submit" disabled={!isLoaded || isSubmitting} className="w-full">
+            <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 w-full sm:h-9">
               {isSubmitting ? 'Creating account...' : 'Continue'}
             </Button>
           </form>
@@ -345,7 +345,7 @@ export function SignUpDialog() {
               >
                 Back
               </Button>
-              <Button type="submit" disabled={!isLoaded || isSubmitting}>
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 sm:h-9">
                 <Check className="size-4" />
                 {isSubmitting ? 'Verifying...' : 'Create account'}
               </Button>

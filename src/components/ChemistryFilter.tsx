@@ -79,7 +79,7 @@ export function ChemistryFilter({
 
   if (isLoading && !hasLoadedData) {
     return (
-      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+      <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/90 sm:rounded-[1.75rem]">
         <CardContent className="flex min-h-[320px] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
         </CardContent>
@@ -89,7 +89,7 @@ export function ChemistryFilter({
 
   if (error && !hasLoadedData) {
     return (
-      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+      <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/90 sm:rounded-[1.75rem]">
         <CardContent className="flex min-h-[260px] items-center justify-center px-6 text-center text-sm text-muted-foreground">
           Chemistry data is unavailable right now.
         </CardContent>
@@ -98,11 +98,11 @@ export function ChemistryFilter({
   }
 
   return (
-    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
-      <CardHeader className="space-y-4 px-5 pb-0 pt-5">
-        <div className="flex items-center justify-between gap-3">
+    <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)] sm:rounded-[1.75rem]">
+      <CardHeader className="space-y-4 px-4 pt-4 pb-0 sm:px-5 sm:pt-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Beaker className="h-5 w-5 text-primary" />
               Chemistries
             </CardTitle>
@@ -117,7 +117,7 @@ export function ChemistryFilter({
               variant="outline"
               size="sm"
               onClick={() => onSelectionChange([])}
-              className="rounded-full border-[#d7ece8] bg-white"
+              className="w-full rounded-full border-[#d7ece8] bg-white sm:w-auto"
             >
               Clear
             </Button>
@@ -125,27 +125,27 @@ export function ChemistryFilter({
         </div>
 
         <div className="grid items-stretch gap-3 sm:grid-cols-3">
-          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
               Selected
             </p>
-            <p className="text-3xl font-semibold tracking-tight text-foreground">
+            <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {selectedChemistries.length}
             </p>
           </div>
-          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-white px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
               Matching facilities
             </p>
-            <p className="text-3xl font-semibold tracking-tight text-foreground">
+            <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {displayFacilityCount}
             </p>
           </div>
-          <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-white px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
               Available chemistries
             </p>
-            <p className="text-3xl font-semibold tracking-tight text-foreground">
+            <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {chemistries.filter((chemistry) => chemistry.facilityCount > 0).length}
             </p>
           </div>
@@ -177,8 +177,8 @@ export function ChemistryFilter({
         </div>
       </CardHeader>
 
-      <CardContent className="px-5 pb-5 pt-5">
-        <ScrollArea className="h-[320px] pr-4">
+      <CardContent className="px-4 pt-5 pb-4 sm:px-5 sm:pb-5">
+        <ScrollArea className="h-[280px] pr-2 sm:h-[320px] sm:pr-4">
           <div className="space-y-2.5">
             {visibleChemistries.map((chemistry) => {
               const isSelected = selectedChemistries.includes(chemistry.id)
@@ -187,7 +187,7 @@ export function ChemistryFilter({
                   key={chemistry.id}
                   type="button"
                   onClick={() => toggleChemistry(chemistry.id)}
-                  className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                  className={`flex w-full items-center justify-between gap-3 rounded-[1rem] border px-3 py-3 text-left transition-colors sm:rounded-[1.1rem] sm:px-4 ${
                     isSelected
                       ? 'border-primary/25 bg-primary/[0.06]'
                       : 'border-[#d7ece8] bg-white hover:border-primary/20'
@@ -206,7 +206,7 @@ export function ChemistryFilter({
                     </span>
                   </div>
 
-                  <span className="text-sm font-medium text-muted-foreground">
+                  <span className="shrink-0 text-sm font-medium text-muted-foreground">
                     {chemistry.facilityCount.toLocaleString()}
                   </span>
                 </button>

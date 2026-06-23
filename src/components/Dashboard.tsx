@@ -52,14 +52,14 @@ function NavButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+      className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-xs font-medium transition-colors sm:flex-none sm:px-4 sm:text-sm ${
         active
           ? 'bg-primary text-primary-foreground shadow-[0_12px_30px_-18px_rgba(15,118,110,0.9)]'
           : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
       }`}
     >
-      {icon}
-      {label}
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate">{label}</span>
     </button>
   )
 }
@@ -137,13 +137,13 @@ function DashboardContent() {
 
       <div className="relative z-10">
         <header className="sticky top-0 z-30 border-b border-white/70 bg-background/75 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 sm:px-6 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary text-white shadow-[0_20px_40px_-24px_rgba(15,118,110,0.95)]">
+          <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-primary text-white shadow-[0_20px_40px_-24px_rgba(15,118,110,0.95)] sm:h-12 sm:w-12 sm:rounded-[1.2rem]">
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-lg font-semibold tracking-tight text-foreground">
+                <p className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
                   Capillia
                 </p>
                 <p className="truncate text-sm text-muted-foreground">
@@ -152,8 +152,8 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-full border border-white/80 bg-white/88 p-1 shadow-sm">
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+              <div className="grid min-w-0 flex-1 grid-cols-2 rounded-full border border-white/80 bg-white/88 p-1 shadow-sm sm:inline-flex sm:flex-none">
                 <NavButton
                   active={activeTab === 'overview'}
                   label="Overview"
@@ -172,7 +172,7 @@ function DashboardContent() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
+        <main className="mx-auto max-w-[1440px] px-3 py-4 sm:px-6 sm:py-8">
           {error && (
             <div className="mb-6 flex flex-col gap-3 rounded-[1.2rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
               <span>
@@ -193,13 +193,13 @@ function DashboardContent() {
 
           {activeTab === 'overview' ? (
             <div className="space-y-6">
-              <section className="rounded-[2rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-5 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:p-6">
+              <section className="rounded-[1.25rem] border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,248,246,0.92))] p-4 shadow-[0_40px_100px_-70px_rgba(15,118,110,0.55)] sm:rounded-[2rem] sm:p-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:tracking-[0.24em]">
                       Platform overview
                     </p>
-                    <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+                    <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                       Find manufacturing capacity faster.
                     </h2>
                     <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -246,29 +246,29 @@ function DashboardContent() {
               </section>
 
               <div className="grid items-stretch gap-3 sm:grid-cols-3">
-                <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(15,118,110,0.07),rgba(15,118,110,0.02))] px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
                     Products
                   </p>
-                  <p className="text-3xl font-semibold tracking-tight text-foreground">
+                  <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {formatOverviewValue(platformStats.products)}
                   </p>
                 </div>
 
-                <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-white px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
                     Available chemistries
                   </p>
-                  <p className="text-3xl font-semibold tracking-tight text-foreground">
+                  <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {formatOverviewValue(platformStats.chemistries)}
                   </p>
                 </div>
 
-                <div className="flex min-h-[126px] flex-col justify-between rounded-[1.2rem] border border-[#d7ece8] bg-white px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="flex min-h-[104px] flex-col justify-between rounded-[1rem] border border-[#d7ece8] bg-white px-4 py-4 sm:min-h-[126px] sm:rounded-[1.2rem]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:tracking-[0.18em]">
                     Facilities
                   </p>
-                  <p className="text-3xl font-semibold tracking-tight text-foreground">
+                  <p className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                     {formatOverviewValue(totalFacilities)}
                   </p>
                 </div>

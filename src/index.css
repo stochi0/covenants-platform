@@ -135,9 +135,11 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "ss02", "cv01";
     min-height: 100vh;
+    overflow-x: hidden;
   }
   #root {
     min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 

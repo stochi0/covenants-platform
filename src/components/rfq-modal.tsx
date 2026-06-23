@@ -147,7 +147,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col w-[calc(100%-1rem)] sm:w-full">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-0.75rem)] flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:w-full sm:max-w-2xl">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border bg-gradient-to-b from-accent/5 to-transparent shrink-0">
           <DialogHeader>
@@ -265,7 +265,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
             </div>
 
             {/* Footer */}
-            <div className="p-3 sm:p-4 border-t border-border bg-muted/30 flex items-center justify-between gap-3 shrink-0">
+            <div className="flex shrink-0 flex-col gap-3 border-t border-border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
               <div className="flex items-center gap-2">
                 {onBack && (
                   <Button 
@@ -286,7 +286,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                   {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''}
                 </p>
               </div>
-              <Button onClick={() => setStep('contact')} className="group" disabled={selectedProducts.length === 0}>
+              <Button onClick={() => setStep('contact')} className="group h-11 w-full sm:h-9 sm:w-auto" disabled={selectedProducts.length === 0}>
                 Continue
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
               </Button>
@@ -425,11 +425,11 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
             </div>
 
             {/* Footer */}
-            <div className="p-3 sm:p-4 border-t border-border bg-muted/30 flex items-center justify-between gap-2 shrink-0">
-              <Button type="button" variant="ghost" onClick={() => setStep('products')} size="sm" className="sm:size-default">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-muted/30 p-3 sm:p-4">
+              <Button type="button" variant="ghost" onClick={() => setStep('products')} size="sm" className="h-10 sm:h-9">
                 Back
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="group min-w-[100px] sm:min-w-32">
+              <Button type="submit" disabled={isSubmitting} className="group h-10 min-w-[112px] sm:h-9 sm:min-w-32">
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />

@@ -89,7 +89,7 @@ export function SignInDialog() {
       <DialogTrigger asChild>
         <Button type="button" className="w-full">Sign in</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:max-w-md sm:p-6">
         <DialogHeader>
           <DialogTitle>Sign in</DialogTitle>
           <DialogDescription>Enter your email and password to continue.</DialogDescription>
@@ -127,7 +127,7 @@ export function SignInDialog() {
 
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
-          <Button type="submit" disabled={!isLoaded || isSubmitting} className="w-full">
+          <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 w-full sm:h-9">
             <LogIn className="size-4" />
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </Button>

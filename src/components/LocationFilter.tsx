@@ -15,8 +15,8 @@ const IndiaMap = lazy(() =>
 
 function IndiaMapFallback() {
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7ece8] bg-white p-3 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.28)] sm:p-4">
-      <div className="flex min-h-[520px] items-center justify-center">
+    <div className="relative overflow-hidden rounded-[1.25rem] border border-[#d7ece8] bg-white p-3 shadow-[0_24px_60px_-48px_rgba(15,118,110,0.28)] sm:rounded-[1.75rem] sm:p-4">
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[520px]">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
       </div>
     </div>
@@ -133,7 +133,7 @@ export function LocationFilter({
 
   if (isLoading && !hasLoadedData) {
     return (
-      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+      <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/90 sm:rounded-[1.75rem]">
         <CardContent className="flex min-h-[420px] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
         </CardContent>
@@ -143,7 +143,7 @@ export function LocationFilter({
 
   if (error && !hasLoadedData) {
     return (
-      <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/90">
+      <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/90 sm:rounded-[1.75rem]">
         <CardContent className="flex min-h-[260px] items-center justify-center px-6 text-center text-sm text-muted-foreground">
           Location data is unavailable right now.
         </CardContent>
@@ -152,11 +152,11 @@ export function LocationFilter({
   }
 
   return (
-    <Card className="rounded-[1.75rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)]">
-      <CardHeader className="space-y-4 px-5 pb-0 pt-5 sm:px-6 sm:pt-6">
+    <Card className="rounded-[1.25rem] border-[#d7ece8] bg-white/88 shadow-[0_30px_80px_-56px_rgba(15,118,110,0.45)] sm:rounded-[1.75rem]">
+      <CardHeader className="space-y-4 px-4 pt-4 pb-0 sm:px-6 sm:pt-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <MapPin className="h-5 w-5 text-primary" />
               Locations
             </CardTitle>
@@ -168,7 +168,7 @@ export function LocationFilter({
               variant="outline"
               size="sm"
               onClick={() => onSelectionChange([])}
-              className="rounded-full border-[#d7ece8] bg-white"
+              className="w-full rounded-full border-[#d7ece8] bg-white sm:w-auto"
             >
               Clear states
             </Button>
@@ -196,7 +196,7 @@ export function LocationFilter({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+      <CardContent className="space-y-5 px-4 pt-5 pb-4 sm:px-6 sm:pb-6">
         <Suspense fallback={<IndiaMapFallback />}>
           <IndiaMap
             interactive
@@ -224,7 +224,7 @@ export function LocationFilter({
               />
             </div>
 
-            <ScrollArea className="h-[340px] pr-4">
+            <ScrollArea className="h-[280px] pr-2 sm:h-[340px] sm:pr-4">
               <div className="space-y-2.5">
                 {visibleLocations.map((location) => {
                   const isSelected = selectedLocations.includes(location.id)
@@ -233,7 +233,7 @@ export function LocationFilter({
                       key={location.id}
                       type="button"
                       onClick={() => toggleLocation(location.id)}
-                      className={`flex w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors ${
+                      className={`flex w-full items-center justify-between gap-3 rounded-[1rem] border px-3 py-3 text-left transition-colors sm:rounded-[1.1rem] sm:px-4 ${
                         isSelected
                           ? 'border-primary/25 bg-primary/[0.06]'
                           : 'border-[#d7ece8] bg-white hover:border-primary/20'
@@ -252,7 +252,7 @@ export function LocationFilter({
                         </span>
                       </div>
 
-                      <span className="text-sm font-medium text-muted-foreground">
+                      <span className="shrink-0 text-sm font-medium text-muted-foreground">
                         {location.facilityCount.toLocaleString()}
                       </span>
                     </button>
@@ -262,8 +262,8 @@ export function LocationFilter({
             </ScrollArea>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(248,252,252,0.95),rgba(255,255,255,0.95))] p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
+          <div className="rounded-[1.1rem] border border-[#d7ece8] bg-[linear-gradient(180deg,rgba(248,252,252,0.95),rgba(255,255,255,0.95))] p-4 sm:rounded-[1.5rem] sm:p-5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <p className="text-sm font-semibold text-foreground">Selected states</p>
               <span className="text-sm font-medium text-muted-foreground">
                 {selectedFacilityCount.toLocaleString()} facilities
