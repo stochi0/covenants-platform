@@ -144,30 +144,124 @@
 }
 
 @layer components {
+  [data-slot="dialog-overlay"] {
+    background: oklch(0.16 0.015 260 / 0.58);
+    backdrop-filter: blur(10px);
+  }
+
+  .auth-flow-content {
+    border: 1px solid oklch(0.9 0.018 210);
+    background:
+      linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.985 0.006 190) 52%, oklch(0.985 0.006 245) 100%);
+    box-shadow: 0 28px 80px -42px oklch(0.2 0.03 260 / 0.55);
+  }
+
+  .auth-flow-header {
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid oklch(0.92 0.012 220);
+    background: linear-gradient(135deg, oklch(1 0 0 / 0.96), oklch(0.965 0.018 180 / 0.72));
+  }
+
+  .auth-flow-body {
+    padding: 1.25rem;
+  }
+
   .auth-dialog-content {
-    left: 50% !important;
-    right: auto !important;
-    top: 50% !important;
-    width: min(calc(100vw - 2rem), 28rem) !important;
-    max-width: 28rem !important;
-    max-height: calc(100dvh - 2rem) !important;
-    transform: translate(-50%, -50%) !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: min(86dvh, 42rem) !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    translate: none !important;
+    transform: none !important;
   }
 
   .auth-signup-dialog-content {
-    left: 50% !important;
-    right: auto !important;
-    top: 50% !important;
-    width: min(calc(100vw - 2rem), 38rem) !important;
-    max-width: 38rem !important;
-    max-height: calc(100dvh - 2rem) !important;
-    transform: translate(-50%, -50%) !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: min(92dvh, 48rem) !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    translate: none !important;
+    transform: none !important;
+  }
+
+  @media (min-width: 640px) {
+    .auth-flow-header {
+      padding: 1.5rem 1.5rem 1.125rem;
+    }
+
+    .auth-flow-body {
+      padding: 1.5rem;
+    }
+
+    .auth-dialog-content {
+      bottom: auto !important;
+      left: 50% !important;
+      right: auto !important;
+      top: 50% !important;
+      width: min(calc(100vw - 2rem), 30rem) !important;
+      max-width: 30rem !important;
+      max-height: calc(100dvh - 2rem) !important;
+      border: 1px solid oklch(0.9 0.018 210) !important;
+      border-radius: 1.5rem !important;
+      translate: none !important;
+      transform: translate(-50%, -50%) !important;
+    }
+
+    .auth-signup-dialog-content {
+      bottom: auto !important;
+      left: 50% !important;
+      right: auto !important;
+      top: 50% !important;
+      width: min(calc(100vw - 2rem), 44rem) !important;
+      max-width: 44rem !important;
+      max-height: calc(100dvh - 2rem) !important;
+      border: 1px solid oklch(0.9 0.018 210) !important;
+      border-radius: 1.5rem !important;
+      translate: none !important;
+      transform: translate(-50%, -50%) !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .auth-signup-dialog-content {
+      width: min(calc(100vw - 3rem), 48rem) !important;
+      max-width: 48rem !important;
+    }
   }
 
   @supports (padding: max(0px)) {
+    .auth-flow-body {
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+    }
+
     .auth-dialog-content,
     .auth-signup-dialog-content {
-      max-height: calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom))) !important;
+      max-height: calc(100dvh - max(0.75rem, env(safe-area-inset-top))) !important;
+    }
+  }
+
+  @media (min-width: 640px) {
+    @supports (padding: max(0px)) {
+      .auth-dialog-content,
+      .auth-signup-dialog-content {
+        max-height: calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom))) !important;
+      }
     }
   }
 }

@@ -176,14 +176,19 @@ export function SignInDialog() {
       <DialogTrigger asChild>
         <Button type="button" className="w-full">Sign in</Button>
       </DialogTrigger>
-      <DialogContent className="auth-dialog-content max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+      <DialogContent className="auth-dialog-content auth-flow-content overflow-y-auto p-0">
+        <DialogHeader className="auth-flow-header text-left">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+            {step === 'sign-in' ? <LogIn className="size-5" /> : <KeyRound className="size-5" />}
+          </div>
+          <div className="min-w-0 space-y-1">
+            <DialogTitle className="text-2xl leading-8 tracking-tight">{title}</DialogTitle>
+            <DialogDescription className="text-base leading-7">{description}</DialogDescription>
+          </div>
         </DialogHeader>
 
         {step === 'sign-in' && (
-        <form className="grid gap-4" onSubmit={handleSubmit}>
+        <form className="auth-flow-body grid gap-4" onSubmit={handleSubmit}>
           <label className="grid gap-1.5 text-sm font-medium text-foreground">
             <span>Email or username</span>
             <div className="relative">
@@ -224,7 +229,7 @@ export function SignInDialog() {
 
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
-          <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 w-full sm:h-9">
+          <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
             <LogIn className="size-4" />
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </Button>
@@ -232,7 +237,7 @@ export function SignInDialog() {
         )}
 
         {step === 'reset-request' && (
-          <form className="grid gap-4" onSubmit={handleResetRequest}>
+          <form className="auth-flow-body grid gap-4" onSubmit={handleResetRequest}>
             <label className="grid gap-1.5 text-sm font-medium text-foreground">
               <span>Email or username</span>
               <div className="relative">
@@ -252,7 +257,7 @@ export function SignInDialog() {
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
             <div className="grid gap-2">
-              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 w-full sm:h-9">
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
                 <KeyRound className="size-4" />
                 {isSubmitting ? 'Sending code...' : 'Send reset code'}
               </Button>
@@ -265,7 +270,7 @@ export function SignInDialog() {
         )}
 
         {step === 'reset-code' && (
-          <form className="grid gap-4" onSubmit={handleResetSubmit}>
+          <form className="auth-flow-body grid gap-4" onSubmit={handleResetSubmit}>
             <label className="grid gap-1.5 text-sm font-medium text-foreground">
               <span>Reset code</span>
               <Input
@@ -295,7 +300,7 @@ export function SignInDialog() {
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
             <div className="grid gap-2">
-              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 w-full sm:h-9">
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
                 {isSubmitting ? 'Resetting password...' : 'Reset password'}
               </Button>
               <Button type="button" variant="ghost" disabled={isSubmitting} onClick={goToReset}>

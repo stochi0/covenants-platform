@@ -139,7 +139,7 @@ function ProgressHeader({ currentStep }: { currentStep: SignUpStep }) {
   const currentIndex = signUpSteps.findIndex((item) => item.id === currentStep)
 
   return (
-    <div className="rounded-lg border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(237,248,246,0.86))] p-3 shadow-[0_20px_60px_-44px_rgba(15,118,110,0.55)]">
+    <div className="rounded-xl border border-[#d7ece8] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(237,248,246,0.86))] p-3 shadow-[0_20px_60px_-44px_rgba(15,118,110,0.55)]">
       <div className="grid grid-cols-4 gap-2">
         {signUpSteps.map((item, index) => {
           const isComplete = index < currentIndex
@@ -371,25 +371,25 @@ export function SignUpDialog() {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" className="w-full">Create account</Button>
       </DialogTrigger>
-      <DialogContent className="auth-signup-dialog-content max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="gap-4 text-left">
+      <DialogContent className="auth-signup-dialog-content auth-flow-content overflow-y-auto p-0">
+        <DialogHeader className="auth-flow-header gap-4 text-left">
           <div className="flex items-start gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_18px_45px_-24px_rgba(15,118,110,0.95)]">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
               {step === 'verification' ? <ShieldCheck className="size-5" /> : <Building2 className="size-5" />}
             </div>
             <div className="min-w-0 space-y-1">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
                 {currentStep.eyebrow}
               </p>
-              <DialogTitle className="text-xl leading-7">{currentStep.title}</DialogTitle>
-              <DialogDescription className="leading-6">{currentStep.description}</DialogDescription>
+              <DialogTitle className="text-2xl leading-8 tracking-tight">{currentStep.title}</DialogTitle>
+              <DialogDescription className="text-base leading-7">{currentStep.description}</DialogDescription>
             </div>
           </div>
           <ProgressHeader currentStep={step} />
         </DialogHeader>
 
         {step !== 'verification' ? (
-          <form className="grid gap-5" onSubmit={handleWizardSubmit}>
+          <form className="auth-flow-body grid gap-5" onSubmit={handleWizardSubmit}>
             {step === 'personal' && (
               <div className="grid gap-3 sm:grid-cols-2">
                 {fieldLabel(
@@ -589,12 +589,12 @@ export function SignUpDialog() {
                 variant="outline"
                 disabled={isFirstStep || isSubmitting}
                 onClick={goBack}
-                className="h-11 sm:h-10"
+                className="h-12 sm:h-11"
               >
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 sm:h-10">
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 sm:h-11">
                 {isSubmitting ? (
                   'Creating account...'
                 ) : isCompanyStep ? (
@@ -612,7 +612,7 @@ export function SignUpDialog() {
             </div>
           </form>
         ) : (
-          <form className="grid gap-5" onSubmit={handleVerificationSubmit}>
+          <form className="auth-flow-body grid gap-5" onSubmit={handleVerificationSubmit}>
             <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-3">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -648,12 +648,12 @@ export function SignUpDialog() {
                   setStep('company')
                   setError(null)
                 }}
-                className="h-11 sm:h-10"
+                className="h-12 sm:h-11"
               >
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-11 sm:h-10">
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 sm:h-11">
                 <Check className="size-4" />
                 {isSubmitting ? 'Verifying...' : 'Launch workspace'}
               </Button>
