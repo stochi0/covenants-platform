@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import { useSignIn } from '@clerk/react/legacy'
-import { ArrowLeft, KeyRound, LogIn, Mail } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, KeyRound, LockKeyhole, LogIn, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,6 +15,21 @@ import { Input } from '@/components/ui/input'
 
 type SetActiveFn = (params: { session: string }) => Promise<unknown>
 type AuthStep = 'sign-in' | 'reset-request' | 'reset-code'
+
+const stepCopy: Record<AuthStep, { title: string; description: string }> = {
+  'sign-in': {
+    title: 'Sign in',
+    description: 'Use your Capillia account credentials to continue.',
+  },
+  'reset-request': {
+    title: 'Reset password',
+    description: 'Enter your email or username and we will send a reset code.',
+  },
+  'reset-code': {
+    title: 'Choose a new password',
+    description: 'Enter the code from your email and set a new password.',
+  },
+}
 
 function getClerkErrorMessage(error: unknown): string {
   if (
@@ -34,6 +49,43 @@ async function activateSession(setActive: SetActiveFn | undefined, sessionId: st
   if (setActive && sessionId) {
     await setActive({ session: sessionId })
   }
+}
+
+function Field({
+  children,
+  label,
+}: {
+  children: ReactNode
+  label: string
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium text-foreground">
+      <span>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function StatusMessage({
+  message,
+  tone,
+}: {
+  message: string | null
+  tone: 'error' | 'success'
+}) {
+  if (!message) return null
+
+  return (
+    <div
+      className={`rounded-lg border px-3 py-2 text-sm leading-6 ${
+        tone === 'error'
+          ? 'border-destructive/25 bg-destructive/5 text-destructive'
+          : 'border-primary/20 bg-primary/5 text-muted-foreground'
+      }`}
+    >
+      {message}
+    </div>
+  )
 }
 
 export function SignInDialog() {
@@ -164,99 +216,103 @@ export function SignInDialog() {
     setMessage(null)
   }
 
-  const title = step === 'sign-in' ? 'Sign in' : 'Reset password'
-  const description = step === 'sign-in'
-    ? 'Use your email or username to continue.'
-    : step === 'reset-request'
-    ? 'Enter your email or username and Clerk will send a reset code.'
-    : 'Enter the reset code and choose a new password.'
+  const copy = stepCopy[step]
+  const isResetFlow = step !== 'sign-in'
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button type="button" className="w-full">Sign in</Button>
       </DialogTrigger>
-      <DialogContent className="auth-dialog-content auth-flow-content overflow-y-auto p-0">
+      <DialogContent className="auth-dialog-content auth-flow-content overflow-hidden p-0">
         <DialogHeader className="auth-flow-header text-left">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
-            {step === 'sign-in' ? <LogIn className="size-5" /> : <KeyRound className="size-5" />}
+            {isResetFlow ? <KeyRound className="size-5" /> : <LogIn className="size-5" />}
           </div>
           <div className="min-w-0 space-y-1">
-            <DialogTitle className="text-2xl leading-8 tracking-tight">{title}</DialogTitle>
-            <DialogDescription className="text-base leading-7">{description}</DialogDescription>
+            <DialogTitle className="text-2xl leading-8 tracking-tight">{copy.title}</DialogTitle>
+            <DialogDescription className="text-base leading-7">{copy.description}</DialogDescription>
           </div>
         </DialogHeader>
 
         {step === 'sign-in' && (
-        <form className="auth-flow-body grid gap-4" onSubmit={handleSubmit}>
-          <label className="grid gap-1.5 text-sm font-medium text-foreground">
-            <span>Email or username</span>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                autoComplete="username"
-                className="pl-9"
-                onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="you@company.com or username"
-                required
-                value={identifier}
-              />
+          <form className="auth-form-shell" onSubmit={handleSubmit}>
+            <div className="auth-flow-body grid gap-4 overflow-y-auto">
+              <Field label="Email or username">
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="username"
+                    className="h-11 pl-9"
+                    onChange={(event) => setIdentifier(event.target.value)}
+                    placeholder="you@company.com or username"
+                    required
+                    value={identifier}
+                  />
+                </div>
+              </Field>
+
+              <Field label="Password">
+                <div className="relative">
+                  <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="current-password"
+                    className="h-11 pl-9"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    required
+                    type="password"
+                    value={password}
+                  />
+                </div>
+              </Field>
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto px-0 text-sm"
+                  onClick={goToReset}
+                >
+                  Forgot password?
+                </Button>
+              </div>
+
+              <StatusMessage message={message} tone="success" />
+              <StatusMessage message={error} tone="error" />
             </div>
-          </label>
 
-          <label className="grid gap-1.5 text-sm font-medium text-foreground">
-            <span>Password</span>
-            <Input
-              autoComplete="current-password"
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
-              required
-              type="password"
-              value={password}
-            />
-          </label>
-
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto px-0 text-sm"
-              onClick={goToReset}
-            >
-              Forgot password?
-            </Button>
-          </div>
-
-          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-
-          <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
-            <LogIn className="size-4" />
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
-          </Button>
-        </form>
+            <div className="auth-flow-actions">
+              <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
+                <LogIn className="size-4" />
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </div>
+          </form>
         )}
 
         {step === 'reset-request' && (
-          <form className="auth-flow-body grid gap-4" onSubmit={handleResetRequest}>
-            <label className="grid gap-1.5 text-sm font-medium text-foreground">
-              <span>Email or username</span>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  autoComplete="username"
-                  className="pl-9"
-                  onChange={(event) => setIdentifier(event.target.value)}
-                  placeholder="you@company.com or username"
-                  required
-                  value={identifier}
-                />
-              </div>
-            </label>
+          <form className="auth-form-shell" onSubmit={handleResetRequest}>
+            <div className="auth-flow-body grid gap-4 overflow-y-auto">
+              <Field label="Email or username">
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="username"
+                    className="h-11 pl-9"
+                    onChange={(event) => setIdentifier(event.target.value)}
+                    placeholder="you@company.com or username"
+                    required
+                    value={identifier}
+                  />
+                </div>
+              </Field>
 
-            {message && <p className="text-sm font-medium text-muted-foreground">{message}</p>}
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+              <StatusMessage message={message} tone="success" />
+              <StatusMessage message={error} tone="error" />
+            </div>
 
-            <div className="grid gap-2">
+            <div className="auth-flow-actions grid gap-2">
               <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
                 <KeyRound className="size-4" />
                 {isSubmitting ? 'Sending code...' : 'Send reset code'}
@@ -270,37 +326,47 @@ export function SignInDialog() {
         )}
 
         {step === 'reset-code' && (
-          <form className="auth-flow-body grid gap-4" onSubmit={handleResetSubmit}>
-            <label className="grid gap-1.5 text-sm font-medium text-foreground">
-              <span>Reset code</span>
-              <Input
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                onChange={(event) => setResetCode(event.target.value)}
-                placeholder="Enter reset code"
-                required
-                value={resetCode}
+          <form className="auth-form-shell" onSubmit={handleResetSubmit}>
+            <div className="auth-flow-body grid gap-4 overflow-y-auto">
+              <StatusMessage
+                message={message ?? 'Check your inbox for the reset code before choosing a new password.'}
+                tone="success"
               />
-            </label>
 
-            <label className="grid gap-1.5 text-sm font-medium text-foreground">
-              <span>New password</span>
-              <Input
-                autoComplete="new-password"
-                minLength={8}
-                onChange={(event) => setResetPassword(event.target.value)}
-                placeholder="At least 8 characters"
-                required
-                type="password"
-                value={resetPassword}
-              />
-            </label>
+              <Field label="Reset code">
+                <Input
+                  autoComplete="one-time-code"
+                  className="h-11"
+                  inputMode="numeric"
+                  onChange={(event) => setResetCode(event.target.value)}
+                  placeholder="Enter reset code"
+                  required
+                  value={resetCode}
+                />
+              </Field>
 
-            {message && <p className="text-sm font-medium text-muted-foreground">{message}</p>}
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+              <Field label="New password">
+                <div className="relative">
+                  <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoComplete="new-password"
+                    className="h-11 pl-9"
+                    minLength={8}
+                    onChange={(event) => setResetPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                    required
+                    type="password"
+                    value={resetPassword}
+                  />
+                </div>
+              </Field>
 
-            <div className="grid gap-2">
+              <StatusMessage message={error} tone="error" />
+            </div>
+
+            <div className="auth-flow-actions grid gap-2">
               <Button type="submit" disabled={!isLoaded || isSubmitting} className="h-12 w-full">
+                <CheckCircle2 className="size-4" />
                 {isSubmitting ? 'Resetting password...' : 'Reset password'}
               </Button>
               <Button type="button" variant="ghost" disabled={isSubmitting} onClick={goToReset}>

@@ -153,10 +153,16 @@
     border: 1px solid oklch(0.9 0.018 210);
     background:
       linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.985 0.006 190) 52%, oklch(0.985 0.006 245) 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
     box-shadow: 0 28px 80px -42px oklch(0.2 0.03 260 / 0.55);
   }
 
   .auth-flow-header {
+    flex-shrink: 0;
     padding: 1.25rem 1.25rem 1rem;
     border-bottom: 1px solid oklch(0.92 0.012 220);
     background: linear-gradient(135deg, oklch(1 0 0 / 0.96), oklch(0.965 0.018 180 / 0.72));
@@ -164,37 +170,46 @@
 
   .auth-flow-body {
     padding: 1.25rem;
+    min-height: 0;
+  }
+
+  .auth-form-shell {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .auth-flow-actions {
+    flex-shrink: 0;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid oklch(0.92 0.012 220);
+    background: oklch(1 0 0 / 0.84);
   }
 
   .auth-dialog-content {
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    max-height: min(86dvh, 42rem) !important;
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    border-left: 0 !important;
-    border-radius: 1.5rem 1.5rem 0 0 !important;
-    translate: none !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(calc(100vw - 2rem), 30rem) !important;
+    max-width: 30rem !important;
+    max-height: calc(100vh - 2rem) !important;
+    max-height: calc(100dvh - 2rem) !important;
+    border: 1px solid oklch(0.9 0.018 210) !important;
+    border-radius: 1.5rem !important;
+    translate: -50% -50% !important;
     transform: none !important;
   }
 
   .auth-signup-dialog-content {
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    max-height: min(92dvh, 48rem) !important;
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    border-left: 0 !important;
-    border-radius: 1.5rem 1.5rem 0 0 !important;
-    translate: none !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(calc(100vw - 2rem), 48rem) !important;
+    max-width: 48rem !important;
+    max-height: calc(100vh - 2rem) !important;
+    max-height: calc(100dvh - 2rem) !important;
+    border: 1px solid oklch(0.9 0.018 210) !important;
+    border-radius: 1.5rem !important;
+    translate: -50% -50% !important;
     transform: none !important;
   }
 
@@ -207,68 +222,45 @@
       padding: 1.5rem;
     }
 
-    .auth-dialog-content {
-      bottom: auto !important;
-      left: 50% !important;
-      right: auto !important;
-      top: max(1rem, env(safe-area-inset-top)) !important;
-      width: min(calc(100vw - 2rem), 30rem) !important;
-      max-width: 30rem !important;
-      max-height: min(calc(100dvh - 2rem), calc(100vh - 2rem)) !important;
-      border: 1px solid oklch(0.9 0.018 210) !important;
-      border-radius: 1.5rem !important;
-      margin: 0 !important;
-      translate: none !important;
-      transform: translateX(-50%) !important;
-    }
-
-    .auth-signup-dialog-content {
-      bottom: auto !important;
-      left: 50% !important;
-      right: auto !important;
-      top: max(1rem, env(safe-area-inset-top)) !important;
-      width: min(calc(100vw - 2rem), 44rem) !important;
-      max-width: 44rem !important;
-      max-height: min(calc(100dvh - 2rem), calc(100vh - 2rem)) !important;
-      border: 1px solid oklch(0.9 0.018 210) !important;
-      border-radius: 1.5rem !important;
-      margin: 0 !important;
-      translate: none !important;
-      transform: translateX(-50%) !important;
+    .auth-flow-actions {
+      padding: 1rem 1.5rem 1.5rem;
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (max-width: 479px) {
+    .auth-dialog-content,
     .auth-signup-dialog-content {
-      width: min(calc(100vw - 3rem), 48rem) !important;
-      max-width: 48rem !important;
+      width: calc(100vw - 1rem) !important;
+      max-height: calc(100vh - 1rem) !important;
+      max-height: calc(100dvh - 1rem) !important;
+      border-radius: 1.25rem !important;
     }
   }
 
   @supports (padding: max(0px)) {
     .auth-flow-body {
       padding-right: max(1.25rem, env(safe-area-inset-right));
-      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
       padding-left: max(1.25rem, env(safe-area-inset-left));
     }
 
-    .auth-dialog-content,
-    .auth-signup-dialog-content {
-      max-height: min(
-        calc(100dvh - max(0.75rem, env(safe-area-inset-top))),
-        calc(100vh - max(0.75rem, env(safe-area-inset-top)))
-      ) !important;
+    .auth-flow-actions {
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+      padding-left: max(1.25rem, env(safe-area-inset-left));
     }
   }
 
   @media (min-width: 640px) {
     @supports (padding: max(0px)) {
-      .auth-dialog-content,
-      .auth-signup-dialog-content {
-        max-height: min(
-          calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom))),
-          calc(100vh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom)))
-        ) !important;
+      .auth-flow-body {
+        padding-right: max(1.5rem, env(safe-area-inset-right));
+        padding-left: max(1.5rem, env(safe-area-inset-left));
+      }
+
+      .auth-flow-actions {
+        padding-right: max(1.5rem, env(safe-area-inset-right));
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+        padding-left: max(1.5rem, env(safe-area-inset-left));
       }
     }
   }
