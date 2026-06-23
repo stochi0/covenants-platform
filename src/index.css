@@ -211,28 +211,36 @@
       bottom: auto !important;
       left: 50% !important;
       right: auto !important;
-      top: 50% !important;
+      top: max(1rem, env(safe-area-inset-top)) !important;
       width: min(calc(100vw - 2rem), 30rem) !important;
       max-width: 30rem !important;
       max-height: calc(100dvh - 2rem) !important;
       border: 1px solid oklch(0.9 0.018 210) !important;
       border-radius: 1.5rem !important;
       translate: none !important;
-      transform: translate(-50%, -50%) !important;
+      transform: translateX(-50%) !important;
     }
 
     .auth-signup-dialog-content {
       bottom: auto !important;
       left: 50% !important;
       right: auto !important;
-      top: 50% !important;
+      top: max(1rem, env(safe-area-inset-top)) !important;
       width: min(calc(100vw - 2rem), 44rem) !important;
       max-width: 44rem !important;
       max-height: calc(100dvh - 2rem) !important;
       border: 1px solid oklch(0.9 0.018 210) !important;
       border-radius: 1.5rem !important;
       translate: none !important;
-      transform: translate(-50%, -50%) !important;
+      transform: translateX(-50%) !important;
+    }
+
+    @media (min-height: 720px) {
+      .auth-dialog-content,
+      .auth-signup-dialog-content {
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+      }
     }
   }
 
