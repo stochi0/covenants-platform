@@ -48,6 +48,7 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
   const primaryEmail = data.email_addresses.find((email) => email.id === data.primary_email_address_id)
     ?? data.email_addresses[0]
   const unsafeMetadata = data.unsafe_metadata ?? {}
+  const phoneMetadata = readPhoneMetadata(unsafeMetadata)
 
   if (!primaryEmail?.email_address) {
     throw new Error('Clerk webhook user does not have an email address')
@@ -61,7 +62,9 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
     username: data.username,
     imageUrl: data.image_url,
     emailVerified: primaryEmail.verification?.status === 'verified',
-    phoneNumber: readMetadataString(unsafeMetadata.phoneNumber),
+    phoneNumber: phoneMetadata.phoneNumber,
+    phoneCountryCode: phoneMetadata.phoneCountryCode,
+    phoneNationalNumber: phoneMetadata.phoneNationalNumber,
     companyName: readMetadataString(unsafeMetadata.companyName),
     companyCountry: readMetadataString(unsafeMetadata.companyCountry),
     designation: readMetadataString(unsafeMetadata.designation),
@@ -72,6 +75,20 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
 
 function readMetadataString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function readPhoneMetadata(unsafeMetadata: Record<string, unknown>) {
+  const phoneCountryCode = readMetadataString(unsafeMetadata.phoneCountryCode)
+  const phoneNationalNumber = readMetadataString(unsafeMetadata.phoneNationalNumber)
+  const phoneNumber = phoneCountryCode && phoneNationalNumber
+    ? `${phoneCountryCode} ${phoneNationalNumber}`
+    : readMetadataString(unsafeMetadata.phoneNumber)
+
+  return {
+    phoneNumber,
+    phoneCountryCode,
+    phoneNationalNumber,
+  }
 }
 
 function isUserEvent(event: ClerkWebhookEvent): event is Extract<ClerkWebhookEvent, { type: 'user.created' | 'user.updated' }> {

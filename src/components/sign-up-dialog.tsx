@@ -32,7 +32,8 @@ interface SignUpFormData {
   username: string
   email: string
   password: string
-  phoneNumber: string
+  phoneCountryCode: string
+  phoneNationalNumber: string
   companyName: string
   companyCountry: string
   designation: string
@@ -46,7 +47,8 @@ const initialFormData: SignUpFormData = {
   username: '',
   email: '',
   password: '',
-  phoneNumber: '',
+  phoneCountryCode: '+91',
+  phoneNationalNumber: '',
   companyName: '',
   companyCountry: '',
   designation: '',
@@ -54,7 +56,8 @@ const initialFormData: SignUpFormData = {
   companyType: '',
 }
 
-const e164PhonePattern = /^\+[1-9]\d{7,14}$/
+const countryCodePattern = /^\+[1-9]\d{0,3}$/
+const nationalPhonePattern = /^\d{4,14}$/
 type SignUpStep = 'personal' | 'access' | 'company' | 'verification'
 
 const signUpSteps: Array<{
@@ -126,6 +129,10 @@ async function activateSession(setActive: SetActiveFn | undefined, sessionId: st
   if (setActive && sessionId) {
     await setActive({ session: sessionId })
   }
+}
+
+function getPhoneDisplayValue(formData: SignUpFormData) {
+  return `${formData.phoneCountryCode.trim()} ${formData.phoneNationalNumber.trim()}`
 }
 
 function ProgressHeader({ currentStep }: { currentStep: SignUpStep }) {
@@ -205,6 +212,8 @@ export function SignUpDialog() {
 
   const validateCurrentStep = (): string | null => {
     if (step === 'personal') {
+      if (!formData.firstName.trim()) return 'First name is required.'
+      if (!formData.lastName.trim()) return 'Last name is required.'
       if (!formData.username.trim()) return 'Choose a username to continue.'
       return null
     }
@@ -212,8 +221,15 @@ export function SignUpDialog() {
     if (step === 'access') {
       if (!formData.email.trim()) return 'Email is required.'
       if (!formData.password) return 'Password is required.'
-      if (!e164PhonePattern.test(formData.phoneNumber.trim())) {
-        return 'Phone number must use strict country code format, for example +14155552671.'
+      if (!countryCodePattern.test(formData.phoneCountryCode.trim())) {
+        return 'Country code must start with + and contain 1 to 4 digits.'
+      }
+      if (!nationalPhonePattern.test(formData.phoneNationalNumber.trim())) {
+        return 'Phone number must contain digits only, without spaces or country code.'
+      }
+      const totalDigits = `${formData.phoneCountryCode}${formData.phoneNationalNumber}`.replace(/\D/g, '')
+      if (totalDigits.length < 8 || totalDigits.length > 15) {
+        return 'Phone number must be 8 to 15 digits including the country code.'
       }
       return null
     }
@@ -244,11 +260,20 @@ export function SignUpDialog() {
   }
 
   const validateDetails = (): string | null => {
+    if (!formData.firstName.trim()) return 'First name is required.'
+    if (!formData.lastName.trim()) return 'Last name is required.'
     if (!formData.username.trim()) return 'Username is required.'
     if (!formData.email.trim()) return 'Email is required.'
     if (!formData.password) return 'Password is required.'
-    if (!e164PhonePattern.test(formData.phoneNumber.trim())) {
-      return 'Phone number must use strict country code format, for example +14155552671.'
+    if (!countryCodePattern.test(formData.phoneCountryCode.trim())) {
+      return 'Country code must start with + and contain 1 to 4 digits.'
+    }
+    if (!nationalPhonePattern.test(formData.phoneNationalNumber.trim())) {
+      return 'Phone number must contain digits only, without spaces or country code.'
+    }
+    const totalDigits = `${formData.phoneCountryCode}${formData.phoneNationalNumber}`.replace(/\D/g, '')
+    if (totalDigits.length < 8 || totalDigits.length > 15) {
+      return 'Phone number must be 8 to 15 digits including the country code.'
     }
     if (!formData.companyName.trim()) return 'Company name is required.'
     if (!formData.companyCountry.trim()) return 'Company country/location is required.'
@@ -277,12 +302,14 @@ export function SignUpDialog() {
     try {
       const result = await signUp.create({
         emailAddress: formData.email.trim(),
-        firstName: formData.firstName.trim() || undefined,
-        lastName: formData.lastName.trim() || undefined,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         password: formData.password,
         username: formData.username.trim(),
         unsafeMetadata: {
-          phoneNumber: formData.phoneNumber.trim(),
+          phoneNumber: getPhoneDisplayValue(formData),
+          phoneCountryCode: formData.phoneCountryCode.trim(),
+          phoneNationalNumber: formData.phoneNationalNumber.trim(),
           companyName: formData.companyName.trim(),
           companyCountry: formData.companyCountry.trim(),
           designation: formData.designation.trim() || null,
@@ -371,10 +398,10 @@ export function SignUpDialog() {
                     className="h-11 sm:h-10"
                     onChange={(event) => updateField('firstName', event.target.value)}
                     placeholder="First name"
+                    required
                     value={formData.firstName}
                   />,
                   'First name',
-                  'Optional',
                 )}
                 {fieldLabel(
                   <Input
@@ -382,10 +409,10 @@ export function SignUpDialog() {
                     className="h-11 sm:h-10"
                     onChange={(event) => updateField('lastName', event.target.value)}
                     placeholder="Last name"
+                    required
                     value={formData.lastName}
                   />,
                   'Last name',
-                  'Optional',
                 )}
                 <div className="sm:col-span-2">
                   {fieldLabel(
@@ -440,25 +467,44 @@ export function SignUpDialog() {
                   </div>,
                   'Password*',
                 )}
-                {fieldLabel(
-                  <div className="relative">
-                    <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      autoComplete="tel"
-                      className="h-11 pl-9 sm:h-10"
-                      inputMode="tel"
-                      onChange={(event) => updateField('phoneNumber', event.target.value)}
-                      pattern="^\+[1-9]\d{7,14}$"
-                      placeholder="+14155552671"
-                      required
-                      title="Use E.164 format: + followed by country code and number, digits only."
-                      type="tel"
-                      value={formData.phoneNumber}
-                    />
-                  </div>,
-                  'Phone number*',
-                  'Country code required',
-                )}
+                <div className="grid gap-2 text-sm font-medium text-foreground">
+                  <span>Phone number*</span>
+                  <div className="grid grid-cols-[minmax(5.5rem,0.35fr)_1fr] gap-2">
+                    <div className="relative">
+                      <Globe2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        autoComplete="tel-country-code"
+                        className="h-11 pl-9 sm:h-10"
+                        inputMode="tel"
+                        onChange={(event) => updateField('phoneCountryCode', event.target.value)}
+                        pattern="^\+[1-9]\d{0,3}$"
+                        placeholder="+91"
+                        required
+                        title="Enter only the country code, for example +91."
+                        type="tel"
+                        value={formData.phoneCountryCode}
+                      />
+                    </div>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        autoComplete="tel-national"
+                        className="h-11 pl-9 sm:h-10"
+                        inputMode="numeric"
+                        onChange={(event) => updateField('phoneNationalNumber', event.target.value)}
+                        pattern="^\d{4,14}$"
+                        placeholder="9876543210"
+                        required
+                        title="Enter the phone number without country code, spaces, or dashes."
+                        type="tel"
+                        value={formData.phoneNationalNumber}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs font-normal text-muted-foreground">
+                    Saved clearly as {getPhoneDisplayValue(formData)}
+                  </p>
+                </div>
               </div>
             )}
 

@@ -145,23 +145,30 @@
 
 @layer components {
   .auth-dialog-content {
-    left: max(0.5rem, calc((100vw - 28rem) / 2)) !important;
-    right: max(0.5rem, calc((100vw - 28rem) / 2)) !important;
-    top: max(0.5rem, calc((100dvh - 26rem) / 2)) !important;
-    width: auto !important;
-    max-width: none !important;
-    transform: none !important;
-    translate: none !important;
+    left: 50% !important;
+    right: auto !important;
+    top: 50% !important;
+    width: min(calc(100vw - 2rem), 28rem) !important;
+    max-width: 28rem !important;
+    max-height: calc(100dvh - 2rem) !important;
+    transform: translate(-50%, -50%) !important;
   }
 
   .auth-signup-dialog-content {
-    left: max(0.5rem, calc((100vw - 42rem) / 2)) !important;
-    right: max(0.5rem, calc((100vw - 42rem) / 2)) !important;
-    top: max(0.5rem, calc((100dvh - 48rem) / 2)) !important;
-    width: auto !important;
-    max-width: none !important;
-    transform: none !important;
-    translate: none !important;
+    left: 50% !important;
+    right: auto !important;
+    top: 50% !important;
+    width: min(calc(100vw - 2rem), 38rem) !important;
+    max-width: 38rem !important;
+    max-height: calc(100dvh - 2rem) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  @supports (padding: max(0px)) {
+    .auth-dialog-content,
+    .auth-signup-dialog-content {
+      max-height: calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom))) !important;
+    }
   }
 }
 

@@ -22,6 +22,20 @@ function readMetadata(body: Record<string, unknown>): Record<string, unknown> {
     : {}
 }
 
+function readPhoneMetadata(unsafeMetadata: Record<string, unknown>) {
+  const phoneCountryCode = readString(unsafeMetadata.phoneCountryCode)
+  const phoneNationalNumber = readString(unsafeMetadata.phoneNationalNumber)
+  const phoneNumber = phoneCountryCode && phoneNationalNumber
+    ? `${phoneCountryCode} ${phoneNationalNumber}`
+    : readString(unsafeMetadata.phoneNumber)
+
+  return {
+    phoneNumber,
+    phoneCountryCode,
+    phoneNationalNumber,
+  }
+}
+
 export default async function handler(req: SyncUserRequest, res: SyncUserResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
@@ -45,6 +59,7 @@ export default async function handler(req: SyncUserRequest, res: SyncUserRespons
     : {}
   const email = readString(body.email)
   const unsafeMetadata = readMetadata(body)
+  const phoneMetadata = readPhoneMetadata(unsafeMetadata)
 
   if (!email) {
     res.status(400).json({ error: 'Email is required' })
@@ -60,7 +75,9 @@ export default async function handler(req: SyncUserRequest, res: SyncUserRespons
       username: readString(body.username),
       imageUrl: readString(body.imageUrl),
       emailVerified: body.emailVerified === true,
-      phoneNumber: readString(unsafeMetadata.phoneNumber),
+      phoneNumber: phoneMetadata.phoneNumber,
+      phoneCountryCode: phoneMetadata.phoneCountryCode,
+      phoneNationalNumber: phoneMetadata.phoneNationalNumber,
       companyName: readString(unsafeMetadata.companyName),
       companyCountry: readString(unsafeMetadata.companyCountry),
       designation: readString(unsafeMetadata.designation),

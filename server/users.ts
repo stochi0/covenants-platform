@@ -20,6 +20,8 @@ export interface UserProfile {
   imageUrl: string | null
   emailVerified: boolean
   phoneNumber: string | null
+  phoneCountryCode: string | null
+  phoneNationalNumber: string | null
   companyName: string | null
   companyCountry: string | null
   designation: string | null
@@ -41,6 +43,8 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       image_url,
       email_verified,
       phone_number,
+      phone_country_code,
+      phone_national_number,
       company_name,
       company_country,
       designation,
@@ -49,7 +53,7 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       last_seen_at,
       deleted_at
     )
-    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, now(), null)
+    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now(), null)
     on conflict (clerk_user_id) do update set
       email = excluded.email,
       first_name = excluded.first_name,
@@ -58,6 +62,8 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
       image_url = excluded.image_url,
       email_verified = excluded.email_verified,
       phone_number = excluded.phone_number,
+      phone_country_code = excluded.phone_country_code,
+      phone_national_number = excluded.phone_national_number,
       company_name = excluded.company_name,
       company_country = excluded.company_country,
       designation = excluded.designation,
@@ -76,6 +82,8 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
     profile.imageUrl,
     profile.emailVerified,
     profile.phoneNumber,
+    profile.phoneCountryCode,
+    profile.phoneNationalNumber,
     profile.companyName,
     profile.companyCountry,
     profile.designation,
