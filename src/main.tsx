@@ -32,7 +32,6 @@ if (!clerkPublishableKey) {
         afterSignOutUrl="/"
         publishableKey={clerkPublishableKey}
         signInFallbackRedirectUrl="/"
-        signUpFallbackRedirectUrl="/"
       >
         <App />
       </ClerkProvider>
