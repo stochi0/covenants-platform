@@ -104,6 +104,82 @@ function getClerkErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unable to create account.'
 }
 
+type ClerkSignUpState = {
+  missingFields: string[]
+  requiredFields: string[]
+  status: string | null
+  unverifiedFields: string[]
+}
+
+const clerkFieldLabels: Record<string, string> = {
+  email_address: 'email address',
+  emailAddress: 'email address',
+  first_name: 'first name',
+  firstName: 'first name',
+  last_name: 'last name',
+  lastName: 'last name',
+  legal_accepted: 'terms acceptance',
+  legalAccepted: 'terms acceptance',
+  password: 'password',
+  phone_number: 'phone number',
+  phoneNumber: 'phone number',
+  username: 'username',
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
+function getClerkSignUpState(result: unknown): ClerkSignUpState {
+  const resource = result && typeof result === 'object'
+    ? result as Record<string, unknown>
+    : {}
+
+  return {
+    missingFields: readStringArray(resource.missingFields),
+    requiredFields: readStringArray(resource.requiredFields),
+    status: typeof resource.status === 'string' ? resource.status : null,
+    unverifiedFields: readStringArray(resource.unverifiedFields),
+  }
+}
+
+function hasClerkField(fields: string[], fieldName: string): boolean {
+  const normalizedFieldName = fieldName.replace(/[^a-z0-9]/gi, '').toLowerCase()
+  return fields.some((field) => field.replace(/[^a-z0-9]/gi, '').toLowerCase() === normalizedFieldName)
+}
+
+function formatClerkFields(fields: string[]): string {
+  const labels = fields.map((field) => clerkFieldLabels[field] ?? field.replace(/_/g, ' '))
+  const uniqueLabels = [...new Set(labels)]
+
+  if (uniqueLabels.length === 0) return ''
+  if (uniqueLabels.length === 1) return uniqueLabels[0]
+  return `${uniqueLabels.slice(0, -1).join(', ')} and ${uniqueLabels[uniqueLabels.length - 1]}`
+}
+
+function getIncompleteSignUpMessage(result: unknown): string {
+  const state = getClerkSignUpState(result)
+  const pendingFields = [...state.missingFields, ...state.unverifiedFields, ...state.requiredFields]
+
+  if (hasClerkField(pendingFields, 'phoneNumber')) {
+    return 'Your email code was accepted, but Clerk still requires phone verification. This app is configured for email-only signup, so phone verification must be disabled in Clerk before users can finish signup.'
+  }
+
+  if (state.missingFields.length > 0) {
+    return `Your email code was accepted, but Clerk still requires ${formatClerkFields(state.missingFields)} before the account can be created.`
+  }
+
+  if (state.unverifiedFields.length > 0) {
+    return `Your email code was accepted, but Clerk still needs verification for ${formatClerkFields(state.unverifiedFields)}.`
+  }
+
+  if (state.requiredFields.length > 0) {
+    return `Your email code was accepted, but Clerk still requires ${formatClerkFields(state.requiredFields)} to finish signup.`
+  }
+
+  return `Your email code was accepted, but Clerk returned signup status "${state.status ?? 'unknown'}" instead of completing the account.`
+}
+
 type SetActiveFn = (params: { session: string }) => Promise<unknown>
 
 function Field({
@@ -366,7 +442,8 @@ export function SignUpDialog() {
         return
       }
 
-      setError('Additional verification is required to finish creating your account.')
+      console.error('Clerk signup did not complete after email verification:', getClerkSignUpState(result))
+      setError(getIncompleteSignUpMessage(result))
     } catch (caughtError) {
       setError(getClerkErrorMessage(caughtError))
     } finally {
