@@ -29,7 +29,6 @@ import { Input } from '@/components/ui/input'
 interface SignUpFormData {
   firstName: string
   lastName: string
-  username: string
   email: string
   password: string
   phoneCountryCode: string
@@ -44,7 +43,6 @@ interface SignUpFormData {
 const initialFormData: SignUpFormData = {
   firstName: '',
   lastName: '',
-  username: '',
   email: '',
   password: '',
   phoneCountryCode: '+91',
@@ -227,7 +225,6 @@ export function SignUpDialog() {
     if (step === 'profile') {
       if (!formData.firstName.trim()) return 'First name is required.'
       if (!formData.lastName.trim()) return 'Last name is required.'
-      if (!formData.username.trim()) return 'Choose a username to continue.'
       return null
     }
 
@@ -275,7 +272,6 @@ export function SignUpDialog() {
   const validateDetails = (): string | null => {
     if (!formData.firstName.trim()) return 'First name is required.'
     if (!formData.lastName.trim()) return 'Last name is required.'
-    if (!formData.username.trim()) return 'Username is required.'
     if (!formData.email.trim()) return 'Email is required.'
     if (!formData.password) return 'Password is required.'
     if (!countryCodePattern.test(formData.phoneCountryCode.trim())) {
@@ -318,7 +314,6 @@ export function SignUpDialog() {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         password: formData.password,
-        username: formData.username.trim(),
         unsafeMetadata: {
           phoneNumber: getPhoneDisplayValue(formData),
           phoneCountryCode: formData.phoneCountryCode.trim(),
@@ -424,20 +419,16 @@ export function SignUpDialog() {
                       value={formData.lastName}
                     />
                   </Field>
-                  <div className="sm:col-span-2">
-                    <Field label="Username">
-                      <div className="relative">
-                        <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          autoComplete="username"
-                          className="h-11 pl-9 sm:h-10"
-                          onChange={(event) => updateField('username', event.target.value)}
-                          placeholder="Choose a username"
-                          required
-                          value={formData.username}
-                        />
+                  <div className="sm:col-span-2 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <UserRound className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">No username setup needed</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          Your work email will be your default username. You can choose a custom one later from your profile.
+                        </p>
                       </div>
-                    </Field>
+                    </div>
                   </div>
                 </div>
               )}
