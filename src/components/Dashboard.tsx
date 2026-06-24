@@ -74,7 +74,6 @@ function AccountMenu() {
     || user?.primaryEmailAddress?.emailAddress
     || 'Account'
   const email = user?.primaryEmailAddress?.emailAddress
-  const username = user?.username || email
 
   return (
     <>
@@ -93,7 +92,7 @@ function AccountMenu() {
           <div className="absolute right-0 top-12 z-40 w-72 overflow-hidden rounded-xl border border-[#d7ece8] bg-popover text-popover-foreground shadow-[0_20px_55px_-30px_rgba(15,118,110,0.55)]">
             <div className="border-b border-border bg-primary/[0.035] px-4 py-3.5">
               <p className="truncate text-sm font-semibold">{displayName}</p>
-              {username && <p className="mt-0.5 truncate text-xs text-muted-foreground">{username}</p>}
+              {email && <p className="mt-0.5 truncate text-xs text-muted-foreground">{email}</p>}
             </div>
             <button
               type="button"

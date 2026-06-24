@@ -13,7 +13,6 @@ import {
   Mail,
   Phone,
   ShieldCheck,
-  UserRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -163,6 +162,10 @@ function getIncompleteSignUpMessage(result: unknown): string {
 
   if (hasClerkField(pendingFields, 'phoneNumber')) {
     return 'Your email code was accepted, but Clerk still requires phone verification. This app is configured for email-only signup, so phone verification must be disabled in Clerk before users can finish signup.'
+  }
+
+  if (hasClerkField(pendingFields, 'username')) {
+    return 'Your email code was accepted, but Clerk still requires a username. This app uses email-only signup, so the username requirement must be disabled in Clerk before users can finish signup.'
   }
 
   if (state.missingFields.length > 0) {
@@ -498,11 +501,11 @@ export function SignUpDialog() {
                   </Field>
                   <div className="sm:col-span-2 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
                     <div className="flex items-start gap-3">
-                      <UserRound className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <Mail className="mt-0.5 size-4 shrink-0 text-primary" />
                       <div>
-                        <p className="text-sm font-medium text-foreground">No username setup needed</p>
+                        <p className="text-sm font-medium text-foreground">Email-only account access</p>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                          Your work email will be your default username. You can choose a custom one later from your profile.
+                          Your work email is the only identifier you need to sign in.
                         </p>
                       </div>
                     </div>
@@ -613,7 +616,7 @@ export function SignUpDialog() {
                   </Field>
                   <Field label="Designation" hint="Optional">
                     <div className="relative">
-                      <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <BriefcaseBusiness className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         autoComplete="organization-title"
                         className="h-11 pl-9 sm:h-10"

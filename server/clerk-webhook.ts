@@ -15,7 +15,6 @@ interface ClerkUserEventData {
   email_addresses: ClerkEmailAddress[]
   first_name: string | null
   last_name: string | null
-  username: string | null
   image_url: string | null
   unsafe_metadata?: Record<string, unknown> | null
 }
@@ -59,7 +58,6 @@ function profileFromEvent(data: ClerkUserEventData): UserProfile {
     email: primaryEmail.email_address,
     firstName: data.first_name,
     lastName: data.last_name,
-    username: data.username,
     imageUrl: data.image_url,
     emailVerified: primaryEmail.verification?.status === 'verified',
     phoneNumber: phoneMetadata.phoneNumber,

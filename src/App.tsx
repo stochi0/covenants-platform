@@ -25,7 +25,6 @@ function SignedInApp() {
         email: user.primaryEmailAddress?.emailAddress,
         firstName: user.firstName,
         lastName: user.lastName,
-        username: user.username,
         imageUrl: user.imageUrl,
         emailVerified: user.primaryEmailAddress?.verification?.status === 'verified',
         unsafeMetadata: user.unsafeMetadata,
