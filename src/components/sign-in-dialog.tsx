@@ -161,7 +161,7 @@ export function SignInDialog() {
         signUpIfMissing: false,
       })
       setStep('reset-code')
-      setMessage('We sent a reset code to the email on your Clerk account.')
+      setMessage(`We sent a reset code to ${identifier.trim()}.`)
     } catch (caughtError) {
       setError(getClerkErrorMessage(caughtError))
     } finally {
