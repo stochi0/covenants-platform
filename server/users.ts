@@ -78,7 +78,7 @@ export async function upsertUserProfile(profile: UserProfile): Promise<string> {
     DEFAULT_USER_ROLE,
     profile.firstName,
     profile.lastName,
-    profile.username,
+    profile.username ?? profile.email,
     profile.imageUrl,
     profile.emailVerified,
     profile.phoneNumber,

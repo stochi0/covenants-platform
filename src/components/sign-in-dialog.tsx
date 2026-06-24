@@ -23,7 +23,7 @@ const stepCopy: Record<AuthStep, { title: string; description: string }> = {
   },
   'reset-request': {
     title: 'Reset password',
-    description: 'Enter your email or username and we will send a reset code.',
+    description: 'Enter your email and we will send a reset code.',
   },
   'reset-code': {
     title: 'Choose a new password',
@@ -294,14 +294,14 @@ export function SignInDialog() {
         {step === 'reset-request' && (
           <form className="auth-form-shell" onSubmit={handleResetRequest}>
             <div className="auth-flow-body grid gap-4 overflow-y-auto">
-              <Field label="Email or username">
+              <Field label="Email">
                 <div className="relative">
                   <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    autoComplete="username"
+                    autoComplete="email"
                     className="h-11 pl-9"
                     onChange={(event) => setIdentifier(event.target.value)}
-                    placeholder="you@company.com or username"
+                    placeholder="you@company.com"
                     required
                     value={identifier}
                   />

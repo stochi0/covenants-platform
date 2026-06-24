@@ -7,6 +7,7 @@ import {
   LogOut,
   LayoutDashboard,
   Package,
+  Pencil,
   RefreshCw,
   Search,
   UserCircle,
@@ -15,6 +16,7 @@ import { FilterDataProvider } from '@/contexts/FilterDataContext'
 import { useFilterData } from '@/contexts/FilterDataContext'
 import type { FilterState } from '@/lib/filterData'
 import { Button } from '@/components/ui/button'
+import { ProfileDialog } from '@/components/profile-dialog'
 import { LocationFilter } from './LocationFilter'
 import { ChemistryFilter } from './ChemistryFilter'
 import { AccreditationFilter } from './AccreditationFilter'
@@ -67,41 +69,58 @@ function NavButton({
 function AccountMenu() {
   const { user } = useUser()
   const [isOpen, setIsOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
     || user?.primaryEmailAddress?.emailAddress
     || 'Account'
   const email = user?.primaryEmailAddress?.emailAddress
+  const username = user?.username || email
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((open) => !open)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/88 text-foreground shadow-sm transition-colors hover:bg-white"
-        aria-label="Open account menu"
-        aria-expanded={isOpen}
-      >
-        <UserCircle className="h-5 w-5" />
-      </button>
+    <>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/88 text-foreground shadow-sm transition-colors hover:bg-white"
+          aria-label="Open account menu"
+          aria-expanded={isOpen}
+        >
+          <UserCircle className="h-5 w-5" />
+        </button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-12 z-40 w-64 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg">
-          <div className="border-b border-border px-4 py-3">
-            <p className="truncate text-sm font-medium">{displayName}</p>
-            {email && <p className="truncate text-xs text-muted-foreground">{email}</p>}
-          </div>
-          <SignOutButton>
+        {isOpen && (
+          <div className="absolute right-0 top-12 z-40 w-72 overflow-hidden rounded-xl border border-[#d7ece8] bg-popover text-popover-foreground shadow-[0_20px_55px_-30px_rgba(15,118,110,0.55)]">
+            <div className="border-b border-border bg-primary/[0.035] px-4 py-3.5">
+              <p className="truncate text-sm font-semibold">{displayName}</p>
+              {username && <p className="mt-0.5 truncate text-xs text-muted-foreground">{username}</p>}
+            </div>
             <button
               type="button"
-              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm transition-colors hover:bg-muted"
+              onClick={() => {
+                setIsOpen(false)
+                setIsProfileOpen(true)
+              }}
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-muted"
             >
-              <LogOut className="h-4 w-4" />
-              Sign out
+              <Pencil className="h-4 w-4 text-primary" />
+              Edit profile
             </button>
-          </SignOutButton>
-        </div>
-      )}
-    </div>
+            <div className="mx-4 border-t border-border" />
+            <SignOutButton>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </button>
+            </SignOutButton>
+          </div>
+        )}
+      </div>
+      <ProfileDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} />
+    </>
   )
 }
 
