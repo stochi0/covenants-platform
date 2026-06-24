@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Show, useAuth, useUser } from '@clerk/react'
+import { ClerkLoaded, ClerkLoading, Show, useAuth, useUser } from '@clerk/react'
 import { Building2, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Dashboard } from '@/components/Dashboard'
 import { SignInDialog } from '@/components/sign-in-dialog'
@@ -102,28 +102,48 @@ function SignedInApp() {
   )
 }
 
+function PublicAuthLanding({ interactive = true }: { interactive?: boolean }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-lg">
+        <div className="space-y-2">
+          <p className="text-2xl font-semibold tracking-tight">Capillia</p>
+          <p className="text-sm text-muted-foreground">
+            Sign in with your email to continue.
+          </p>
+        </div>
+        <div className="mt-6 grid gap-3">
+          {interactive ? (
+            <>
+              <SignInDialog />
+              <SignUpDialog />
+            </>
+          ) : (
+            <>
+              <Button type="button" className="w-full">Sign in</Button>
+              <Button type="button" variant="outline" className="w-full">Create account</Button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   return (
     <>
-      <Show when="signed-out">
-        <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-lg">
-            <div className="space-y-2">
-              <p className="text-2xl font-semibold tracking-tight">Capillia</p>
-              <p className="text-sm text-muted-foreground">
-                Sign in with your email to continue.
-              </p>
-            </div>
-            <div className="mt-6 grid gap-3">
-              <SignInDialog />
-              <SignUpDialog />
-            </div>
-          </div>
-        </div>
-      </Show>
-      <Show when="signed-in">
-        <SignedInApp />
-      </Show>
+      <ClerkLoading>
+        <PublicAuthLanding interactive={false} />
+      </ClerkLoading>
+      <ClerkLoaded>
+        <Show when="signed-out">
+          <PublicAuthLanding />
+        </Show>
+        <Show when="signed-in">
+          <SignedInApp />
+        </Show>
+      </ClerkLoaded>
     </>
   )
 }
