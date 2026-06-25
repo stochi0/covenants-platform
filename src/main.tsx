@@ -11,10 +11,16 @@ const ClerkProvider = ClerkProviderBase as unknown as ComponentType<
 >
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const legacyProductionHost = 'capillia.vercel.app'
+const canonicalProductionHost = 'capillia.covenantspc.com'
 
 const root = createRoot(document.getElementById('root')!)
 
-if (!clerkPublishableKey) {
+if (window.location.hostname === legacyProductionHost) {
+  const canonicalUrl = new URL(window.location.href)
+  canonicalUrl.hostname = canonicalProductionHost
+  window.location.replace(canonicalUrl)
+} else if (!clerkPublishableKey) {
   root.render(
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
