@@ -27,14 +27,14 @@ import {
   Loader2,
   Trash2,
 } from 'lucide-react'
-import type { Product } from '@/lib/products-data'
 import { formatProductCategoryLabel } from '@/lib/products-data'
 import { apiJson } from '@/lib/api'
+import type { ContactProfile, RfqProduct } from '@/lib/rfq-types'
 
 interface RFQModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  selectedProducts: Product[]
+  selectedProducts: RfqProduct[]
   onSuccess: () => void
   onRemoveProduct?: (productId: string) => void
   onBack?: () => void
@@ -44,6 +44,10 @@ interface ProductQuantity {
   productId: string
   quantity: string
   unit: string
+}
+
+function isManualProduct(product: RfqProduct) {
+  return 'isManual' in product && product.isManual === true
 }
 
 export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRemoveProduct, onBack }: RFQModalProps) {
@@ -80,6 +84,31 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
       email,
     }))
   }, [user])
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+
+    apiJson<ContactProfile>(getToken, '/api/users/me')
+      .then((profile) => {
+        if (cancelled) return
+        setFormData((prev) => ({
+          ...prev,
+          name: profile.name || prev.name,
+          email: profile.email || prev.email,
+          company: profile.company || prev.company,
+          phone: profile.phone || prev.phone,
+          country: profile.country || prev.country,
+        }))
+      })
+      .catch((error) => {
+        console.error('Unable to load RFQ contact profile:', error)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [getToken, open])
 
   const updateQuantity = (productId: string, field: 'quantity' | 'unit', value: string) => {
     setQuantities((prev) =>
@@ -144,6 +173,11 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
     resetAndClose()
     onSuccess()
   }
+
+  const hasIncompleteManualProduct = selectedProducts.some((product) => {
+    const quantity = quantities.find((q) => q.productId === product.id)
+    return isManualProduct(product) && !quantity?.quantity.trim()
+  })
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
@@ -211,7 +245,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                               </h4>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <Badge variant="secondary" className="text-[10px]">
-                                  <span>{formatProductCategoryLabel(product.category)}</span>
+                                  <span>{isManualProduct(product) ? 'Unlisted' : formatProductCategoryLabel(product.category)}</span>
                                 </Badge>
                                 {onRemoveProduct && (
                                   <button
@@ -225,9 +259,15 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                                 )}
                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground font-mono">
-                              CAS: {product.casNumber}
-                            </p>
+                            {product.casNumber ? (
+                              <p className="text-xs text-muted-foreground font-mono">
+                                CAS: {product.casNumber}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                {isManualProduct(product) ? 'Not listed on Capillia' : 'CAS unavailable'}
+                              </p>
+                            )}
                           </div>
 
                           {/* Quantity Input */}
@@ -286,7 +326,11 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                   {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''}
                 </p>
               </div>
-              <Button onClick={() => setStep('contact')} className="group h-11 w-full sm:h-9 sm:w-auto" disabled={selectedProducts.length === 0}>
+              <Button
+                onClick={() => setStep('contact')}
+                className="group h-11 w-full sm:h-9 sm:w-auto"
+                disabled={selectedProducts.length === 0 || hasIncompleteManualProduct}
+              >
                 Continue
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
               </Button>
@@ -409,7 +453,7 @@ export function RFQModal({ open, onOpenChange, selectedProducts, onSuccess, onRe
                         const qty = quantities.find((q) => q.productId === product.id)
                         return (
                           <Badge key={product.id} variant="outline" className="text-[10px] sm:text-xs font-mono">
-                            <span>{product.casNumber}</span>
+                            <span>{product.casNumber || product.name}</span>
                             {qty?.quantity && (
                               <span className="ml-1 opacity-70">
                                 ({qty.quantity}{qty.unit})

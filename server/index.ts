@@ -4,6 +4,7 @@ import { requireAuth, type AuthenticatedRequest } from './auth.js'
 import { handleClerkWebhook } from './clerk-webhook.js'
 import { handleDataRequest } from './data.js'
 import { submitRfq, type RFQBody } from './rfq.js'
+import { getLocalUserProfile } from './users.js'
 
 const app = express()
 
@@ -44,6 +45,23 @@ app.post('/api/rfq', async (req, res) => {
     res.status(status).json({
       error: status === 400 ? 'Validation failed' : 'Failed to submit RFQ',
       details,
+    })
+  }
+})
+
+app.get('/api/users/me', async (req, res) => {
+  try {
+    const profile = await getLocalUserProfile((req as AuthenticatedRequest).auth!.internalUserId)
+    if (!profile) {
+      res.status(404).json({ error: 'User profile not found' })
+      return
+    }
+
+    res.status(200).json(profile)
+  } catch (err) {
+    res.status(500).json({
+      error: 'User profile request failed',
+      details: err instanceof Error ? err.message : 'Unknown error',
     })
   }
 })

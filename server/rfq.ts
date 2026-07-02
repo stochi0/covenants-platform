@@ -10,6 +10,7 @@ export interface RFQProduct {
   category: string | null
   quantity?: string
   unit?: string
+  isManual?: boolean
   supplierMatches?: RFQSupplierMatch[]
 }
 
@@ -69,6 +70,14 @@ export function validateRfqBody(body: RFQBody): string | null {
   if (!body?.email || !body?.name || !Array.isArray(body.products) || body.products.length === 0) {
     return 'name, email, and at least one product are required'
   }
+  for (const product of body.products) {
+    if (!product.name?.trim()) {
+      return 'each product requires a name'
+    }
+    if (product.isManual && (!product.quantity?.trim() || !product.unit?.trim())) {
+      return 'unlisted products require quantity and unit'
+    }
+  }
   return null
 }
 
@@ -79,7 +88,7 @@ export function buildRfqEmailHtml(body: RFQBody): string {
         `<tr>
           <td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(p.name)}</td>
           <td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(p.casNumber || '-')}</td>
-          <td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(p.category || 'Uncategorized')}</td>
+          <td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(p.isManual ? 'Unlisted product' : p.category || 'Uncategorized')}</td>
           <td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(String(p.quantity || ''))} ${escapeHtml(String(p.unit || ''))}</td>
         </tr>`
     )
@@ -165,6 +174,9 @@ export async function submitRfq(body: RFQBody, auth?: AuthenticatedUser): Promis
       ...body,
       name: user.name,
       email: user.email,
+      company: body.company || user.company,
+      phone: body.phone || user.phone,
+      country: body.country || user.country,
     }
   }
 

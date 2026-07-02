@@ -9,6 +9,9 @@ interface LocalUserRow extends QueryResultRow {
   email: string
   first_name: string | null
   last_name: string | null
+  phone_number: string | null
+  company_name: string | null
+  company_country: string | null
 }
 
 export interface UserProfile {
@@ -117,9 +120,17 @@ export async function softDeleteUserByClerkId(clerkUserId: string): Promise<void
   `, [clerkUserId])
 }
 
-export async function getLocalUserProfile(userId: string): Promise<{ email: string; name: string } | null> {
+export interface LocalUserProfile {
+  email: string
+  name: string
+  company: string
+  phone: string
+  country: string
+}
+
+export async function getLocalUserProfile(userId: string): Promise<LocalUserProfile | null> {
   const row = await dbOne<LocalUserRow>(`
-    select email, first_name, last_name
+    select email, first_name, last_name, phone_number, company_name, company_country
     from public.users
     where id = $1 and deleted_at is null
   `, [userId])
@@ -129,5 +140,8 @@ export async function getLocalUserProfile(userId: string): Promise<{ email: stri
   return {
     email: row.email,
     name: [row.first_name, row.last_name].filter(Boolean).join(' ') || row.email,
+    company: row.company_name ?? '',
+    phone: row.phone_number ?? '',
+    country: row.company_country ?? '',
   }
 }
