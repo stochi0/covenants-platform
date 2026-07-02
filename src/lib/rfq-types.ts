@@ -1,4 +1,4 @@
-import type { Product } from './products-data'
+import type { Product } from './api-types.js'
 
 export interface ManualRfqProduct {
   id: string

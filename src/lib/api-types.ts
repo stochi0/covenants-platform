@@ -1,4 +1,4 @@
-import type { FilterState } from './filterData'
+import type { FilterState } from './filterData.js'
 
 export interface Company {
   id: string

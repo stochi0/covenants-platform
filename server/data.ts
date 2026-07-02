@@ -9,10 +9,11 @@ import type {
   ProductSupplierMatch,
   SearchParams,
   StateFacilityCountResponse,
-} from '../src/lib/api-types'
-import type { FilterState } from '../src/lib/filterData'
+} from '../src/lib/api-types.js'
+import type { FilterState } from '../src/lib/filterData.js'
 
 interface JsonResponse {
+  setHeader?: (name: string, value: string) => void
   status: (code: number) => { json: (body: unknown) => void }
 }
 
@@ -704,40 +705,73 @@ export function sendError(res: JsonResponse, error: unknown) {
   res.status(500).json({ error: 'Database request failed', details })
 }
 
+function sendMethodNotAllowed(res: JsonResponse, allowed: string) {
+  res.setHeader?.('Allow', allowed)
+  res.status(405).json({ error: 'Method not allowed' })
+}
+
 export async function handleDataRequest(req: DataRequest, res: JsonResponse) {
   try {
-    if (req.method === 'GET' && req.path === '/api/stats') {
+    if (req.path === '/api/stats') {
+      if (req.method !== 'GET') {
+        sendMethodNotAllowed(res, 'GET')
+        return
+      }
       sendJson(res, 200, await getPlatformStats())
       return
     }
 
-    if (req.method === 'GET' && req.path === '/api/filters') {
+    if (req.path === '/api/filters') {
+      if (req.method !== 'GET') {
+        sendMethodNotAllowed(res, 'GET')
+        return
+      }
       sendJson(res, 200, await getFilterData())
       return
     }
 
-    if (req.method === 'GET' && req.path === '/api/product-categories') {
+    if (req.path === '/api/product-categories') {
+      if (req.method !== 'GET') {
+        sendMethodNotAllowed(res, 'GET')
+        return
+      }
       sendJson(res, 200, await getProductCategories())
       return
     }
 
-    if (req.method === 'POST' && req.path === '/api/products/search') {
+    if (req.path === '/api/products/search') {
+      if (req.method !== 'POST') {
+        sendMethodNotAllowed(res, 'POST')
+        return
+      }
       sendJson(res, 200, await searchProducts(parseSearchParams(req.body)))
       return
     }
 
-    if (req.method === 'GET' && req.path === '/api/products') {
+    if (req.path === '/api/products') {
+      if (req.method !== 'GET') {
+        sendMethodNotAllowed(res, 'GET')
+        return
+      }
       sendJson(res, 200, await searchProducts(parseSearchQuery(req.query ?? {})))
       return
     }
 
-    if (req.method === 'POST' && req.path === '/api/products/by-ids') {
+    if (req.path === '/api/products/by-ids') {
+      if (req.method !== 'POST') {
+        sendMethodNotAllowed(res, 'POST')
+        return
+      }
       const ids = req.body && typeof req.body === 'object' ? parseArray((req.body as { ids?: unknown }).ids) : []
       sendJson(res, 200, { products: await getProductsByIds(ids) })
       return
     }
 
-    if (req.method === 'POST' && req.path === '/api/facilities/count') {
+    if (req.path === '/api/facilities/count') {
+      if (req.method !== 'POST') {
+        sendMethodNotAllowed(res, 'POST')
+        return
+      }
       const filters = req.body && typeof req.body === 'object'
         ? parseFilters((req.body as { filters?: unknown }).filters)
         : parseFilters(null)
@@ -745,7 +779,11 @@ export async function handleDataRequest(req: DataRequest, res: JsonResponse) {
       return
     }
 
-    if (req.method === 'POST' && req.path === '/api/facilities/state-counts') {
+    if (req.path === '/api/facilities/state-counts') {
+      if (req.method !== 'POST') {
+        sendMethodNotAllowed(res, 'POST')
+        return
+      }
       const filters = req.body && typeof req.body === 'object'
         ? parseFilters((req.body as { filters?: unknown }).filters)
         : parseFilters(null)
@@ -754,7 +792,11 @@ export async function handleDataRequest(req: DataRequest, res: JsonResponse) {
     }
 
     const productMatch = req.path.match(/^\/api\/products\/([^/]+)$/)
-    if (req.method === 'GET' && productMatch?.[1]) {
+    if (productMatch?.[1]) {
+      if (req.method !== 'GET') {
+        sendMethodNotAllowed(res, 'GET')
+        return
+      }
       const product = await getProductById(decodeURIComponent(productMatch[1]))
       if (!product) {
         sendJson(res, 404, { error: 'Product not found' })
